@@ -1,5 +1,5 @@
-// index.mjs — CLI entry point
-// Flow: setup → conversation → feedback → plan
+// index.mjs — CLI entry point with WorldEngine V2
+// Flow: setup → conversation (V2 signals) → feedback → plan
 // Commands: /end, /restart, /retry, /quit, /stats
 
 import * as readline from 'node:readline';
@@ -10,7 +10,10 @@ import { analyzeFeedback } from './analyzer.mjs';
 import { generatePlan } from './planner.mjs';
 import { createAnthropicProvider } from './provider.mjs';
 import { createStore, randomUUID } from './store.mjs';
-import { evaluateBelts, computeBiasProfile, identifyWeaknesses, formatBeltDisplay } from './belt.mjs';
+import { evaluateBelts, identifyWeaknesses, formatBeltDisplay } from './belt.mjs';
+import { getMomentumTrend, analyzeZOPA } from './worldEngine.mjs';
+import { analyzeSessionBiases, updateBiasProfile, recommendBiasTraining } from './biasTracker.mjs';
+import { computeDifficulty, assessZPD, profileToPromptInstructions } from './difficulty.mjs';
 
 // ANSI colors
 const c = {
@@ -23,11 +26,17 @@ const c = {
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
   red: '\x1b[31m',
+  white: '\x1b[37m',
 };
 
 function print(text) { process.stdout.write(text + '\n'); }
 function header(text) { print(`\n${c.bold}${c.cyan}═══ ${text} ═══${c.reset}\n`); }
 function label(name, value) { print(`  ${c.dim}${name}:${c.reset} ${value}`); }
+
+function bar(value, max, width = 10) {
+  const filled = Math.round((value / max) * width);
+  return '█'.repeat(filled) + '░'.repeat(width - filled);
+}
 
 async function askQuestion(rl, question, required = false) {
   return new Promise((resolve) => {
@@ -102,15 +111,32 @@ async function conversationPhase(rl, session, store) {
       print(`\n${c.bold}${c.yellow}${result.event.narrative}${c.reset}`);
     }
 
+    // Adversary response
     if (result.adversaryResponse) {
       print(`\n${c.magenta}  ${session.adversary.identity}:${c.reset} ${result.adversaryResponse}`);
     }
 
-    // Real-time coaching
-    if (result.coaching) {
-      if (result.coaching.biasDetected) {
-        print(`${c.red}  ⚠ Biais détecté: ${result.coaching.biasDetected}${c.reset}`);
+    // V2: Adversary tactics detected (Cialdini)
+    if (result.tactics?.adversary?.length > 0) {
+      const tacticsStr = result.tactics.adversary.map((t) => t.principle).join(', ');
+      print(`${c.red}  ⚡ Tactiques adversaire: ${tacticsStr}${c.reset}`);
+    }
+
+    // V2: User techniques detected (Voss)
+    if (result.tactics?.user?.length > 0) {
+      const techStr = result.tactics.user.map((t) => `${t.technique}(${Math.round(t.quality * 100)}%)`).join(', ');
+      print(`${c.green}  ✓ Tes techniques: ${techStr}${c.reset}`);
+    }
+
+    // V2: Real-time bias alerts
+    if (result.biasIndicators?.length > 0) {
+      for (const bias of result.biasIndicators) {
+        print(`${c.red}  ⚠ BIAIS: ${bias.biasType} (sévérité ${Math.round(bias.severity * 100)}%) — "${bias.evidence}"${c.reset}`);
       }
+    }
+
+    // Real-time coaching (LLM)
+    if (result.coaching) {
       if (result.coaching.alternative) {
         print(`${c.cyan}  → Alternative: ${result.coaching.alternative}${c.reset}`);
       }
@@ -119,11 +145,16 @@ async function conversationPhase(rl, session, store) {
       }
     }
 
-    if (result.detectedSignals.length > 0) {
-      print(`${c.dim}  [Signaux: ${result.detectedSignals.join(', ')}]${c.reset}`);
-    }
+    // V2: WorldEngine emotional dashboard
+    const emo = session._world?.emotions || {};
+    const trend = session._world ? getMomentumTrend(session._world.negotiation) : 'stable';
+    const trendIcon = trend === 'gaining' ? '↑' : trend === 'losing' ? '↓' : '→';
 
-    print(`${c.dim}  [Confiance: ${result.state.confidence} | Frustration: ${result.state.frustration} | Momentum: ${result.state.momentum}]${c.reset}\n`);
+    print(`${c.dim}  ┌─ État adversaire ──────────────────────────────────────────┐${c.reset}`);
+    print(`${c.dim}  │ Confiance ${bar(emo.confidence || 0, 100)} ${(emo.confidence || 0).toString().padStart(3)}  Peur      ${bar(emo.fear || 0, 100)} ${(emo.fear || 0).toString().padStart(3)}  │${c.reset}`);
+    print(`${c.dim}  │ Frustrat. ${bar(emo.frustration || 0, 100)} ${(emo.frustration || 0).toString().padStart(3)}  Ouverture ${bar(emo.openness || 0, 100)} ${(emo.openness || 0).toString().padStart(3)}  │${c.reset}`);
+    print(`${c.dim}  │ Momentum ${trendIcon} ${session.momentum.toString().padStart(4)}  Ego menacé ${bar(emo.egoThreat || 0, 100)} ${(emo.egoThreat || 0).toString().padStart(3)}  │${c.reset}`);
+    print(`${c.dim}  └────────────────────────────────────────────────────────────┘${c.reset}\n`);
 
     if (result.sessionOver) {
       print(`\n${c.bold}${c.yellow}Session terminée: ${result.endReason}${c.reset}`);
@@ -138,28 +169,48 @@ function displayFeedback(report) {
   header('FEEDBACK');
   print(`${c.bold}  Score global: ${report.globalScore}/100${c.reset}\n`);
   print(`  ${c.cyan}Détail des scores:${c.reset}`);
-  label('Outcome/Leverage', `${report.scores.outcomeLeverage}/25`);
-  label('Discipline BATNA', `${report.scores.batnaDiscipline}/20`);
-  label('Régulation émotionnelle', `${report.scores.emotionalRegulation}/25`);
-  label('Résistance aux biais', `${report.scores.biasResistance}/15`);
-  label('Flow conversationnel', `${report.scores.conversationalFlow}/15`);
+  label('Outcome/Leverage', `${bar(report.scores.outcomeLeverage, 25)} ${report.scores.outcomeLeverage}/25`);
+  label('Discipline BATNA', `${bar(report.scores.batnaDiscipline, 20)} ${report.scores.batnaDiscipline}/20`);
+  label('Régulation émotionnelle', `${bar(report.scores.emotionalRegulation, 25)} ${report.scores.emotionalRegulation}/25`);
+  label('Résistance aux biais', `${bar(report.scores.biasResistance, 15)} ${report.scores.biasResistance}/15`);
+  label('Flow conversationnel', `${bar(report.scores.conversationalFlow, 15)} ${report.scores.conversationalFlow}/15`);
 
-  if (report.biasesDetected.length > 0) {
-    print(`\n  ${c.red}Biais détectés:${c.reset}`);
+  // V2: Algorithmic bias report
+  if (report.algorithmicBiases?.length > 0) {
+    print(`\n  ${c.bold}${c.red}Biais détectés (analyse algorithmique):${c.reset}`);
+    for (const bias of report.algorithmicBiases) {
+      print(`  ${c.red}•${c.reset} ${bias.biasType} (tour ${bias.turn}, sévérité ${Math.round(bias.severity * 100)}%) — "${bias.evidence}"`);
+    }
+  }
+
+  // V2: Tactical score
+  if (report.tacticalScore) {
+    print(`\n  ${c.green}Score tactique: ${report.tacticalScore.score}/100${c.reset}`);
+    if (report.tacticalScore.breakdown) {
+      for (const [tech, score] of Object.entries(report.tacticalScore.breakdown)) {
+        if (score > 0) print(`  ${c.green}•${c.reset} ${tech}: ${score}`);
+      }
+    }
+  }
+
+  // LLM biases (additional insights)
+  if (report.biasesDetected?.length > 0) {
+    print(`\n  ${c.red}Analyse IA des biais:${c.reset}`);
     for (const bias of report.biasesDetected) {
       print(`  ${c.red}•${c.reset} ${bias.biasType} (tour ${bias.turn}): "${bias.excerpt}"`);
       print(`    ${c.dim}${bias.explanation}${c.reset}`);
     }
   }
-  if (report.tacticsUsed.length > 0) {
+
+  if (report.tacticsUsed?.length > 0) {
     print(`\n  ${c.green}Tactiques utilisées:${c.reset}`);
     for (const t of report.tacticsUsed) print(`  ${c.green}•${c.reset} ${t}`);
   }
-  if (report.missedOpportunities.length > 0) {
+  if (report.missedOpportunities?.length > 0) {
     print(`\n  ${c.yellow}Opportunités manquées:${c.reset}`);
     for (const o of report.missedOpportunities) print(`  ${c.yellow}•${c.reset} ${o}`);
   }
-  if (report.recommendations.length > 0) {
+  if (report.recommendations?.length > 0) {
     print(`\n  ${c.blue}Recommandations:${c.reset}`);
     for (const r of report.recommendations) print(`  ${c.blue}•${c.reset} ${r}`);
   }
@@ -184,14 +235,25 @@ function displayPlan(plan) {
   print(`\n  ${c.bold}Walk-away:${c.reset} ${plan.walkAwayRule}`);
 }
 
-async function updateProgression(store) {
+async function updateProgression(store, session) {
   const sessions = await store.loadSessions();
   const belts = evaluateBelts(sessions);
-  const biasProfile = computeBiasProfile(sessions);
   const weak = identifyWeaknesses(sessions);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // V2: Update bias profile with spaced repetition
   const prev = await store.loadProgression();
+  const biasReport = analyzeSessionBiases(
+    session.transcript,
+    { confidence: session.confidence, frustration: session.frustration, pressure: session.pressure || 0, concessions: session.concessions, activeAnchor: session.activeAnchor },
+    session.brief,
+  );
+  const biasProfile = updateBiasProfile(prev.biasProfile || {}, biasReport, new Date().toISOString());
+
+  // V2: Compute adaptive difficulty
+  const difficultyProfile = computeDifficulty(sessions);
+  const zpd = assessZPD(sessions);
+
+  const today = new Date().toISOString().slice(0, 10);
   const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
   const streak = prev.lastSessionDate === yesterday ? prev.currentStreak + 1 : (prev.lastSessionDate === today ? prev.currentStreak : 1);
 
@@ -201,6 +263,8 @@ async function updateProgression(store) {
   await store.saveProgression({
     belts,
     biasProfile,
+    difficultyProfile,
+    zpd: zpd.zone,
     totalSessions: sessions.length,
     currentStreak: streak,
     lastSessionDate: today,
@@ -208,6 +272,22 @@ async function updateProgression(store) {
     recentAvgScore: Math.round(recentAvg),
     currentDifficulty: sessions[0]?.brief?.difficulty || 'cooperative',
   });
+
+  // Show bias training recommendation
+  const biasRec = recommendBiasTraining(biasProfile);
+  if (biasRec) {
+    print(`\n${c.yellow}  Prochain drill recommandé: ${biasRec.biasType} (urgence: ${biasRec.urgency.toFixed(1)})${c.reset}`);
+    print(`${c.dim}  ${biasRec.reason}${c.reset}`);
+  }
+
+  // Show ZPD feedback
+  if (zpd.zone === 'too_easy') {
+    print(`${c.green}  ZPD: Trop facile — augmente la difficulté !${c.reset}`);
+  } else if (zpd.zone === 'too_hard') {
+    print(`${c.red}  ZPD: Trop difficile — baisse d'un cran pour mieux apprendre.${c.reset}`);
+  } else {
+    print(`${c.cyan}  ZPD: Zone optimale d'apprentissage.${c.reset}`);
+  }
 
   return belts;
 }
@@ -226,15 +306,19 @@ async function main() {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   process.on('SIGINT', () => { print(`\n${c.dim}  Interruption. Au revoir !${c.reset}\n`); rl.close(); process.exit(0); });
 
-  print(`\n${c.bold}${c.cyan}╔════════════════════════════════════════════╗${c.reset}`);
-  print(`${c.bold}${c.cyan}║   NegotiateAI — Simulateur de négociation  ║${c.reset}`);
-  print(`${c.bold}${c.cyan}║   Miroir cognitif + Coach temps réel       ║${c.reset}`);
-  print(`${c.bold}${c.cyan}╚════════════════════════════════════════════╝${c.reset}`);
+  print(`\n${c.bold}${c.cyan}╔════════════════════════════════════════════════╗${c.reset}`);
+  print(`${c.bold}${c.cyan}║   NegotiateAI — Miroir Cognitif V2             ║${c.reset}`);
+  print(`${c.bold}${c.cyan}║   WorldEngine + Coach temps réel + Ceintures   ║${c.reset}`);
+  print(`${c.bold}${c.cyan}╚════════════════════════════════════════════════╝${c.reset}`);
 
   // Show progression on start
   const prog = await store.loadProgression();
   if (prog.totalSessions > 0) {
-    print(`\n${c.dim}  Sessions: ${prog.totalSessions} | Streak: ${prog.currentStreak}j | Score moyen: ${prog.recentAvgScore || '?'}/100${c.reset}`);
+    print(`\n${c.dim}  Sessions: ${prog.totalSessions} | Streak: ${prog.currentStreak}j | Score moyen: ${prog.recentAvgScore || '?'}/100 | ZPD: ${prog.zpd || '?'}${c.reset}`);
+    const biasRec = recommendBiasTraining(prog.biasProfile || {});
+    if (biasRec) {
+      print(`${c.dim}  Biais prioritaire: ${biasRec.biasType} — essaie un drill /drill${c.reset}`);
+    }
   }
 
   let running = true;
@@ -261,6 +345,14 @@ async function main() {
         const report = await analyzeFeedback(session, provider);
         displayFeedback(report);
 
+        // ZOPA analysis
+        if (session._world) {
+          const zopa = analyzeZOPA(session._world.negotiation);
+          if (zopa.dealQuality !== null) {
+            print(`\n${c.dim}  Qualité de l'accord: ${zopa.dealQuality}% (0% = ton minimum, 100% = ton idéal)${c.reset}`);
+          }
+        }
+
         // Plan
         print(`\n${c.dim}  Génération du plan optimal...${c.reset}`);
         const plan = await generatePlan(brief, report, provider);
@@ -280,10 +372,11 @@ async function main() {
           mode: 'full',
           eventPolicy,
           eventsActive: eventPolicy !== 'none',
+          worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
         });
 
-        // Update progression
-        const belts = await updateProgression(store);
+        // Update progression with V2 bias profile
+        const belts = await updateProgression(store, session);
         const newBelts = Object.values(belts).filter((b) => b.earned);
         if (newBelts.length > 0) {
           print(`\n${c.bold}${c.green}Ceintures obtenues:${c.reset}`);
@@ -293,9 +386,14 @@ async function main() {
         print(`${c.dim}  Session sauvegardée.${c.reset}`);
 
         // Post-session menu
-        const choice = await askQuestion(rl, `\n${c.cyan}[R]ejouer / [N]ouveau / [S]tats / [Q]uitter${c.reset} `);
+        const choice = await askQuestion(rl, `\n${c.cyan}[R]ejouer / [N]ouveau / [D]rill / [S]tats / [Q]uitter${c.reset} `);
         const ch = choice.toLowerCase();
         if (ch === 'r' || ch.startsWith('rej')) continue;
+        if (ch === 'd' || ch.startsWith('dri')) {
+          print(`${c.dim}  Lance: npm run drill${c.reset}`);
+          retryWithSameBrief = false;
+          continue;
+        }
         if (ch === 's' || ch.startsWith('sta')) {
           const sessions = await store.loadSessions();
           const allBelts = evaluateBelts(sessions);
@@ -304,7 +402,7 @@ async function main() {
           continue;
         }
         if (ch === 'q' || ch.startsWith('qui')) { running = false; retryWithSameBrief = false; continue; }
-        retryWithSameBrief = false; // 'n' or anything else = new scenario
+        retryWithSameBrief = false;
       }
     } catch (err) {
       print(`\n${c.red}Erreur: ${err.message}${c.reset}`);

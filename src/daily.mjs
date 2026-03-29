@@ -4,6 +4,7 @@
 import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { identifyWeaknesses } from './belt.mjs';
+import { computeDifficulty, presetToProfile, assessZPD } from './difficulty.mjs';
 
 const DIFFICULTY_LADDER = ['cooperative', 'neutral', 'hostile', 'manipulative'];
 
@@ -47,6 +48,9 @@ export async function generateDaily(store, provider) {
   const progression = await store.loadProgression();
   const sessions = await store.loadSessions();
 
+  // V2: Use adaptive difficulty engine
+  const diffProfile = computeDifficulty(sessions);
+  const zpd = assessZPD(sessions);
   const difficulty = calibrateDifficulty(progression);
   const weakDims = sessions.length > 0 ? identifyWeaknesses(sessions) : ['batnaDiscipline', 'outcomeLeverage'];
   const targetSkill = weakDims[0];
@@ -71,6 +75,8 @@ export async function generateDaily(store, provider) {
     adversary,
     targetSkill,
     difficulty,
+    difficultyProfile: diffProfile,
+    zpd: zpd.zone,
     maxTurns,
     eventPolicy: progression.totalSessions >= 10 ? 'adaptive' : 'none',
   };

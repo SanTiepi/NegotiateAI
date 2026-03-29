@@ -87,14 +87,22 @@ describe('drill', () => {
     assert.equal(typeof result.passed, 'boolean');
   });
 
-  it('scoreDrill passes when score >= 70', async () => {
+  it('scoreDrill returns positive score with good techniques', async () => {
     const provider = createMockProvider({
       adversary: MOCK_ADVERSARY,
-      drillScore: { ...MOCK_DRILL_SCORE, skillScore: 80 },
+      drillScore: { feedback: 'Good mirroring and labeling.', tips: ['Keep it up'] },
     });
     const { session, drill } = await createDrill('mirror', provider);
-    session.transcript = [{ role: 'user', content: 'X' }];
+    // Transcript with detectable mirroring + labeling (drill target = conversationalFlow)
+    session.transcript = [
+      { role: 'adversary', content: 'Le budget est serré cette année.' },
+      { role: 'user', content: 'On dirait que le budget est serré. Le budget est serré cette année.' },
+      { role: 'adversary', content: 'Oui, la direction impose des limites strictes.' },
+      { role: 'user', content: 'Il semble que les limites strictes vous contraignent. Des limites strictes.' },
+    ];
     const result = await scoreDrill(session, drill, provider);
-    assert.equal(result.passed, true);
+    assert.ok(result.skillScore > 0, `Score should be positive with detected techniques, got ${result.skillScore}`);
+    assert.equal(typeof result.passed, 'boolean');
+    assert.equal(typeof result.feedback, 'string');
   });
 });

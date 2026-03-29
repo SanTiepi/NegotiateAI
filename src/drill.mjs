@@ -4,6 +4,7 @@
 import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { createSession } from './engine.mjs';
+import { detectUserTechniques, computeTacticalScore } from './tactics.mjs';
 
 export const DRILL_CATALOG = [
   {
@@ -100,21 +101,50 @@ export async function scoreDrill(session, drill, provider) {
     .map((m) => `${m.role}: ${m.content}`)
     .join('\n');
 
+  // --- Algorithmic scoring (WorldEngine V2) ---
+  const userMsgs = session.transcript.filter(m => m.role === 'user');
+  const allTechniques = userMsgs.flatMap((m, i) => {
+    const advMsg = session.transcript[Math.min(i * 2 + 1, session.transcript.length - 1)]?.content || '';
+    return detectUserTechniques(m.content, advMsg, { transcript: session.transcript, turn: i + 1 });
+  });
+  const tacticalResult = computeTacticalScore(allTechniques, userMsgs.length);
+
+  // Map drill skill to the most relevant tactical breakdown dimension
+  const skillToDimension = {
+    conversationalFlow: ['mirroring', 'labeling', 'calibratedQuestion'],
+    outcomeLeverage: ['anchoringFirst', 'reframing'],
+    emotionalRegulation: ['strategicSilence', 'labeling'],
+    batnaDiscipline: ['anchoringFirst', 'strategicSilence'],
+    biasResistance: ['reframing', 'calibratedQuestion'],
+  };
+  const relevantDimensions = skillToDimension[drill.skill] || [];
+  let dimensionScore = 0;
+  let dimensionMax = 0;
+  for (const dim of relevantDimensions) {
+    dimensionScore += tacticalResult.breakdown[dim] || 0;
+    // Sum the max weights for normalization
+    dimensionMax += { mirroring: 15, labeling: 20, calibratedQuestion: 20, accusationAudit: 10, strategicSilence: 10, anchoringFirst: 15, reframing: 10 }[dim] || 0;
+  }
+  const algorithmicSkillScore = dimensionMax > 0 ? Math.round((dimensionScore / dimensionMax) * 100) : tacticalResult.score;
+
+  // Use algorithmic score as primary, LLM for qualitative feedback only
   const result = await provider.generateJson({
-    system: `You are a negotiation drill coach. Score this focused exercise.
+    system: `You are a negotiation drill coach. Provide qualitative feedback for this exercise.
 The drill focus was: ${drill.name} — ${drill.coachingFocus}
-Score from 0-100 on the targeted skill. Be specific in feedback.
-Return JSON with: skillScore (0-100), feedback (string, 2-3 sentences), passed (boolean, true if score >= 70), tips (string[]).`,
-    prompt: `Drill: ${drill.name}\nSkill: ${drill.skill}\n\nTranscript:\n${transcriptText}`,
+The algorithmic skill score is ${algorithmicSkillScore}/100 (tactical score: ${tacticalResult.score}/100).
+Provide qualitative feedback and tips only. Do NOT override the score.
+Return JSON with: feedback (string, 2-3 sentences), tips (string[]).`,
+    prompt: `Drill: ${drill.name}\nSkill: ${drill.skill}\nAlgorithmic score: ${algorithmicSkillScore}/100\nTechniques detected: ${JSON.stringify(allTechniques.map(t => t.technique))}\nBreakdown: ${JSON.stringify(tacticalResult.breakdown)}\n\nTranscript:\n${transcriptText}`,
     schemaName: 'drillScore',
     temperature: 0.4,
   });
 
+  const skillScore = Math.max(0, Math.min(100, algorithmicSkillScore));
   return {
     drillId: drill.id,
-    skillScore: Math.max(0, Math.min(100, result.skillScore || 0)),
+    skillScore,
     feedback: result.feedback || '',
-    passed: (result.skillScore || 0) >= 70,
+    passed: skillScore >= 70,
     tips: result.tips || [],
   };
 }
