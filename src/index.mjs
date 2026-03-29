@@ -66,7 +66,7 @@ async function setupPhase(rl) {
 
 async function conversationPhase(rl, session) {
   header(`NÉGOCIATION — vs ${session.adversary.identity}`);
-  print(`${c.dim}  Commandes : /end (terminer), /quit (quitter), /restart (recommencer)${c.reset}`);
+  print(`${c.dim}  Commandes : /end (terminer), /quit (quitter), /restart (recommencer), /retry (nouvelle tentative)${c.reset}`);
   print(`${c.dim}  Max ${12} tours. Bonne chance.${c.reset}\n`);
 
   while (session.status === 'active') {
@@ -80,7 +80,14 @@ async function conversationPhase(rl, session) {
       return 'retry';
     }
 
-    const result = await processTurn(session, userMsg);
+    let result;
+    try {
+      result = await processTurn(session, userMsg);
+    } catch (err) {
+      print(`\n${c.red}  Erreur durant le tour: ${err.message}${c.reset}`);
+      print(`${c.dim}  Le tour n'a pas été comptabilisé. Réessayez ou tapez /end.${c.reset}\n`);
+      continue;
+    }
 
     if (result.adversaryResponse) {
       print(`\n${c.magenta}  ${session.adversary.identity}:${c.reset} ${result.adversaryResponse}`);
@@ -177,6 +184,13 @@ async function main() {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
+  });
+
+  // Clean shutdown on Ctrl+C
+  process.on('SIGINT', () => {
+    print(`\n${c.dim}  Interruption. Au revoir !${c.reset}\n`);
+    rl.close();
+    process.exit(0);
   });
 
   print(`\n${c.bold}${c.cyan}╔════════════════════════════════════════╗${c.reset}`);

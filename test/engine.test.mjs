@@ -131,5 +131,67 @@ describe('engine', () => {
       const result = await processTurn(session, 'I really need at least 12%.');
       assert.ok(result.state.concessions.length > 0);
     });
+
+    it('does not corrupt session state when provider throws', async () => {
+      const provider = createMockProvider({
+        turn: () => { throw new Error('API rate limit'); },
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      const turnBefore = session.turn;
+      const transcriptLenBefore = session.transcript.length;
+      await assert.rejects(() => processTurn(session, 'Hello'), { message: /rate limit/i });
+      assert.equal(session.turn, turnBefore, 'Turn should not advance on error');
+      assert.equal(session.transcript.length, transcriptLenBefore, 'Transcript should not change on error');
+      assert.equal(session.status, 'active', 'Session should remain active on error');
+    });
+
+    it('clamps state values to valid ranges', async () => {
+      const provider = createMockProvider({
+        turn: () => ({
+          adversaryResponse: 'Hmm.',
+          detectedSignals: [],
+          stateUpdates: { confidence: 999, frustration: -50, momentum: 200 },
+          sessionOver: false,
+          endReason: null,
+        }),
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      const result = await processTurn(session, 'Test bounds.');
+      assert.equal(result.state.confidence, 100, 'Confidence clamped to 100');
+      assert.equal(result.state.frustration, 0, 'Frustration clamped to 0');
+      assert.equal(result.state.momentum, 100, 'Momentum clamped to 100');
+    });
+
+    it('ignores malformed concessions from LLM', async () => {
+      const provider = createMockProvider({
+        turn: () => ({
+          adversaryResponse: 'Sure.',
+          detectedSignals: [],
+          stateUpdates: { confidence: 50 },
+          sessionOver: false,
+          endReason: null,
+          concession: { invalid: 'no by/detail fields' },
+        }),
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      await processTurn(session, 'Test.');
+      assert.equal(session.concessions.length, 0, 'Malformed concession should be ignored');
+    });
+
+    it('uses explicit sessionStatus field instead of string matching', async () => {
+      const provider = createMockProvider({
+        turn: () => ({
+          adversaryResponse: 'Deal!',
+          detectedSignals: [],
+          stateUpdates: { confidence: 50 },
+          sessionOver: true,
+          endReason: 'Deal reached at 15%',
+          sessionStatus: 'accepted',
+        }),
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      const result = await processTurn(session, 'I accept.');
+      assert.equal(result.state.status, 'accepted');
+    });
   });
 });

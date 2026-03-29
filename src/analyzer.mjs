@@ -1,7 +1,18 @@
 // analyzer.mjs — Post-session feedback with cognitive bias detection and scoring
 // Contract: analyzeFeedback(session, provider) → FeedbackReport
 
-const BIAS_TYPES = ['anchoring', 'loss_aversion', 'conflict_avoidance', 'framing', 'conversational_blocking'];
+const SCORE_RANGES = {
+  outcomeLeverage: [0, 25],
+  batnaDiscipline: [0, 20],
+  emotionalRegulation: [0, 25],
+  biasResistance: [0, 15],
+  conversationalFlow: [0, 15],
+};
+
+function clampScore(field, value) {
+  const [min, max] = SCORE_RANGES[field];
+  return Math.max(min, Math.min(max, value));
+}
 
 /**
  * Analyzes a completed negotiation session and produces a detailed feedback report.
@@ -42,6 +53,18 @@ Return a JSON FeedbackReport with: globalScore (0-100), scores: { outcomeLeverag
     temperature: 0.5,
   });
 
+  // Clamp scores to valid ranges before validation
+  if (result.scores && typeof result.scores === 'object') {
+    for (const field of Object.keys(SCORE_RANGES)) {
+      if (typeof result.scores[field] === 'number') {
+        result.scores[field] = clampScore(field, result.scores[field]);
+      }
+    }
+    // Recompute globalScore as sum of clamped sub-scores
+    const sum = Object.keys(SCORE_RANGES).reduce((acc, f) => acc + (result.scores[f] || 0), 0);
+    result.globalScore = Math.max(0, Math.min(100, sum));
+  }
+
   assertValidFeedbackReport(result);
   return result;
 }
@@ -52,11 +75,14 @@ Return a JSON FeedbackReport with: globalScore (0-100), scores: { outcomeLeverag
 export function assertValidFeedbackReport(report) {
   if (!report || typeof report !== 'object') throw new Error('FeedbackReport must be an object');
   if (typeof report.globalScore !== 'number') throw new Error('FeedbackReport missing globalScore');
+  if (report.globalScore < 0 || report.globalScore > 100) throw new Error('FeedbackReport globalScore out of range 0-100');
   if (!report.scores || typeof report.scores !== 'object') throw new Error('FeedbackReport missing scores');
 
-  const scoreFields = ['outcomeLeverage', 'batnaDiscipline', 'emotionalRegulation', 'biasResistance', 'conversationalFlow'];
-  for (const field of scoreFields) {
+  for (const [field, [min, max]] of Object.entries(SCORE_RANGES)) {
     if (typeof report.scores[field] !== 'number') throw new Error(`FeedbackReport scores missing: ${field}`);
+    if (report.scores[field] < min || report.scores[field] > max) {
+      throw new Error(`FeedbackReport scores.${field} out of range ${min}-${max}`);
+    }
   }
 
   if (!Array.isArray(report.biasesDetected)) throw new Error('FeedbackReport missing biasesDetected array');

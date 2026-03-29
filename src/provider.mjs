@@ -3,6 +3,8 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 
+const DEFAULT_TIMEOUT_MS = 60_000;
+
 /**
  * @typedef {object} GenerateJsonRequest
  * @property {string} system - System prompt
@@ -15,20 +17,37 @@ import Anthropic from '@anthropic-ai/sdk';
  * @param {object} options
  * @param {string} options.apiKey
  * @param {string} [options.model='claude-sonnet-4-20250514']
+ * @param {number} [options.timeoutMs=60000]
  * @returns {{ generateJson: (req: GenerateJsonRequest) => Promise<object> }}
  */
-export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250514' } = {}) {
+export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250514', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const client = new Anthropic({ apiKey });
 
   return {
     async generateJson({ system, prompt, schemaName, temperature = 0.7 }) {
-      const response = await client.messages.create({
-        model,
-        max_tokens: 4096,
-        temperature,
-        system,
-        messages: [{ role: 'user', content: prompt }],
-      });
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+      let response;
+      try {
+        response = await client.messages.create(
+          {
+            model,
+            max_tokens: 4096,
+            temperature,
+            system,
+            messages: [{ role: 'user', content: prompt }],
+          },
+          { signal: controller.signal },
+        );
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          throw new Error(`Provider: timeout after ${timeoutMs}ms for schema "${schemaName}"`);
+        }
+        throw err;
+      } finally {
+        clearTimeout(timer);
+      }
 
       const text = response.content
         .filter((b) => b.type === 'text')
@@ -40,7 +59,12 @@ export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250
       if (!jsonMatch) {
         throw new Error(`Provider: no JSON found in response for schema "${schemaName}"`);
       }
-      return JSON.parse(jsonMatch[1]);
+
+      try {
+        return JSON.parse(jsonMatch[1]);
+      } catch (parseErr) {
+        throw new Error(`Provider: malformed JSON for schema "${schemaName}": ${parseErr.message}`);
+      }
     },
   };
 }

@@ -130,6 +130,28 @@ describe('analyzer', () => {
     }
   });
 
+  it('clamps out-of-range scores and recomputes globalScore', async () => {
+    const outOfRange = {
+      ...MOCK_FEEDBACK,
+      globalScore: 999,
+      scores: {
+        outcomeLeverage: 50,
+        batnaDiscipline: 40,
+        emotionalRegulation: 99,
+        biasResistance: -5,
+        conversationalFlow: 30,
+      },
+    };
+    const provider = createMockProvider({ feedback: outOfRange });
+    const report = await analyzeFeedback(MOCK_SESSION, provider);
+    assert.equal(report.scores.outcomeLeverage, 25, 'Clamped to max 25');
+    assert.equal(report.scores.batnaDiscipline, 20, 'Clamped to max 20');
+    assert.equal(report.scores.emotionalRegulation, 25, 'Clamped to max 25');
+    assert.equal(report.scores.biasResistance, 0, 'Clamped to min 0');
+    assert.equal(report.scores.conversationalFlow, 15, 'Clamped to max 15');
+    assert.equal(report.globalScore, 85, 'globalScore recomputed from clamped sub-scores');
+  });
+
   describe('assertValidFeedbackReport', () => {
     it('does not throw for a valid report', () => {
       assert.doesNotThrow(() => assertValidFeedbackReport(MOCK_FEEDBACK));
@@ -138,6 +160,14 @@ describe('analyzer', () => {
     it('throws for a report missing scores', () => {
       const { scores, ...invalid } = MOCK_FEEDBACK;
       assert.throws(() => assertValidFeedbackReport(invalid));
+    });
+
+    it('throws for out-of-range scores', () => {
+      const invalid = {
+        ...MOCK_FEEDBACK,
+        scores: { ...MOCK_FEEDBACK.scores, outcomeLeverage: 30 },
+      };
+      assert.throws(() => assertValidFeedbackReport(invalid), { message: /outcomeLeverage.*range/i });
     });
   });
 });
