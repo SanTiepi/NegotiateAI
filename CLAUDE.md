@@ -4,8 +4,8 @@
 - **Nom** : NegotiateAI (`negotiate-ai`)
 - **Description** : Simulateur de négociation universel — jeu de rôle émotionnel avec scoring cognitif
 - **Stack** : Node.js 20+, ESM, `@anthropic-ai/sdk`, `node:test`, readline natif
-- **État** : Squelettes générés, tests en échec — prêt pour construction
-- **Vision** : Entraîner n'importe qui à négocier contre un adversaire IA doté d'émotions, de biais et d'une BATNA propre, puis recevoir un feedback cognitif et un plan optimal
+- **État** : MVP fonctionnel — 54 tests verts, 6 modules implémentés, CLI interactive
+- **Vision** : Système d'entraînement cognitif déguisé en jeu de rôle — miroir de tes patterns de pensée sous pression, pas juste un simulateur
 
 ## Sources de vérité
 1. Ce fichier
@@ -95,22 +95,77 @@ test/
 
 ## Décisions figées
 - CLI uniquement, pas de web/GUI pour le MVP
-- Mémoire RAM seule, aucune persistance disque
-- Un seul adversaire par session, texte uniquement
 - `/retry` rejoue le même scénario avec nouvel état
 - `@anthropic-ai/sdk` = seule dépendance runtime
 - Couleurs ANSI et validations faites maison (pas de Zod, pas de Commander)
 - Langue de sortie = langue du setup utilisateur (français par défaut)
 - Contrats inter-modules = objets JS simples + fonctions d'assertion
+- Provider: timeout 60s, try-catch JSON.parse, session state intact si erreur
+- Engine: clamp 0-100 sur toutes les valeurs émotionnelles, sessionStatus explicite (pas de string matching)
+- Analyzer: clamp scores aux ranges contractuels, recompute globalScore
 
-## Ordre de construction recommandé
-1. `provider.mjs` — MockProvider d'abord (débloque tous les tests), puis AnthropicProvider
-2. `scenario.mjs` — Validation pure, pas de dépendance
-3. `persona.mjs` — Dépend de provider + scenario
-4. `engine.mjs` — Le plus complexe : WorldEngine + boucle conversation
-5. `analyzer.mjs` — Dépend de engine (session complète)
-6. `planner.mjs` — Dépend de analyzer (feedback)
-7. `index.mjs` — Câblage CLI readline
+## Insight fondamental (brainstorm 2026-03-30)
+
+NegotiateAI n'est PAS un simulateur — c'est un **miroir cognitif**. Le vrai problème utilisateur :
+1. **Voir ses propres patterns** (le miroir)
+2. **Avoir la permission de s'affirmer** (red lines + BATNA = structure de permission)
+3. **Construire du muscle mémoire émotionnel** (rester calme sous pression)
+
+Le MVP fait le 1 et le 2. Le gap = le 3.
+
+## Roadmap post-MVP (3 vagues)
+
+### Vague B — Coach cognitif temps réel (priorité 1)
+Objectif : transformer "j'ai joué une fois" en "j'ai appris quelque chose sur moi"
+
+1. **Coaching mid-session** — enrichir `TurnResult` avec un champ `coaching` (détection de biais en temps réel, suggestion d'alternative)
+2. **Persistance sessions** — `sessions.jsonl` local, dernières 10 sessions avec metadata (score, date, adversary, difficulty)
+3. **Replay annoté** — `npm run replay` : revoir la session tour par tour avec overlay IA (ancrage détecté, alternative suggérée, momentum expliqué)
+4. **Profil de biais personnel** — tracker les fréquences de biais sur N sessions ("tu tombes dans l'ancrage 70% du temps")
+5. **Injection de pannes mid-session** — événements imprévus injectés par l'engine (gel budgétaire, appel concurrent, changement de ton)
+
+### Vague A — Duolingo de la négo (priorité 2)
+Objectif : créer l'habitude quotidienne
+
+1. **Mode drill** — 3-5 tours focusés sur UN skill (miroir, ancrage, pression). `mode: 'drill'` dans le brief
+2. **Système de ceintures** — progression visible par dimension de scoring :
+   - Blanche : BATNA discipline (>14/20 × 3 sessions coopératives)
+   - Jaune : Ancrage & leverage (>18/25 × 3 sessions neutres)
+   - Verte : Flow conversationnel (>11/15 × 3 sessions neutres avec surprises)
+   - Bleue : Régulation émotionnelle (>18/25 × 3 sessions hostiles)
+   - Noire : Résistance aux biais (>12/15 × 3 sessions manipulateur)
+3. **Daily challenge** — `npm run daily` : 1 scénario auto-calibré en 5 min
+4. **Spaced repetition** — le système sert des scénarios qui exploitent tes faiblesses détectées
+5. **Progression locale** — `progression.json` : ceinture, historique scores, streaks
+
+### Vague C — Sparring compétitif (priorité 3, besoin d'utilisateurs)
+Objectif : motivation sociale
+
+1. **Scénarios standardisés** — fixtures dans `scenarios/` pour scoring comparable
+2. **Leaderboard local** — score sur le même scénario, comparaison avec les runs précédentes
+3. **Scenario of the week** — 1 scénario commun avec 3 tiers de difficulté
+4. **Hall of fame** — meilleurs transcripts annotés (anonymisés)
+5. **Mode versus** (stretch) — 2 humains + 1 IA arbitre
+
+## Architecture cible (post-roadmap)
+```
+src/
+  provider.mjs       — Couche LLM (existant)
+  scenario.mjs       — Brief validation (existant)
+  persona.mjs        — Adversaire structuré (existant)
+  engine.mjs         — WorldEngine + coaching temps réel (enrichir)
+  analyzer.mjs       — Feedback + biais (existant)
+  planner.mjs        — Plan optimal (existant)
+  index.mjs          — CLI principale (existant)
+  store.mjs          — Persistance sessions.jsonl + progression.json (nouveau)
+  replay.mjs         — Replay annoté tour par tour (nouveau)
+  drill.mjs          — Mode drill : exercices courts ciblés (nouveau)
+  daily.mjs          — Daily challenge auto-calibré (nouveau)
+  belt.mjs           — Système de ceintures + progression (nouveau)
+  events.mjs         — Injection de pannes mid-session (nouveau)
+
+scenarios/           — Scénarios standardisés fixtures (nouveau)
+```
 
 ## Mode A / Mode B
 

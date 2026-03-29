@@ -1,0 +1,1 @@
+- [2026-03-30] [deep] [3 directions: coach cognitif, duolingo négo, sparring compétitif] NegotiateAI post-MVP — du simulateur au système d'entraînement cognitif
