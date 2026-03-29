@@ -193,5 +193,82 @@ describe('engine', () => {
       const result = await processTurn(session, 'I accept.');
       assert.equal(result.state.status, 'accepted');
     });
+
+    it('returns coaching field (can be null)', async () => {
+      const provider = createMockProvider({
+        turn: () => ({ adversaryResponse: 'OK.', detectedSignals: [], stateUpdates: {}, sessionOver: false, endReason: null }),
+        coaching: { biasDetected: null, alternative: null, momentum: 'stable', tip: 'Stay calm.' },
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      const result = await processTurn(session, 'Test coaching.');
+      assert.ok('coaching' in result);
+      assert.equal(result.coaching.momentum, 'stable');
+    });
+
+    it('coaching is null when coaching LLM call fails', async () => {
+      const provider = createMockProvider({
+        turn: () => ({ adversaryResponse: 'OK.', detectedSignals: [], stateUpdates: {}, sessionOver: false, endReason: null }),
+        coaching: () => { throw new Error('coaching fail'); },
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      const result = await processTurn(session, 'Test.');
+      assert.equal(result.coaching, null);
+    });
+
+    it('with eventPolicy random, events can be injected after turn 3', async () => {
+      const provider = createMockProvider({
+        turn: () => ({ adversaryResponse: 'Response.', detectedSignals: [], stateUpdates: { confidence: 50 }, sessionOver: false, endReason: null }),
+        coaching: { biasDetected: null, alternative: null, momentum: 'stable', tip: 'ok' },
+      });
+      // Force event by setting eventChance to 1
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider, { eventPolicy: 'random', eventChance: 1.0 });
+      // Play 3 turns (no events)
+      for (let i = 0; i < 3; i++) {
+        const r = await processTurn(session, `Turn ${i + 1}`);
+        assert.equal(r.event, null, `No event before turn 4`);
+      }
+      // Turn 4 — event should fire
+      const r4 = await processTurn(session, 'Turn 4');
+      assert.ok(r4.event !== null, 'Event should fire after turn 3');
+      assert.equal(typeof r4.event.id, 'string');
+      assert.equal(typeof r4.event.narrative, 'string');
+    });
+
+    it('with eventPolicy none, no events injected (backward compat)', async () => {
+      const provider = makeTurnProvider(['R1', 'R2', 'R3', 'R4', 'R5']);
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
+      for (let i = 0; i < 5; i++) {
+        const r = await processTurn(session, `Turn ${i + 1}`);
+        assert.equal(r.event, null);
+      }
+    });
+
+    it('same event not injected twice', async () => {
+      const provider = createMockProvider({
+        turn: () => ({ adversaryResponse: 'R.', detectedSignals: [], stateUpdates: { confidence: 50 }, sessionOver: false, endReason: null }),
+        coaching: { biasDetected: null, alternative: null, momentum: 'stable', tip: 'ok' },
+      });
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider, { eventPolicy: 'random', eventChance: 1.0 });
+      // Play through turn 3
+      for (let i = 0; i < 3; i++) await processTurn(session, `T${i + 1}`);
+      const firedIds = new Set();
+      // Play several more turns
+      for (let i = 0; i < 5; i++) {
+        const r = await processTurn(session, `T${i + 4}`);
+        if (r.event) {
+          assert.ok(!firedIds.has(r.event.id), `Event ${r.event.id} should not repeat`);
+          firedIds.add(r.event.id);
+        }
+      }
+    });
+
+    it('supports custom maxTurns', async () => {
+      const provider = makeTurnProvider(['Response.']);
+      const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider, { maxTurns: 5 });
+      session.turn = 4;
+      const result = await processTurn(session, 'Last turn.');
+      assert.equal(result.sessionOver, true);
+      assert.ok(result.endReason.includes('5'));
+    });
   });
 });

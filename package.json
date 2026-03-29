@@ -5,7 +5,11 @@
   "description": "Universal negotiation simulator — practice any negotiation against an AI adversary with emotional modeling, cognitive bias detection, and optimal strategy planning",
   "scripts": {
     "test": "node --test test/*.test.mjs",
-    "start": "node src/index.mjs"
+    "start": "node src/index.mjs",
+    "daily": "node src/cli/daily-cli.mjs",
+    "drill": "node src/cli/drill-cli.mjs",
+    "replay": "node src/cli/replay-cli.mjs",
+    "stats": "node src/cli/stats-cli.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"

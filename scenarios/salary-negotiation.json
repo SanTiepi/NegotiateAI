@@ -1,0 +1,34 @@
+{
+  "id": "salary-negotiation",
+  "name": "Revue salariale annuelle",
+  "description": "Négociation de salaire avec votre engineering manager lors de l'entretien annuel",
+  "brief": {
+    "situation": "Vous travaillez depuis 2 ans comme développeur senior chez TechNova, une scale-up parisienne de 200 personnes en pleine croissance. Votre entretien annuel approche et vous estimez que votre salaire actuel de 58 000 € brut/an est en dessous du marché. Vous avez livré avec succès le projet de migration cloud qui a réduit les coûts d'infrastructure de 30%. Deux collègues de niveau comparable ont été embauchés récemment à 68 000 €.",
+    "userRole": "Développeur senior chez TechNova, 2 ans d'ancienneté, tech lead de facto sur le projet cloud",
+    "adversaryRole": "Camille Renard, Engineering Manager, responsable d'une équipe de 12 développeurs",
+    "objective": "Obtenir une augmentation à 67 000 € brut/an minimum, idéalement 70 000 €, avec un titre officiel de Tech Lead",
+    "minimalThreshold": "63 000 € brut/an avec une perspective claire d'évolution à 6 mois",
+    "batna": "Vous avez passé un premier entretien chez DataStream qui propose 72 000 € pour un poste similaire, mais vous préférez rester chez TechNova",
+    "constraints": ["Le budget de l'équipe est validé trimestriellement par le VP Engineering", "Les augmentations au-delà de 10% nécessitent une approbation RH spéciale", "Vous ne voulez pas menacer explicitement de partir"],
+    "difficulty": "neutral",
+    "relationalStakes": "Relation professionnelle continue — Camille est votre manager direct et vous travaillez ensemble quotidiennement. Un conflit ouvert rendrait le quotidien difficile."
+  },
+  "adversary": {
+    "identity": "Camille Renard, 38 ans, Engineering Manager depuis 3 ans chez TechNova. Ancienne développeuse reconvertie en management. Appréciée pour son écoute mais sous pression budgétaire constante du VP Engineering.",
+    "style": "Empathique mais prudente. Utilise beaucoup le conditionnel ('j'aimerais pouvoir...'). Tend à reporter les décisions en invoquant des processus. Évite la confrontation directe.",
+    "publicObjective": "Retenir les talents clés tout en respectant la grille salariale et le budget de l'équipe",
+    "hiddenObjective": "Camille doit aussi augmenter deux juniors sous-payés qui menacent de partir. Son enveloppe totale d'augmentation est de 25 000 € pour toute l'équipe. Elle a peur que si elle accorde trop, elle n'aura rien pour les autres.",
+    "batna": "Proposer 61 000 € avec un bonus de performance variable de 3 000 € et une promesse de réévaluation dans 6 mois",
+    "nonNegotiables": ["Ne dépassera pas 65 000 € sans l'accord du VP", "Refuse de créer un titre de Tech Lead sans processus de promotion formelle"],
+    "timePressure": "Les budgets doivent être finalisés avant le 15 du mois prochain. Au-delà, toute augmentation sera reportée au trimestre suivant.",
+    "emotionalProfile": { "confidence": 50, "frustration": 35, "egoThreat": 15 },
+    "likelyTactics": ["Invoquer les contraintes budgétaires et les processus RH", "Proposer des avantages non-salariaux (formation, jours de télétravail)", "Repousser la discussion à une date ultérieure", "Flatter les contributions passées tout en minimisant l'urgence"],
+    "vulnerabilities": ["Sait que le marché est tendu et craint de perdre un développeur senior", "A elle-même bénéficié d'une augmentation significative l'an dernier", "Le VP Engineering lui a dit en privé que la rétention était prioritaire cette année"]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

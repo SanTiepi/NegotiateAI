@@ -10,123 +10,127 @@ L'utilisateur donne une idée en 1 ligne. Le skill produit un repo complet et pr
 
 ## Flow
 
-### 1. Brainstorm multi-expert (30s)
+### 1. Détecte le type de projet
 
-Avant tout, challenge l'idée. Fais parler 3-5 experts de domaines DIFFÉRENTS selon l'idée :
-- Choisis les experts les plus pertinents ET les plus inattendus pour cette idée spécifique
-- Exemples : physicien, game designer, neurologue, économiste, chirurgien, DJ, chorégraphe, juge, biologiste, architecte...
+Avant tout, classifie automatiquement :
+
+- **Site web / landing page** → HTML/CSS/JS pur, pas de build, pas de tests unitaires
+- **API / backend** → Node.js ESM ou Python FastAPI, modules + tests
+- **CLI tool** → Node.js ESM, commandes + tests
+- **App full-stack** → backend + frontend séparés
+- **Librairie / SDK** → exports + tests + docs
+- **Autre** → adapte au contexte
+
+Le type de projet change TOUT : la structure, les fichiers générés, les tests, les commandes, le CLAUDE.md.
+
+### 2. Brainstorm multi-expert (30s)
+
+Challenge l'idée. Fais parler 3-5 experts de domaines DIFFÉRENTS selon l'idée :
+- Choisis les experts les plus pertinents ET les plus inattendus
 - Chaque expert donne 1 insight unique en 1-2 lignes
 - Applique la pensée divergente : cadre implicite, contraire vrai, analogie forcée
+- Utilise Codex si disponible (en background)
 
-Utilise Codex si disponible (en background). Sinon fais-le seul.
+### 3. Intake express (2 min)
 
-Résultat : l'idée est challengée, enrichie, peut-être pivotée. L'utilisateur voit le débat et peut ajuster.
+15-20 décisions pré-remplies. L'utilisateur valide/corrige.
+Présente avec ✅ ⚠️ 🔴.
 
-### 2. Intake express (2 min validation humaine)
+### 4. Génération du repo
 
-Génère 15-20 décisions pré-remplies basées sur le brainstorm. L'utilisateur valide/corrige.
+Adapte la structure au type de projet détecté :
 
-Couvre au minimum :
-- Scope MVP (qu'est-ce qui est IN et OUT)
-- Architecture (modules, contrats d'interface)
-- Stack technique
-- CLI / API / MCP / autre
-- Tests strategy
-- Nom du projet
-
-Présente avec ✅ ⚠️ 🔴. L'utilisateur ne modifie que ce qui est faux.
-
-### 3. Génération du repo
-
-Après validation de l'intake, crée TOUT le repo :
-
+#### Type: Site web / landing page
 ```
 [projet]/
-  CLAUDE.md            — mission, contrats, architecture, mode A/B, skills
-  package.json         — scripts (test, start), type:module
-  .gitignore           — node_modules, .orchestra, coverage
-  src/                 — 1 fichier vide par module (juste le export squelette)
-  test/                — 1 fichier de test par module (tests qui FAILENT — c'est le contrat)
-  .claude/
-    skills/            — copie des skills universels (brainstorm, context, status, fix-loop, intake)
+  index.html          — page complète avec CSS intégré
+  assets/             — images, fonts si nécessaire
+  CLAUDE.md           — brief du site, sections, design, contenu
+  .gitignore
+```
+Pas de tests unitaires. Le "test" c'est : le site s'ouvre dans un navigateur et tous les liens/sections fonctionnent.
+
+#### Type: API / backend Node.js
+```
+[projet]/
+  CLAUDE.md            — mission, contrats d'interface, architecture
+  package.json         — scripts (test, start)
+  src/                 — 1 fichier squelette par module (exports qui throw)
+  test/                — 1 fichier de test par module (tests qui FAILENT = contrat)
+  .claude/skills/      — skills universels
+  .gitignore
 ```
 
-#### CLAUDE.md généré — le fichier clé
-
-Il doit contenir TOUT ce qu'un agent senior a besoin :
-
-```markdown
-# CLAUDE.md — [NOM DU PROJET]
-
-## Projet
-- Nom, description en 1 ligne
-- Stack, état
-- Vision en 1 phrase (issue du brainstorm)
-
-## Sources de vérité
-1. Ce fichier  2. Code + tests  3. Docs
-
-## Session start
-Lance /context. Résume en 2-3 lignes.
-
-## Contrats d'interface
-[TOUTES les signatures de fonctions, figées, issues de l'intake]
-
-## Architecture
-[Arborescence des modules avec 1 ligne par fichier]
-
-## Décisions figées
-[Les réponses de l'intake — ce qui est tranché]
-
-## Mode A / Mode B
-[Template standard]
-
-## Commandes
-npm test / npm start / codex exec
+#### Type: API / backend Python
+```
+[projet]/
+  CLAUDE.md
+  pyproject.toml / requirements.txt
+  app/                 — modules avec stubs
+  tests/               — pytest tests qui failent
+  .claude/skills/
+  .gitignore
 ```
 
-#### Tests squelettes — le contrat vivant
-
-Chaque fichier test/ contient des tests qui IMPORTENT le module et testent le contrat. Ils FAILENT parce que le code n'existe pas encore. C'est intentionnel — l'agent implémente pour les faire passer.
-
-#### Fichiers source squelettes
-
-Chaque fichier src/ contient juste les exports vides :
-```js
-export function nomFonction() { throw new Error('Not implemented'); }
+#### Type: CLI tool
+```
+[projet]/
+  CLAUDE.md
+  package.json         — bin entry point
+  src/
+    cli.mjs            — argument parsing + dispatch
+    [modules].mjs      — logique métier
+  test/
+  .claude/skills/
+  .gitignore
 ```
 
-### 4. Init Git + commit
+#### Type: Full-stack
+```
+[projet]/
+  CLAUDE.md
+  backend/             — API (Node.js ou Python)
+  frontend/            — HTML/CSS/JS ou framework
+  .claude/skills/
+  .gitignore
+```
+
+### 5. CLAUDE.md adapté au type
+
+Le CLAUDE.md généré contient TOUT ce qu'un agent a besoin. Son contenu s'adapte :
+
+- **Site web** : brief créatif, sections attendues, palette de couleurs, contenu texte, CTA, responsive requirements
+- **API** : contrats d'interface (signatures), architecture modules, décisions figées, commandes test/start
+- **CLI** : commandes supportées, arguments, format de sortie
+- **Full-stack** : les deux
+
+### 6. Init Git + commit
 
 ```bash
 git init && git add -A && git commit -m "genesis: [nom] — repo prêt pour construction"
 ```
 
-### 5. Lancer la construction automatiquement
+### 7. Lancer la construction
 
-Après le commit initial, lance la construction en background :
-
+Lance en background si possible :
 ```bash
-cd [chemin du repo] && claude -p "You are a senior autonomous engineer for this repo. Read CLAUDE.md. Build it. Use agents for parallelism. Ship when npm test is green." --dangerously-skip-permissions --output-format json > .genesis_build.log 2>&1 &
+cd [chemin] && claude -p "You are a senior autonomous engineer for this repo. Read CLAUDE.md. Build it." --dangerously-skip-permissions > .genesis_build.log 2>&1 &
 ```
 
-Puis dis à l'utilisateur :
+Si pas possible (session imbriquée), donne le prompt à copier-coller.
+
+Résumé pour l'utilisateur :
 ```
 ✅ Repo [nom] créé dans [chemin]
+📁 Type: [site web / API / CLI / full-stack]
 🚀 Construction lancée en autonomie
-📊 [X] modules, [Y] tests à faire passer
-⏱️ Estimation: [Z] minutes
-
-Tu peux suivre l'avancement: tail -f [chemin]/.genesis_build.log
-Ou attendre — je te dirai quand c'est fini.
+📊 [X] fichiers à créer
 ```
-
-Si `claude -p` n'est pas disponible (session imbriquée), propose le prompt à copier-coller.
 
 ## Principes
 
-- Le brainstorm doit SURPRENDRE — pas confirmer l'idée initiale
-- L'intake doit être RAPIDE — 2 min max de validation humaine
-- Le repo généré doit être COMPLET — un agent ne doit rien demander
-- Les tests qui failent = le contrat — l'agent implémente pour les faire passer
-- Tout le travail intellectuel est fait AVANT le code, pas pendant
+- Détecte le type AUTOMATIQUEMENT — ne demande jamais "c'est quoi comme projet ?"
+- Le brainstorm doit SURPRENDRE
+- L'intake doit être RAPIDE — 2 min max
+- Le repo doit être COMPLET pour le type détecté
+- Tout le travail intellectuel est fait AVANT le code

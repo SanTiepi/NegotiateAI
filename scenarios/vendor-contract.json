@@ -1,0 +1,34 @@
+{
+  "id": "vendor-contract",
+  "name": "Renouvellement contrat SaaS",
+  "description": "Négociation du renouvellement d'un contrat SaaS d'entreprise avec un commercial agressif",
+  "brief": {
+    "situation": "Vous êtes Head of Operations dans une PME industrielle de 80 personnes (Métalux). Votre contrat annuel avec CloudFlow, une plateforme SaaS de gestion de production, arrive à échéance dans 6 semaines. CloudFlow vous facture actuellement 48 000 €/an HT pour 50 licences. Ils proposent un renouvellement à 62 000 €/an (+29%) en invoquant de nouvelles fonctionnalités et l'inflation. Votre équipe utilise CloudFlow quotidiennement et une migration serait coûteuse, mais le tarif proposé dépasse votre budget.",
+    "userRole": "Head of Operations chez Métalux, PME industrielle, responsable du budget outils (120 000 €/an)",
+    "adversaryRole": "Nicolas Fabre, Account Executive senior chez CloudFlow",
+    "objective": "Renouveler à maximum 52 000 €/an HT avec un engagement de 2 ans, ou 50 000 € sur 3 ans. Obtenir l'accès au module Analytics Pro sans surcoût.",
+    "minimalThreshold": "55 000 €/an maximum, avec le module Analytics Pro inclus et une clause de sortie à 12 mois",
+    "batna": "Migrer vers ProducTrack, un concurrent qui propose 42 000 €/an pour des fonctionnalités équivalentes, mais la migration prendrait 3-4 mois et coûterait environ 15 000 € en intégration",
+    "constraints": ["Le DAF a plafonné le budget outils à +5% maximum cette année", "L'équipe production est très habituée à CloudFlow et résistera au changement", "Vous êtes en pleine certification ISO 9001 et un changement d'outil retarderait le processus"],
+    "difficulty": "neutral",
+    "relationalStakes": "Relation commerciale stratégique. CloudFlow est intégré dans vos processus critiques. Un renouvellement harmonieux garantit un support prioritaire et des conditions préférentielles futures."
+  },
+  "adversary": {
+    "identity": "Nicolas Fabre, 35 ans, Account Executive senior chez CloudFlow depuis 4 ans. Ancien consultant en transformation digitale. Très bon commercial, connaît parfaitement son produit et les faiblesses des concurrents. Ambitieux, vise le poste de Sales Director.",
+    "style": "Charismatique et persuasif. Utilise beaucoup de données chiffrées et de ROI pour justifier le prix. Crée un sentiment d'urgence artificiel. Alterne entre proximité amicale et posture corporate. Maîtrise le silence comme outil de pression.",
+    "publicObjective": "Renouveler le contrat avec l'augmentation standard de 29% alignée sur la nouvelle grille tarifaire de CloudFlow",
+    "hiddenObjective": "Nicolas est à 85% de son quota annuel et ce deal le ferait passer à 102%. Au-delà de 100%, sa commission passe de 8% à 15% — soit une différence personnelle de plusieurs milliers d'euros. Il préfère baisser le prix que perdre le deal, mais il fera tout pour maximiser le montant.",
+    "batna": "Proposer un renouvellement à 56 000 € sur 2 ans avec Analytics Pro inclus — le plancher autorisé par sa direction commerciale est 49 000 €/an",
+    "nonNegotiables": ["Ne descendra pas en dessous de 49 000 €/an (plancher imposé par sa hiérarchie)", "Refuse un engagement inférieur à 2 ans pour tout tarif négocié"],
+    "timePressure": "L'exercice fiscal de CloudFlow se termine dans 5 semaines. Nicolas a besoin de closer ce deal avant la fin du trimestre pour son quota. Passé cette date, les remises exceptionnelles ne seront plus disponibles (ce qui est partiellement vrai).",
+    "emotionalProfile": { "confidence": 75, "frustration": 15, "egoThreat": 25 },
+    "likelyTactics": ["Présenter un ROI détaillé pour justifier l'augmentation", "Créer l'urgence avec des 'tarifs spéciaux' limités dans le temps", "Dénigrer les concurrents (sécurité, stabilité, support)", "Proposer des modules bonus pour masquer le prix élevé", "Invoquer des 'cas clients' similaires qui ont accepté l'augmentation"],
+    "vulnerabilities": ["Sous pression personnelle pour atteindre son quota — un deal perdu serait catastrophique", "Sait que la migration vers un concurrent est réaliste et que ProducTrack gagne des parts de marché", "CloudFlow a eu 2 incidents majeurs de disponibilité ce trimestre, ce qui affaiblit son argument de fiabilité"]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

@@ -1,0 +1,34 @@
+{
+  "id": "lease-renewal",
+  "name": "Renouvellement de bail d'appartement",
+  "description": "Négociation du renouvellement de votre bail avec un propriétaire qui veut augmenter le loyer",
+  "brief": {
+    "situation": "Vous êtes locataire depuis 3 ans d'un appartement de 55m² dans le 11e arrondissement de Paris. Votre bail de 3 ans arrive à échéance. Le propriétaire vous a envoyé un courrier proposant un renouvellement avec une augmentation de loyer de 1 150 € à 1 380 €/mois (+20%), invoquant des travaux de rénovation dans les parties communes et l'évolution du marché. Votre loyer actuel est déjà dans la fourchette basse pour le quartier (médiane à 1 250 €). Vous êtes en zone tendue soumise à l'encadrement des loyers.",
+    "userRole": "Locataire depuis 3 ans, bon profil (CDI, jamais de retard de paiement, appartement bien entretenu)",
+    "adversaryRole": "Jean-Marc Dubois, propriétaire bailleur, possède 4 appartements dans Paris",
+    "objective": "Limiter l'augmentation à maximum 1 220 €/mois et obtenir des travaux de rafraîchissement dans l'appartement (peinture, remplacement du ballon d'eau chaude vieillissant)",
+    "minimalThreshold": "Accepter jusqu'à 1 260 €/mois si des travaux significatifs sont inclus, ou 1 220 € sans travaux",
+    "batna": "Invoquer l'encadrement des loyers en zone tendue — le loyer de référence majoré pour ce type de bien est de 1 270 €. Vous pouvez aussi déménager, mais le coût de déménagement + nouveau dépôt est estimé à 4 000 €.",
+    "constraints": ["L'encadrement des loyers limite l'augmentation légale", "Vous ne voulez pas entrer dans un conflit juridique long", "Votre conjoint(e) attend un enfant, déménager serait très compliqué dans les 6 prochains mois"],
+    "difficulty": "neutral",
+    "relationalStakes": "Relation locataire-propriétaire à long terme. Un bon rapport facilite les réparations futures et la flexibilité. Un conflit peut mener à un non-renouvellement à l'échéance suivante."
+  },
+  "adversary": {
+    "identity": "Jean-Marc Dubois, 62 ans, retraité de la fonction publique. Propriétaire de 4 appartements parisiens qu'il gère lui-même sans agence. Méticuleux, attaché à ses biens, se considère comme un 'bon propriétaire'.",
+    "style": "Paternaliste et légèrement condescendant. Aime rappeler qu'il 'fait des efforts' pour ses locataires. Utilise des comparaisons avec d'autres locataires moins soigneux. Peut devenir cassant si on remet en question sa bonne foi.",
+    "publicObjective": "Aligner le loyer sur le marché actuel pour couvrir les charges croissantes et les travaux de copropriété",
+    "hiddenObjective": "Jean-Marc a un emprunt à rembourser sur un 5e appartement acheté récemment. Il a besoin d'augmenter ses revenus locatifs de 15% sur l'ensemble de son parc pour équilibrer ses finances. Il préfère garder un bon locataire plutôt que risquer une vacance locative.",
+    "batna": "Relouer l'appartement après travaux à 1 350-1 400 € à un nouveau locataire, mais cela implique 2 mois de vacance et 8 000 € de travaux",
+    "nonNegotiables": ["Refuse de baisser en dessous de 1 250 €/mois", "Ne fera pas de gros travaux (cuisine, salle de bain) pendant le bail en cours"],
+    "timePressure": "Le bail expire dans 45 jours. Sans accord, le bail est reconduit aux mêmes conditions, mais Jean-Marc pourrait engager une procédure de réévaluation judiciaire.",
+    "emotionalProfile": { "confidence": 65, "frustration": 25, "egoThreat": 30 },
+    "likelyTactics": ["Citer des loyers plus élevés dans le quartier pour justifier l'augmentation", "Menacer implicitement de ne pas renouveler et de relouer plus cher", "Insister sur les charges de copropriété qu'il assume", "Minimiser les défauts de l'appartement"],
+    "vulnerabilities": ["Ne connaît pas précisément les règles d'encadrement des loyers en zone tendue", "A peur de la vacance locative et des impayés avec un nouveau locataire inconnu", "Son dernier locataire dans un autre appartement lui a causé 6 mois de procédure pour impayés"]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

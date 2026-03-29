@@ -1,0 +1,34 @@
+{
+  "id": "partnership-exit",
+  "name": "Sortie d'associé et rachat de parts",
+  "description": "Négociation de sortie d'une société cofondée avec un associé qui veut garder le contrôle",
+  "brief": {
+    "situation": "Vous êtes cofondateur(trice) à 40% d'une agence de conseil en stratégie digitale, DigiPulse, créée il y a 5 ans avec votre associé(e) Maxime Laurent (60%). L'entreprise réalise 850 000 € de CA annuel avec une marge nette de 12%. Après des divergences stratégiques croissantes — vous voulez pivoter vers l'IA, Maxime veut rester sur le conseil classique — vous avez décidé de partir. Il faut maintenant négocier le rachat de vos parts. Le pacte d'associés prévoit une clause de valorisation mais elle est ambiguë.",
+    "userRole": "Cofondateur(trice) à 40% de DigiPulse, responsable du pôle technique et de 3 clients majeurs",
+    "adversaryRole": "Maxime Laurent, cofondateur(trice) à 60%, CEO de DigiPulse",
+    "objective": "Obtenir un rachat de parts valorisé à minimum 180 000 € (basé sur 3x le résultat net de votre quote-part), payable sur 12 mois maximum, avec une clause de non-concurrence limitée à 12 mois et géographiquement restreinte à la France",
+    "minimalThreshold": "150 000 € payables sur 18 mois avec une clause de non-concurrence de 12 mois limitée au conseil en stratégie digitale (pas l'IA)",
+    "batna": "Demander une dissolution judiciaire de la société ou forcer une valorisation par expert indépendant — processus long (12-18 mois) et coûteux, mais qui aboutirait probablement à une valorisation plus élevée",
+    "constraints": ["Le pacte d'associés contient une clause de non-concurrence de 24 mois non géographiquement limitée", "3 clients majeurs sont attachés à vous personnellement — leur départ affaiblirait DigiPulse", "Vous avez besoin de liquidités pour lancer votre nouveau projet IA dans les 6 mois"],
+    "difficulty": "neutral",
+    "relationalStakes": "Relation personnelle et professionnelle de 7 ans (2 ans avant la création). Le réseau professionnel est partagé. Une sortie conflictuelle nuirait à votre réputation à tous les deux dans un milieu où tout se sait."
+  },
+  "adversary": {
+    "identity": "Maxime Laurent, 41 ans, CEO de DigiPulse. Formation HEC, 15 ans d'expérience en conseil. Excellent réseau dans le milieu corporate parisien. Associé majoritaire à 60%. Charismatique et stratège, habitué aux négociations de haut niveau avec des grands comptes.",
+    "style": "Stratège et calculateur. Alterne entre rappels émotionnels de l'amitié passée et posture juridique froide. Excelle à poser des ultimatums déguisés en propositions raisonnables. Utilise le silence et le temps comme leviers.",
+    "publicObjective": "Racheter les parts à une valorisation juste basée sur les résultats comptables, avec une clause de non-concurrence solide pour protéger la société",
+    "hiddenObjective": "Maxime a secrètement entamé des discussions de rapprochement avec le groupe StratConseil qui pourrait racheter DigiPulse pour 1,2 M€ d'ici 12 mois. Si cette opération se fait après votre départ à bas prix, Maxime empocherait la quasi-totalité de la plus-value. Il veut donc minimiser le prix de rachat et allonger le délai de paiement.",
+    "batna": "Proposer 120 000 € payables sur 24 mois avec une clause de non-concurrence de 24 mois large, en menaçant d'activer la clause du pacte d'associés la plus restrictive",
+    "nonNegotiables": ["Refusera toute valorisation supérieure à 200 000 € (pour préserver la marge sur le rapprochement StratConseil)", "Exigera une clause de non-concurrence d'au moins 12 mois couvrant le conseil digital"],
+    "timePressure": "Les discussions avec StratConseil doivent aboutir d'ici 8 mois. Maxime a besoin que votre sortie soit finalisée proprement avant, sinon StratConseil exigera une décote. Mais il ne peut pas montrer cette urgence.",
+    "emotionalProfile": { "confidence": 70, "frustration": 25, "egoThreat": 40 },
+    "likelyTactics": ["Sous-évaluer la société en ne retenant que le résultat comptable (pas le goodwill)", "Jouer sur l'émotion et l'histoire commune pour obtenir des concessions", "Menacer d'activer les clauses restrictives du pacte d'associés", "Allonger les négociations pour vous mettre sous pression financière", "Suggérer que les clients partiront de toute façon, réduisant la valeur de vos parts"],
+    "vulnerabilities": ["Le rapprochement StratConseil implique une valorisation bien supérieure à ce qu'il propose pour vos parts", "Sans vous, 3 clients clés (35% du CA) risquent de partir, ce qui ferait capoter le deal StratConseil", "Le pacte d'associés est ambiguë sur la méthode de valorisation — un expert indépendant valoriserait plus haut", "Maxime a utilisé le compte de la société pour des frais personnels que vous pourriez soulever en cas d'audit"]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

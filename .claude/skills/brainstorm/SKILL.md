@@ -1,79 +1,97 @@
 ---
 name: brainstorm
-description: "Brainstorm adaptatif Codex↔Claude. Usage: /brainstorm <idée>. S'adapte au poids de la question."
+description: "Brainstorm adaptatif multi-agents. Usage: /brainstorm <idée>. De la question rapide à l'exploration radicale."
 user-invocable: true
 ---
 
 # /brainstorm
 
-L'utilisateur donne une idée. Tu brainstorms avec Codex. La profondeur s'adapte automatiquement.
+## Classifie
 
-## Classifie l'idée
+- **Quick** — question simple → Claude seul, 3-5 lignes
+- **Standard** — feature, architecture → Codex + Claude, pensée divergente
+- **Deep** — stratégie, business → Codex obligatoire, contraire vrai, analogie forcée
+- **Explore** — innovation, nouvelles pistes → simulation multi-agents, exploration large
 
-- **Quick** — question technique, petit ajustement, oui/non
-- **Standard** — nouvelle feature, changement d'architecture, pivot
-- **Deep** — stratégie produit/business, changement fondamental, multi-systèmes
+Détecte automatiquement. Ne demande jamais le mode.
 
-## Contexte
+## Quick
+3-5 lignes. Verdict + pourquoi + alternative.
 
-Lis CLAUDE.md ou README.md (premières lignes). Si `.claude/codex_context.md` existe, utilise-le au lieu de re-décrire le projet.
+## Standard
+Codex + Claude. Avant tout : cadre implicite, ce qu'il empêche de voir, idée hors cadre. Timeout 45s.
 
-Sinon crée-le après ce brainstorm (5 lignes : nom, stack, état, contraintes, objectif).
+## Deep
+Comme Standard + contraire vrai + analogie forcée. Codex obligatoire 90s.
 
-## Quick — Claude seul, pas de Codex
+## Explore
 
-Réponds toi-même en 3-5 lignes. Verdict + pourquoi + alternative si pertinent. C'est tout.
+Le mode le plus important. On explore LARGE — volontairement trop large au début pour ne rien louper. On affine après.
 
-## Standard — Codex + Claude
+### Principe fondamental
+Ne PAS converger trop vite. Ouvrir le champ au maximum AVANT de trier. Les meilleures idées sont aux intersections les plus improbables.
 
-Appelle Codex. Adapte le prompt à la question — pas de template rigide. Donne-lui :
-- Le contexte projet (court)
-- L'idée
-- Dis-lui d'inspecter le code pertinent à la question
-- Dis-lui de répondre en français, d'être brutal et honnête
-- Demande : forces, faiblesses, risque, alternative, verdict (go/pivot/kill), effort, impact
+### Process
 
-Timeout 45s. Si Codex ne répond pas, tranche seul et ajoute un addendum quand il arrive.
+**Phase 1 — Ouverture maximale**
 
-Puis ajoute ton avis : ce que tu acceptes, ce que tu contestes, enrichissement technique basé sur le code.
+Génère 7-10 points de vue radicalement différents. Pas des variations — des MONDES différents :
+- 3 experts du sujet (mais de sous-domaines éloignés)
+- 3 experts de domaines SANS RAPPORT (sciences, arts, nature, sports, cuisine, musique, médecine, justice, jeux...)
+- 1-2 profils impossibles ou inventés ("un historien de l'an 3000", "un océan qui pense", "un enfant-philosophe")
 
-Présente le résultat — la longueur s'adapte à la complexité de la question. Pas de format rigide. L'important c'est : verdict clair, raison, prochaine action.
+Chaque point de vue : 1 mécanisme transférable de son domaine, pas une opinion. 2 lignes max.
 
-## Deep — Codex obligatoire
+Ne trie PAS encore. Ne juge PAS. Accumule.
 
-Même flow que Standard mais :
-- Dis à Codex d'inspecter le code en profondeur
-- Demande aussi : angles inexplorés, meilleure version de l'idée, dépendances
-- Timeout 90s
-- Ton avis est plus développé : connexions avec l'existant, faisabilité détaillée, risques techniques
-- Propose un plan si go/pivot
+**Phase 2 — Collisions**
+
+Prends les points de vue les plus ÉLOIGNÉS et force des collisions par paires :
+- Qu'est-ce qui émerge quand on connecte A et B ?
+- Quel produit/concept/approche existe à cette intersection ?
+- Qu'est-ce qui est IMPOSSIBLE à trouver sans cette collision ?
+
+3-5 collisions. Cherche celles qui produisent un "c'est bizarre mais..." — c'est là que l'innovation est.
+
+**Phase 3 — Patterns**
+
+Regarde l'ensemble des points de vue et collisions. Quels PATTERNS émergent ?
+- Qu'est-ce que plusieurs experts disent sans le savoir ?
+- Quelle direction revient sous des formes différentes ?
+- Quel problème sous-jacent est révélé par les collisions ?
+
+**Phase 4 — Synthèse ouverte**
+
+Présente à l'utilisateur :
+- Les 3-5 insights les plus surprenants
+- Les 2-3 collisions les plus fertiles
+- Le pattern émergent
+- 2-3 directions possibles (pas 1 seule — garder le champ ouvert)
+- Pour chaque direction : 1 ligne de ce que ça donne concrètement
+
+**Ne conclus PAS.** L'explore ouvre des portes. L'utilisateur choisit laquelle franchir. Si l'utilisateur veut creuser une direction, relance un brainstorm Standard ou Deep dessus.
+
+### Relancer en cours de projet
+
+L'explore n'est pas que pour le début. Relance-le :
+- Quand le projet stagne
+- Quand une décision importante approche
+- Quand l'utilisateur dit "on rate peut-être quelque chose"
+- Toutes les 2-3 semaines sur un projet actif
+
+À chaque relance, les experts changent. Le contexte du projet nourrit de nouvelles collisions.
 
 ## Après chaque brainstorm
 
-Ajoute une ligne dans `.claude/brainstorm_log.md` :
+`.claude/brainstorm_log.md` :
 ```
-- [date] [quick/standard/deep] [verdict] [titre] — [1 ligne]
+- [date] [mode] [résultat] [titre] — [1 ligne]
 ```
-
-## Pensée divergente — OBLIGATOIRE sur Standard et Deep
-
-AVANT de donner ton avis ou d'appeler Codex, fais systématiquement :
-
-1. **Nomme le cadre implicite** — quelle hypothèse non-dite est dans l'idée ? Quel paradigme est pris pour acquis ? (1 ligne)
-2. **Dis ce que ce cadre empêche de voir** — quelle solution est invisible à cause de ce cadre ? (1 ligne)
-3. **Propose une idée HORS cadre** — quelque chose que l'utilisateur n'a PAS demandé mais qui résout peut-être mieux le vrai problème (1-2 lignes)
-
-Intègre ça naturellement dans ton analyse, pas comme un bloc séparé.
-
-Pour le mode Deep, ajoute aussi :
-- **Contraire vrai** — "et si l'hypothèse opposée était correcte ?" Explore brièvement ce que ça implique.
-- **Analogie forcée** — compare le problème à un domaine complètement différent. Qu'est-ce que ce domaine fait mieux ?
 
 ## Principes
 
-- La longueur de la réponse est proportionnelle au poids de la question
-- Le but c'est DÉCIDER et SURPRENDRE — pas juste confirmer ce que l'utilisateur pense déjà
-- Si l'idée est bonne, dis comment la rendre RADICALEMENT meilleure, pas incrémentalement
-- Si l'idée est mauvaise, propose une alternative qui change le problème, pas juste la solution
-- Tu dois anticiper ce que l'utilisateur n'a pas encore pensé — c'est ta valeur ajoutée
-- Pas de complaisance, pas de pessimisme gratuit, pas de réponse prévisible
+- Quick/Standard/Deep = DÉCIDER. Explore = DÉCOUVRIR.
+- En Explore : ne jamais converger trop tôt. La largeur est une force, pas un défaut.
+- Les meilleures idées viennent des collisions les plus improbables
+- Si tu ne surprends pas l'utilisateur, recommence
+- Anticipe ce que l'utilisateur n'a pas encore pensé — c'est ta valeur

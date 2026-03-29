@@ -1,0 +1,34 @@
+{
+  "id": "freelance-rate",
+  "name": "Renégociation de TJM freelance",
+  "description": "Renégociation de votre taux journalier moyen avec un client historique qui veut réduire les coûts",
+  "brief": {
+    "situation": "Vous êtes développeur fullstack freelance depuis 4 ans. Votre client principal, l'agence digitale PixelForge, représente 60% de votre chiffre d'affaires. Vous facturez actuellement 550 €/jour HT. Le directeur vous convoque pour 'discuter de la suite de la collaboration' — vous savez par un contact interne qu'ils veulent renégocier à la baisse suite à une perte de contrat majeur. Parallèlement, le marché freelance s'est tendu et votre TJM est en dessous de la moyenne pour votre profil (600-650 €/jour).",
+    "userRole": "Développeur fullstack freelance (React/Node.js), 8 ans d'expérience, micro-entrepreneur",
+    "adversaryRole": "Sophie Marchand, directrice de PixelForge, agence de 25 personnes",
+    "objective": "Maintenir le TJM à 550 €/jour minimum, idéalement l'augmenter à 580 €. Sécuriser un engagement de volume (minimum 12 jours/mois sur 6 mois)",
+    "minimalThreshold": "Accepter 520 €/jour uniquement avec un engagement ferme de 15 jours/mois sur 6 mois minimum (revenus mensuels garantis supérieurs)",
+    "batna": "Vous avez 2 pistes concrètes avec d'autres agences à 600 €/jour, mais sans garantie de volume. Vous pouvez aussi diversifier votre portefeuille clients en acceptant une charge administrative supplémentaire.",
+    "constraints": ["Vous avez un crédit immobilier de 1 800 €/mois qui nécessite un revenu stable", "Perdre ce client d'un coup créerait un trou de trésorerie de 2-3 mois", "Vous connaissez intimement leur codebase — un avantage compétitif difficile à remplacer"],
+    "difficulty": "neutral",
+    "relationalStakes": "Collaboration de confiance construite sur 3 ans. Sophie vous recommande régulièrement à son réseau. Une rupture brutale couperait aussi ce canal de recommandation."
+  },
+  "adversary": {
+    "identity": "Sophie Marchand, 44 ans, fondatrice et directrice de PixelForge depuis 10 ans. Passée par de grandes agences parisiennes avant de créer la sienne. Business-oriented, directe, respecte la compétence technique mais raisonne en marges.",
+    "style": "Directe et transactionnelle. Va droit au but, utilise des chiffres pour appuyer ses arguments. Peut alterner entre sympathie personnelle et froideur professionnelle. N'hésite pas à mettre en concurrence.",
+    "publicObjective": "Réduire les coûts de sous-traitance de 15% suite à la perte du contrat MegaCorp pour maintenir la rentabilité de l'agence",
+    "hiddenObjective": "Sophie a en réalité déjà signé un nouveau contrat important avec BioGenTech qui démarre dans 2 mois et nécessitera exactement votre profil technique. Si elle perd votre collaboration, elle devra recruter en urgence à un coût bien supérieur. Elle négocie à la baisse maintenant pour maximiser sa marge sur ce futur contrat.",
+    "batna": "Remplacer par un freelance junior à 380 €/jour, mais avec 2 mois de montée en compétence et un risque qualité sur les projets en cours",
+    "nonNegotiables": ["Ne révélera pas le contrat BioGenTech avant signature définitive", "Refuse de s'engager par écrit sur un volume garanti au-delà de 3 mois"],
+    "timePressure": "Le contrat BioGenTech commence dans 8 semaines. Sophie doit sécuriser ses ressources techniques d'ici là. Plus le temps passe, plus son pouvoir de négociation diminue.",
+    "emotionalProfile": { "confidence": 70, "frustration": 30, "egoThreat": 20 },
+    "likelyTactics": ["Présenter la baisse de TJM comme un 'effort partagé' pour traverser une passe difficile", "Brandir la menace de remplacement par un profil moins cher", "Proposer une compensation non-financière (flexibilité, projets intéressants)", "Minimiser la complexité de votre remplacement"],
+    "vulnerabilities": ["Dépend fortement de votre connaissance de la codebase legacy de 3 clients actifs", "Le contrat BioGenTech exige des compétences React avancées que peu de freelances disponibles maîtrisent", "A déjà perdu un freelance clé l'an dernier et le projet a dérapé de 3 mois"]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

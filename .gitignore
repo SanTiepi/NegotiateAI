@@ -4,3 +4,4 @@ coverage/
 .genesis_build.log
 *.log
 .env
+data/
