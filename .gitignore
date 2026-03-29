@@ -1,0 +1,6 @@
+node_modules/
+.orchestra/
+coverage/
+.genesis_build.log
+*.log
+.env

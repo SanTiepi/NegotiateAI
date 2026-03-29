@@ -1,1 +1,13 @@
-{"name":"negotiate-ai","version":"0.1.0","type":"module","scripts":{"test":"node --test test/*.test.mjs","start":"node src/index.mjs"}}
+{
+  "name": "negotiate-ai",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Universal negotiation simulator — practice any negotiation against an AI adversary with emotional modeling, cognitive bias detection, and optimal strategy planning",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "start": "node src/index.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0"
+  }
+}
