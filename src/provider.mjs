@@ -1,6 +1,8 @@
 // provider.mjs — LLM abstraction layer
 // Contract: generateJson({ system, prompt, schemaName, temperature }) → object
 
+import Anthropic from '@anthropic-ai/sdk';
+
 /**
  * @typedef {object} GenerateJsonRequest
  * @property {string} system - System prompt
@@ -16,7 +18,31 @@
  * @returns {{ generateJson: (req: GenerateJsonRequest) => Promise<object> }}
  */
 export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250514' } = {}) {
-  throw new Error('Not implemented');
+  const client = new Anthropic({ apiKey });
+
+  return {
+    async generateJson({ system, prompt, schemaName, temperature = 0.7 }) {
+      const response = await client.messages.create({
+        model,
+        max_tokens: 4096,
+        temperature,
+        system,
+        messages: [{ role: 'user', content: prompt }],
+      });
+
+      const text = response.content
+        .filter((b) => b.type === 'text')
+        .map((b) => b.text)
+        .join('');
+
+      // Extract JSON from response (handles ```json ... ``` blocks or raw JSON)
+      const jsonMatch = text.match(/```json\s*([\s\S]*?)```/) || text.match(/(\{[\s\S]*\})/);
+      if (!jsonMatch) {
+        throw new Error(`Provider: no JSON found in response for schema "${schemaName}"`);
+      }
+      return JSON.parse(jsonMatch[1]);
+    },
+  };
 }
 
 /**
@@ -24,5 +50,16 @@ export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250
  * @returns {{ generateJson: (req: GenerateJsonRequest) => Promise<object> }}
  */
 export function createMockProvider(fixtures = {}) {
-  throw new Error('Not implemented');
+  return {
+    async generateJson(req) {
+      const fixture = fixtures[req.schemaName];
+      if (fixture === undefined) {
+        throw new Error(`MockProvider: no fixture for schema "${req.schemaName}"`);
+      }
+      if (typeof fixture === 'function') {
+        return fixture(req);
+      }
+      return structuredClone(fixture);
+    },
+  };
 }

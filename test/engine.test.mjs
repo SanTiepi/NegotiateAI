@@ -68,7 +68,7 @@ describe('engine', () => {
     it('adds both user and adversary messages to transcript', async () => {
       const provider = makeTurnProvider(['Noted.']);
       const session = createSession(MOCK_BRIEF, MOCK_ADVERSARY, provider);
-      await processTurn(session, 'My work speaks for itself.');
+      const result = await processTurn(session, 'My work speaks for itself.');
       assert.equal(result.state.transcript.length, 2);
       assert.equal(result.state.transcript[0].role, 'user');
       assert.equal(result.state.transcript[1].role, 'adversary');
