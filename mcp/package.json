@@ -1,0 +1,13 @@
+{
+  "name": "negotiate-ai-mcp",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MCP server wrapping NegotiateAI — negotiation simulation tools for Claude Desktop / Claude Code",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  }
+}

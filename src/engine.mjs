@@ -7,6 +7,8 @@ import { selectEvent, applyEvent } from './events.mjs';
 import { createWorldState, processTurnWorld, worldStateToPrompt, applyStimulus } from './worldEngine.mjs';
 import { detectAdversaryTactics, detectUserTechniques } from './tactics.mjs';
 import { analyzeTurnForBias } from './biasTracker.mjs';
+import { computeTicker } from './ticker.mjs';
+import { selectNarrativeEvent, getEventProbability, getNarrativePrompt, formatActTransition } from './narrativeArc.mjs';
 
 const MAX_TURNS_DEFAULT = 12;
 
@@ -110,11 +112,15 @@ export async function processTurn(session, userMessage) {
   const stimuli = techniquesToStimuli(userTechniques);
   session._world = processTurnWorld(session._world, stimuli);
 
-  // --- STEP 3: Event injection (after turn 3) ---
+  // --- STEP 3: Event injection via Narrative Arc ---
   let firedEvent = null;
-  if (session.eventPolicy !== 'none' && nextTurn > 3) {
-    if (Math.random() < session.eventChance) {
-      firedEvent = selectEvent(session, session.brief, { excludeIds: session._usedEventIds });
+  const actTransition = formatActTransition(nextTurn, session.maxTurns);
+
+  if (session.eventPolicy !== 'none') {
+    // Use narrative arc for structured event timing (not random)
+    const eventProb = getEventProbability(nextTurn, session.maxTurns, session);
+    if (Math.random() < eventProb) {
+      firedEvent = selectNarrativeEvent(nextTurn, session.maxTurns, session);
       if (firedEvent) {
         applyEvent(session, firedEvent);
         session._usedEventIds.push(firedEvent.id);
@@ -131,6 +137,7 @@ export async function processTurn(session, userMessage) {
     .join('\n');
 
   const worldPrompt = worldStateToPrompt(session._world);
+  const narrativePrompt = getNarrativePrompt(nextTurn, session.maxTurns);
   const eventInstruction = firedEvent
     ? `\n\nIMPORTANT EVENT: ${firedEvent.adversaryInstruction}`
     : '';
@@ -141,6 +148,7 @@ export async function processTurn(session, userMessage) {
 ${JSON.stringify(session.adversary, null, 2)}
 
 ${worldPrompt}
+${narrativePrompt}
 
 Turn: ${nextTurn}/${session.maxTurns}
 ${isLastTurn ? 'This is the FINAL turn. Wrap up — accept, reject, or final compromise.' : ''}${eventInstruction}
@@ -224,6 +232,9 @@ Do NOT include stateUpdates — the WorldEngine handles state computation.`,
     ...biasIndicators.map((b) => `bias:${b.biasType}`),
   ];
 
+  // --- STEP 11: Compute ticker ---
+  const ticker = computeTicker(session);
+
   return {
     adversaryResponse,
     detectedSignals,
@@ -234,5 +245,7 @@ Do NOT include stateUpdates — the WorldEngine handles state computation.`,
     event: firedEvent,
     tactics: { user: userTechniques, adversary: adversaryTactics },
     biasIndicators,
+    ticker,
+    actTransition,
   };
 }

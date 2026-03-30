@@ -14,6 +14,7 @@ import { evaluateBelts, identifyWeaknesses, formatBeltDisplay } from './belt.mjs
 import { getMomentumTrend, analyzeZOPA } from './worldEngine.mjs';
 import { analyzeSessionBiases, updateBiasProfile, recommendBiasTraining } from './biasTracker.mjs';
 import { computeDifficulty, assessZPD, profileToPromptInstructions } from './difficulty.mjs';
+import { formatTicker, computePreSessionOdds } from './ticker.mjs';
 
 // ANSI colors
 const c = {
@@ -145,16 +146,15 @@ async function conversationPhase(rl, session, store) {
       }
     }
 
-    // V2: WorldEngine emotional dashboard
-    const emo = session._world?.emotions || {};
-    const trend = session._world ? getMomentumTrend(session._world.negotiation) : 'stable';
-    const trendIcon = trend === 'gaining' ? '↑' : trend === 'losing' ? '↓' : '→';
+    // V2: Act transition notification
+    if (result.actTransition) {
+      print(`\n${c.bold}${c.yellow}  ${result.actTransition}${c.reset}`);
+    }
 
-    print(`${c.dim}  ┌─ État adversaire ──────────────────────────────────────────┐${c.reset}`);
-    print(`${c.dim}  │ Confiance ${bar(emo.confidence || 0, 100)} ${(emo.confidence || 0).toString().padStart(3)}  Peur      ${bar(emo.fear || 0, 100)} ${(emo.fear || 0).toString().padStart(3)}  │${c.reset}`);
-    print(`${c.dim}  │ Frustrat. ${bar(emo.frustration || 0, 100)} ${(emo.frustration || 0).toString().padStart(3)}  Ouverture ${bar(emo.openness || 0, 100)} ${(emo.openness || 0).toString().padStart(3)}  │${c.reset}`);
-    print(`${c.dim}  │ Momentum ${trendIcon} ${session.momentum.toString().padStart(4)}  Ego menacé ${bar(emo.egoThreat || 0, 100)} ${(emo.egoThreat || 0).toString().padStart(3)}  │${c.reset}`);
-    print(`${c.dim}  └────────────────────────────────────────────────────────────┘${c.reset}\n`);
+    // V2: Negotiation Ticker (the "trading floor" view)
+    if (result.ticker) {
+      print(formatTicker(result.ticker));
+    }
 
     if (result.sessionOver) {
       print(`\n${c.bold}${c.yellow}Session terminée: ${result.endReason}${c.reset}`);
@@ -330,6 +330,16 @@ async function main() {
       print(`\n${c.dim}  Génération de l'adversaire...${c.reset}`);
       const adversary = await generatePersona(brief, provider);
       print(`${c.dim}  Adversaire prêt: ${adversary.identity}${c.reset}`);
+
+      // Pre-session odds (bookmaker concept)
+      const prog = await store.loadProgression();
+      const odds = computePreSessionOdds(prog, brief.difficulty);
+      print(`\n${c.bold}  🎰 Tes chances estimées: ${odds.successRate}%${c.reset} ${c.dim}(${odds.message})${c.reset}`);
+      if (odds.successRate < 40) {
+        print(`${c.yellow}  Attention — session difficile. Concentre-toi sur ta BATNA.${c.reset}`);
+      } else if (odds.successRate > 70) {
+        print(`${c.green}  Conditions favorables. Vise haut.${c.reset}`);
+      }
 
       let retryWithSameBrief = true;
 

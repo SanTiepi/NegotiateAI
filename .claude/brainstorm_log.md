@@ -1,3 +1,4 @@
 - [2026-03-30] [deep] [3 directions: coach cognitif, duolingo négo, sparring compétitif] NegotiateAI post-MVP — du simulateur au système d'entraînement cognitif
 - [2026-03-30] [deep] [5 modèles de monétisation, recommandation 3 étapes] Commercialisation NegotiateAI — du CLI au revenu. Pattern: on vend la confiance avant un moment à enjeu, pas un simulateur.
 - [2026-03-30] [deep+codex] [marché $3.6B, concurrents sales-only, MCP=distribution, 3 phases] Commercialisation avec données marché — le trou béant: personne ne fait négo universelle B2C. MCP server = move #1.
+- [2026-03-30] [explore] [12 profils, 5 collisions, 4 directions] WorldEngine appliqué au lancement — Ticker de négo (bookmaker×trader), Inoculation cognitive (immunologue×neurochirurgien), Arc narratif 4 actes (DJ×chorégraphe), Feed social d'exploits (urbaniste×Eyal). Pattern: NegotiateAI = microscope cognitif, pas simulateur.

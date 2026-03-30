@@ -9,7 +9,9 @@
     "daily": "node src/cli/daily-cli.mjs",
     "drill": "node src/cli/drill-cli.mjs",
     "replay": "node src/cli/replay-cli.mjs",
-    "stats": "node src/cli/stats-cli.mjs"
+    "stats": "node src/cli/stats-cli.mjs",
+    "profile": "node src/cli/profile-cli.mjs",
+    "mcp": "node mcp/index.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0"
