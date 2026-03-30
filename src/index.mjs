@@ -2,6 +2,9 @@
 // Flow: setup → conversation (V2 signals) → feedback → plan
 // Commands: /end, /restart, /retry, /quit, /stats
 
+import { readFileSync } from 'node:fs';
+try { for (const l of readFileSync(new URL('../.env', import.meta.url), 'utf-8').split('\n')) { const [k, ...v] = l.split('='); if (k?.trim() && v.length) process.env[k.trim()] = v.join('=').trim(); } } catch {}
+
 import * as readline from 'node:readline';
 import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';

@@ -20,7 +20,7 @@ const DEFAULT_TIMEOUT_MS = 60_000;
  * @param {number} [options.timeoutMs=60000]
  * @returns {{ generateJson: (req: GenerateJsonRequest) => Promise<object> }}
  */
-export function createAnthropicProvider({ apiKey, model = 'claude-sonnet-4-20250514', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
+export function createAnthropicProvider({ apiKey, model = process.env.NEGOTIATE_AI_MODEL || 'claude-haiku-4-5-20251001', timeoutMs = DEFAULT_TIMEOUT_MS } = {}) {
   const client = new Anthropic({ apiKey });
 
   return {

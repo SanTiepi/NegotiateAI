@@ -1,6 +1,9 @@
 // MCP Server for NegotiateAI — exposes negotiation tools via Model Context Protocol
 // Transport: stdio | Tools: 6
 
+import { readFileSync } from 'node:fs';
+try { for (const l of readFileSync(new URL('../.env', import.meta.url), 'utf-8').split('\n')) { const [k, ...v] = l.split('='); if (k?.trim() && v.length) process.env[k.trim()] = v.join('=').trim(); } } catch {}
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
