@@ -1,6 +1,6 @@
 # NegotiateAI MCP Server
 
-MCP (Model Context Protocol) server that wraps NegotiateAI into 6 tools callable by Claude Desktop, Claude Code, or any MCP client.
+MCP (Model Context Protocol) server that wraps NegotiateAI into 7 tools callable by Claude Desktop, Claude Code, or any MCP client.
 
 ## Prerequisites
 
@@ -72,6 +72,7 @@ npm run mcp
 | `negotiate_feedback` | Get detailed scoring and bias analysis for a session |
 | `negotiate_plan` | Generate an optimal negotiation strategy plan |
 | `negotiate_prepare` | Run 3 auto-simulations and produce a preparation dossier |
+| `negotiate_war_room` | Run an overnight batch of targeted drills and return the morning report |
 | `negotiate_profile` | View your progression profile (belts, streaks, biases) |
 
 ## Typical flow

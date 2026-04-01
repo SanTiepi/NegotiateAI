@@ -14,7 +14,7 @@ const MAX_SESSIONS = 50;
 function defaultProgression() {
   return {
     belts: {},
-    biasProfile: [],
+    biasProfile: {},
     totalSessions: 0,
     currentStreak: 0,
     lastSessionDate: null,

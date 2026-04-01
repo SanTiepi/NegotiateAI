@@ -4,11 +4,12 @@
   "type": "module",
   "description": "Universal negotiation simulator — practice any negotiation against an AI adversary with emotional modeling, cognitive bias detection, and optimal strategy planning",
   "scripts": {
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test --test-concurrency=1 --test-isolation=none test/*.test.mjs",
     "start": "node src/index.mjs",
     "daily": "node src/cli/daily-cli.mjs",
     "drill": "node src/cli/drill-cli.mjs",
     "replay": "node src/cli/replay-cli.mjs",
+    "war-room": "node src/cli/war-room-cli.mjs",
     "stats": "node src/cli/stats-cli.mjs",
     "profile": "node src/cli/profile-cli.mjs",
     "mcp": "node mcp/index.mjs"

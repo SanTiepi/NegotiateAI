@@ -83,6 +83,7 @@ describe('store', () => {
     assert.equal(prog.totalSessions, 0);
     assert.equal(prog.currentStreak, 0);
     assert.deepEqual(prog.belts, {});
+    assert.deepEqual(prog.biasProfile, {});
   });
 
   it('assertValidSessionEntry throws on missing id', () => {

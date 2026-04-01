@@ -1,5 +1,5 @@
 // MCP Server for NegotiateAI — exposes negotiation tools via Model Context Protocol
-// Transport: stdio | Tools: 6
+// Transport: stdio | Tools: 7
 
 import { readFileSync } from 'node:fs';
 try { for (const l of readFileSync(new URL('../.env', import.meta.url), 'utf-8').split('\n')) { const [k, ...v] = l.split('='); if (k?.trim() && v.length) process.env[k.trim()] = v.join('=').trim(); } } catch {}
@@ -20,6 +20,7 @@ import { evaluateBelts, identifyWeaknesses } from '../src/belt.mjs';
 import { getMomentumTrend } from '../src/worldEngine.mjs';
 import { computeDifficulty, assessZPD } from '../src/difficulty.mjs';
 import { analyzeSessionBiases, updateBiasProfile, recommendBiasTraining } from '../src/biasTracker.mjs';
+import { generateMorningReport, runWarRoom } from '../src/war-room.mjs';
 
 // ---------------------------------------------------------------------------
 // State
@@ -353,7 +354,33 @@ Produce a preparation dossier in the user's language (French if the input is in 
   },
 );
 
-// ── Tool 6: negotiate_profile ───────────────────────────────────────────────
+// ── Tool 6: negotiate_war_room ──────────────────────────────────────────────
+
+server.tool(
+  'negotiate_war_room',
+  'Run the Overnight War Room batch trainer using stored progression and return the aggregated report plus a morning summary.',
+  {
+    drillCount: z.number().int().min(1).max(200).optional().describe('Number of batch drills to run (default: 50)'),
+  },
+  async ({ drillCount }) => {
+    try {
+      const provider = getProvider();
+      const result = await runWarRoom(store, provider, { drillCount: drillCount || 50 });
+      const morningReport = await generateMorningReport(result, provider);
+
+      return {
+        content: [{
+          type: 'text',
+          text: JSON.stringify({ result, morningReport }, null, 2),
+        }],
+      };
+    } catch (err) {
+      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+    }
+  },
+);
+
+// ── Tool 7: negotiate_profile ───────────────────────────────────────────────
 
 server.tool(
   'negotiate_profile',
