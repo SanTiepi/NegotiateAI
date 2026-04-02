@@ -27,6 +27,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - npm test avec --test-isolation=none sur Windows
 - Web app: isoler la logique HTTP dans un createWebApp testable, et injecter provider + sessionIdFactory pour eviter tout appel reel en test
 - Web app temps reel: exposer coaching/ticker/actTransition via JSON mince pour que le frontend reste statique et facilement testable
+- Web app API avancee: daily/drills/replay doivent reposer sur les modules purs existants (daily.mjs, drill.mjs, replay.mjs) et sur les sessions persistées, jamais sur un etat frontend implicite
 - Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
@@ -43,6 +44,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - HTTP server: native node:http, pas Express
 - Web app MVP: GET / + assets statiques, POST /api/session pour creer la session, POST /api/session/:id/turn pour discuter; garder la reponse JSON mince et branchee directement sur engine.mjs
 - Frontend web: afficher le coaching/ticker sans framework ni logique metier dupliquee; parser seulement les champs JSON exposes par l'API
+- API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)

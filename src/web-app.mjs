@@ -13,6 +13,9 @@ import { refreshProgression } from './progression.mjs';
 import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
 import { simulateBeforeSend } from './simulate.mjs';
+import { generateDaily } from './daily.mjs';
+import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
+import { generateReplay } from './replay.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { listScenarios } from '../scenarios/index.mjs';
 
@@ -182,6 +185,28 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      if (req.method === 'GET' && url.pathname === '/api/daily') {
+        json(res, 200, await generateDaily(store, llmProvider));
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/drills') {
+        const progression = await store.loadProgression();
+        const recommendedDrillId = recommendDrill(progression);
+        json(res, 200, {
+          recommendedDrillId,
+          drills: DRILL_CATALOG.map((drill) => ({
+            id: drill.id,
+            name: drill.name,
+            description: drill.description,
+            skill: drill.skill,
+            maxTurns: drill.maxTurns,
+            recommended: drill.id === recommendedDrillId,
+          })),
+        });
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/scenario-of-week') {
         json(res, 200, selectScenarioOfWeek(await listScenarios()));
         return;
@@ -214,6 +239,20 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           mode: s.mode || 'cli',
         }));
         json(res, 200, summaries);
+        return;
+      }
+
+      const replayMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)\/replay$/);
+      if (replayMatch) {
+        const sessionId = decodeURIComponent(replayMatch[1]);
+        const sessions = await store.loadSessions();
+        const session = sessions.find((entry) => entry.id === sessionId);
+        if (!session) {
+          json(res, 404, { error: 'Session not found' });
+          return;
+        }
+
+        json(res, 200, await generateReplay(session, llmProvider));
         return;
       }
 
