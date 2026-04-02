@@ -34,6 +34,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - En batch dev-runner cron, si `git log -10` montre surtout des commits docs mais que les feats `autonomy ladder` et `mcp hardening` sont presentes et `git log --grep="simulate" -n 5` retrouve Simulate Before Send, traiter la session comme zero-delta si `npm test` reste a 277 verts
 - Audit zero-delta robuste: si le top-10 est quasi full docs avec seulement `feat: harden mcp session handling`, verifier aussi `git log --grep="war room|war-room"`, `git log --grep="coach|coaching"`, `git log --grep="autonomy ladder"` et `git log --grep="simulate"`; si les 5 priorites SOUL reapparaissent et `npm test` reste a 277 verts, ne rien reouvrir cote feature
 - Batch cron aube fiable: si `git log -10` est 100% documentaire mais que les greps `simulate`, `war room`, `coach` et `autonomy ladder` retrouvent les feats, considerer le lot comme zero-delta des que `npm test` confirme 277 verts
+- Audit docs-only confirme: si le top-10 git est entierement compose de `docs: refresh soul after zero-delta validation batch`, utiliser les greps cibles (`simulate`, `war room`, `coach`, `autonomy ladder`, `mcp`) + `npm test` avant toute reouverture de feature
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -55,6 +56,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Audit cron express: quand le top-10 est domine par des commits docs, verifier explicitement `git log --grep="simulate" -n 5` avant de conclure qu'une priorite SOUL manque encore
 - Audit prioritaire complet: si `git log -10` est masque par une pile de commits docs, completer avec des greps ciblés (`simulate`, `war room`, `coach`, `autonomy ladder`) avant de declarer un batch zero-delta
 - Batch aube zero-delta: en cron, lancer `git log -10 --oneline`, les greps de couverture SOUL puis `npm test`; si tout est vert, limiter le commit a `SOUL.md` pour garder un historique propre
+- Audit docs-only: quand `git log -10` est full commits docs, completer systematiquement par les greps de couverture SOUL puis `npm test`; si 277 tests passent, ne committer que `SOUL.md`
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
