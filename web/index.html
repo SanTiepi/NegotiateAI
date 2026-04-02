@@ -39,6 +39,47 @@
           <button class="btn btn-primary btn-lg" data-view="real-prep">Préparer ma négo</button>
         </div>
 
+        <section class="card dashboard-filters-card">
+          <div class="section-head">
+            <div>
+              <h2>Filtres joueur</h2>
+              <p class="text-muted">Les mêmes filtres que l'API joueur, appliqués au dashboard, au profil et aux stats réelles.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-outline btn-sm" type="button" id="d-filters-reset">Réinitialiser</button>
+            </div>
+          </div>
+          <form id="dashboard-filters" class="form-grid dashboard-filters-grid">
+            <div class="form-group">
+              <label for="d-filter-mode">Interface</label>
+              <select id="d-filter-mode" name="mode">
+                <option value="">Toutes</option>
+                <option value="web">Web</option>
+                <option value="telegram">Telegram</option>
+                <option value="cli">CLI</option>
+                <option value="daily">Daily</option>
+                <option value="drill">Drill</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="d-filter-difficulty">Difficulté</label>
+              <select id="d-filter-difficulty" name="difficulty">
+                <option value="">Toutes</option>
+                <option value="cooperative">Coopératif</option>
+                <option value="neutral">Neutre</option>
+                <option value="hostile">Hostile</option>
+                <option value="manipulative">Manipulateur</option>
+              </select>
+            </div>
+            <div class="form-group full">
+              <label for="d-filter-scenario">Scénario</label>
+              <select id="d-filter-scenario" name="scenarioId">
+                <option value="">Tous les scénarios</option>
+              </select>
+            </div>
+          </form>
+        </section>
+
         <!-- Real-world stats (shown if journal entries exist) -->
         <div class="real-stats hidden" id="d-real-stats">
           <div class="stat-card">

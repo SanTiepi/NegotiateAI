@@ -64,10 +64,32 @@ function getPlayerId() {
   }
 }
 
-function withPlayerQuery(path) {
+function getDashboardFilters() {
+  const form = document.getElementById('dashboard-filters');
+  if (!form) {
+    return {
+      mode: '',
+      difficulty: '',
+      scenarioId: '',
+    };
+  }
+
+  return {
+    mode: form.querySelector('[name="mode"]')?.value || '',
+    difficulty: form.querySelector('[name="difficulty"]')?.value || '',
+    scenarioId: form.querySelector('[name="scenarioId"]')?.value || '',
+  };
+}
+
+function withPlayerQuery(path, extraParams = {}) {
   const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
   const url = new URL(path, base);
   url.searchParams.set('playerId', getPlayerId());
+
+  for (const [key, value] of Object.entries(extraParams)) {
+    if (value) url.searchParams.set(key, value);
+  }
+
   return `${url.pathname}${url.search}`;
 }
 
@@ -302,9 +324,38 @@ async function loadDailyCard() {
   }
 }
 
+let dashboardScenarioOptionsLoaded = false;
+
+async function ensureDashboardScenarioOptions() {
+  if (dashboardScenarioOptionsLoaded) return;
+
+  const select = document.getElementById('d-filter-scenario');
+  if (!select) return;
+
+  try {
+    const scenarios = await api('/api/scenarios');
+    const options = scenarios
+      .slice()
+      .sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id), 'fr'));
+
+    for (const scenario of options) {
+      const option = document.createElement('option');
+      option.value = scenario.id;
+      option.textContent = scenario.name || scenario.id;
+      select.appendChild(option);
+    }
+
+    dashboardScenarioOptionsLoaded = true;
+  } catch (err) {
+    console.error('Dashboard scenarios load error:', err);
+  }
+}
+
 async function loadDashboard() {
   try {
-    const snapshot = await api(withPlayerQuery('/api/dashboard/player'));
+    await ensureDashboardScenarioOptions();
+    const filters = getDashboardFilters();
+    const snapshot = await api(withPlayerQuery('/api/dashboard/player', filters));
     const stats = {
       ...(snapshot.stats || {}),
       autonomy: snapshot.autonomy,
@@ -1744,5 +1795,16 @@ function updateMobileGauges(ticker, roundScore) {
 // ============================================================
 // INIT
 // ============================================================
+
+document.getElementById('dashboard-filters')?.addEventListener('change', () => {
+  loadDashboard();
+});
+
+document.getElementById('d-filters-reset')?.addEventListener('click', () => {
+  const form = document.getElementById('dashboard-filters');
+  if (!form) return;
+  form.reset();
+  loadDashboard();
+});
 
 loadDashboard();
