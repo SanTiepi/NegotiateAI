@@ -1,0 +1,13 @@
+node_modules
+.env
+.git
+.claude
+test
+*.test.mjs
+CLAUDE.md
+AGENTS.md
+HEARTBEAT.md
+IDENTITY.md
+TOOLS.md
+USER.md
+.openclaw

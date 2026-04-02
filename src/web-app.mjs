@@ -17,7 +17,9 @@ import { generateDaily } from './daily.mjs';
 import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
 import { generateReplay } from './replay.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
-import { listScenarios } from '../scenarios/index.mjs';
+import { listScenarios, loadScenario } from '../scenarios/index.mjs';
+import { generateBriefing, buildObjectiveContract } from './briefing.mjs';
+import { scoreRound, buildFightCard } from './fight-card.mjs';
 
 const SCENARIO_PRESETS = [
   {
@@ -95,6 +97,71 @@ const SCENARIO_PRESETS = [
       difficulty: 'cooperative',
     },
   },
+  // --- Personnalités célèbres ---
+  {
+    id: 'vs-steve-jobs', category: 'celebrity',
+    name: 'vs Steve Jobs', emoji: '🍎',
+    description: 'Résistez au champ de distorsion de la réalité. Manipulateur de génie.',
+    difficulty: 'manipulative',
+    scenarioFile: 'vs-steve-jobs',
+  },
+  {
+    id: 'vs-donald-trump', category: 'celebrity',
+    name: 'vs Donald Trump', emoji: '🏗️',
+    description: 'Ancrage extrême, bluff, attaques personnelles. Gardez votre calme.',
+    difficulty: 'hostile',
+    scenarioFile: 'vs-donald-trump',
+  },
+  {
+    id: 'vs-christine-lagarde', category: 'celebrity',
+    name: 'vs Christine Lagarde', emoji: '🏦',
+    description: 'Diplomatie institutionnelle, droit, précédents. Patience stratégique.',
+    difficulty: 'neutral',
+    scenarioFile: 'vs-christine-lagarde',
+  },
+  {
+    id: 'vs-warren-buffett', category: 'celebrity',
+    name: 'vs Warren Buffett', emoji: '🎩',
+    description: 'Patience infinie, offre unique, charme désarmant. Discipline BATNA.',
+    difficulty: 'cooperative',
+    scenarioFile: 'vs-warren-buffett',
+  },
+  {
+    id: 'vs-elon-musk', category: 'celebrity',
+    name: 'vs Elon Musk', emoji: '🚀',
+    description: 'Chaos, objectifs impossibles, goalposts mobiles. Régulation émotionnelle.',
+    difficulty: 'hostile',
+    scenarioFile: 'vs-elon-musk',
+  },
+  // --- Scénarios extrêmes ---
+  {
+    id: 'vs-anna-wintour', category: 'extreme',
+    name: 'vs Anna Wintour', emoji: '👗',
+    description: 'Silence glacial, mépris poli, pouvoir de statut. Ne vous soumettez pas.',
+    difficulty: 'hostile',
+    scenarioFile: 'vs-anna-wintour',
+  },
+  {
+    id: 'vs-poutine-diplomat', category: 'extreme',
+    name: 'Négociateur Kremlin', emoji: '🕵️',
+    description: 'Guerre psychologique, désinformation, menaces voilées. Tous les biais.',
+    difficulty: 'manipulative',
+    scenarioFile: 'vs-poutine-diplomat',
+  },
+  {
+    id: 'vs-cartel-hostage', category: 'extreme',
+    name: 'Libération d\'otage', emoji: '🚨',
+    description: 'Négociation de crise. Enjeu vital, zéro marge d\'erreur.',
+    difficulty: 'manipulative',
+    scenarioFile: 'vs-cartel-hostage',
+  },
+  {
+    id: 'vs-pharma-ceo', category: 'extreme',
+    name: 'CEO Pharma cynique', emoji: '💊',
+    description: 'Médicament vital, monopole, cynisme corporatif. Trouvez du leverage.',
+    difficulty: 'hostile',
+    scenarioFile: 'vs-pharma-ceo',
+  },
 ];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -131,15 +198,74 @@ async function serveStatic(res, filePath) {
   res.end(content);
 }
 
+// ── Rate limiter (in-memory, per-IP, no deps) ──────────────────────────────
+function createRateLimiter({ windowMs = 60_000, maxRequests = 20 } = {}) {
+  const hits = new Map();
+  // Cleanup every 2 minutes
+  const cleanup = setInterval(() => {
+    const cutoff = Date.now() - windowMs;
+    for (const [ip, timestamps] of hits) {
+      const valid = timestamps.filter((t) => t > cutoff);
+      if (valid.length === 0) hits.delete(ip);
+      else hits.set(ip, valid);
+    }
+  }, 120_000);
+  if (cleanup.unref) cleanup.unref();
+
+  return {
+    check(ip) {
+      const now = Date.now();
+      const cutoff = now - windowMs;
+      const timestamps = (hits.get(ip) || []).filter((t) => t > cutoff);
+      timestamps.push(now);
+      hits.set(ip, timestamps);
+      return timestamps.length <= maxRequests;
+    },
+  };
+}
+
+// ── Session cleanup (TTL + max) ─────────────────────────────────────────────
+const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
+const MAX_ACTIVE_SESSIONS = 50;
+
+function cleanupSessions(activeSessions) {
+  const now = Date.now();
+  for (const [id, session] of activeSessions) {
+    if (session._createdAt && (now - session._createdAt) > SESSION_TTL_MS) {
+      activeSessions.delete(id);
+    }
+  }
+  // If still too many, remove oldest
+  if (activeSessions.size > MAX_ACTIVE_SESSIONS) {
+    const sorted = [...activeSessions.entries()].sort((a, b) => (a[1]._createdAt || 0) - (b[1]._createdAt || 0));
+    const toRemove = sorted.slice(0, activeSessions.size - MAX_ACTIVE_SESSIONS);
+    for (const [id] of toRemove) activeSessions.delete(id);
+  }
+}
+
 export function createWebApp({ provider, sessionIdFactory, store: injectedStore } = {}) {
   const activeSessions = new Map();
   const llmProvider = provider || createAnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY });
   const nextSessionId = sessionIdFactory || (() => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
   const store = injectedStore || createStore();
+  const rateLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 30 });
+
+  // Cleanup expired sessions every 5 minutes
+  const sessionCleanup = setInterval(() => cleanupSessions(activeSessions), 5 * 60 * 1000);
+  if (sessionCleanup.unref) sessionCleanup.unref();
 
   const server = http.createServer(async (req, res) => {
     try {
       const url = new URL(req.url || '/', 'http://localhost');
+
+      // Rate limit POST endpoints (LLM calls)
+      if (req.method === 'POST') {
+        const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+        if (!rateLimiter.check(ip)) {
+          json(res, 429, { error: 'Too many requests. Please wait a moment.' });
+          return;
+        }
+      }
 
       if (req.method === 'GET' && url.pathname === '/') {
         await serveStatic(res, join(WEB_DIR, 'index.html'));
@@ -224,6 +350,12 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      if (req.method === 'GET' && url.pathname === '/api/analytics') {
+        const events = await store.loadAnalytics(Number(url.searchParams.get('limit')) || 100);
+        json(res, 200, events);
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/sessions') {
         const sessions = await store.loadSessions();
         const summaries = sessions.slice(0, 20).map((s) => ({
@@ -256,18 +388,57 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      // Briefing: get scenario context + questions before committing
+      if (req.method === 'POST' && url.pathname === '/api/briefing') {
+        const body = await readBody(req);
+        let scenario;
+        if (body.scenarioFile) {
+          scenario = await loadScenario(body.scenarioFile);
+        } else {
+          scenario = { brief: body.brief || {} };
+        }
+        const progression = await store.loadProgression();
+        json(res, 200, generateBriefing(scenario, progression));
+        return;
+      }
+
       if (req.method === 'POST' && url.pathname === '/api/session') {
         const body = await readBody(req);
-        const brief = buildBrief(body.brief);
-        const adversary = body.adversary || await generatePersona(brief, llmProvider);
+        let brief, adversary, scenario;
+
+        if (body.scenarioFile) {
+          scenario = await loadScenario(body.scenarioFile);
+          brief = buildBrief(scenario.brief);
+          adversary = scenario.adversary;
+        } else {
+          scenario = null;
+          brief = buildBrief(body.brief);
+          adversary = body.adversary || await generatePersona(brief, llmProvider);
+        }
+
+        // Build objective contract from player's answers (or use scenario defaults)
+        let objectiveContract = null;
+        if (body.objectiveContract) {
+          objectiveContract = buildObjectiveContract(body.objectiveContract, scenario || { brief, adversary });
+        }
+
         const session = createSession(brief, adversary, llmProvider, { eventPolicy: body.eventPolicy || 'none' });
+        session._objectiveContract = objectiveContract;
+        session._roundScores = [];
+        session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
+        session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
+        session._scenarioId = scenario?.metadata?.id || body.scenarioFile || null;
+
+        session._createdAt = Date.now();
         const sessionId = nextSessionId();
+        cleanupSessions(activeSessions);
         activeSessions.set(sessionId, session);
 
         json(res, 201, {
           sessionId,
           adversary: { identity: adversary.identity, style: adversary.style },
           state: { turn: session.turn, status: session.status, maxTurns: session.maxTurns },
+          objectiveContract: objectiveContract ? { objective: objectiveContract.objective, threshold: objectiveContract.minimalThreshold, batna: objectiveContract.batna } : null,
         });
         return;
       }
@@ -289,10 +460,21 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
 
         const result = await processTurn(session, body.message);
 
+        // Round scoring
+        const roundScore = scoreRound(result, session);
+        session._roundScores = session._roundScores || [];
+        session._roundScores.push(roundScore);
+        session._prevConfidence = result.state?.confidence ?? session._prevConfidence;
+        session._prevFrustration = result.state?.frustration ?? session._prevFrustration;
+
+        let fightCard = null;
+
         if (result.sessionOver) {
           const feedback = await analyzeFeedback(session, llmProvider);
           result.feedback = feedback;
-          await store.saveSession({
+          fightCard = buildFightCard(feedback, session, session._objectiveContract);
+
+          const sessionEntry = {
             id: randomUUID(),
             date: new Date().toISOString(),
             brief: session.brief,
@@ -301,12 +483,36 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             status: session.status,
             turns: session.turn,
             feedback,
+            fightCard,
+            objectiveContract: session._objectiveContract || null,
+            scenarioId: session._scenarioId || null,
+            roundScores: session._roundScores,
             mode: 'web',
             eventPolicy: session.eventPolicy,
             eventsActive: session.eventPolicy !== 'none',
             worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
-          });
+          };
+
+          await store.saveSession(sessionEntry);
           await refreshProgression(store, session);
+
+          // Analytics log — every session logged for learning
+          await store.appendAnalytics({
+            type: 'session_complete',
+            timestamp: sessionEntry.date,
+            scenarioId: session._scenarioId,
+            difficulty: session.brief?.difficulty,
+            turns: session.turn,
+            status: session.status,
+            globalScore: feedback.globalScore,
+            grade: fightCard.grade.grade,
+            triangle: fightCard.triangle,
+            biasesDetected: (feedback.biasesDetected || []).map((b) => b.biasType),
+            roundScores: session._roundScores.map((r) => r.points),
+            objectiveSet: !!session._objectiveContract,
+            strategy: session._objectiveContract?.strategy || null,
+          });
+
           activeSessions.delete(sessionId);
         }
 
@@ -325,6 +531,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           ticker: result.ticker,
           actTransition: result.actTransition,
           detectedSignals: result.detectedSignals,
+          roundScore,
+          fightCard,
         });
         return;
       }

@@ -1,0 +1,51 @@
+{
+  "id": "vs-warren-buffett",
+  "name": "Face a Warren Buffett — La patience et le walk-away",
+  "description": "Vous vendez votre entreprise a Berkshire Hathaway. Buffett est poli, patient, et pret a partir sans ciller. Le piege: son charme desarmant vous fera baisser la garde.",
+  "teaches": "Discipline BATNA (ne pas ceder par sympathie, garder sa ligne malgre le confort apparent)",
+  "brief": {
+    "situation": "Vous etes le fondateur d'une entreprise familiale de meubles haut de gamme (CA: 120M$/an, 280 employes, 40 ans d'existence). Buffett vous a contacte personnellement — il veut acheter. La valorisation juste est de 350-450M$ selon vos banquiers. Buffett est connu pour payer cash, garder le management, et ne jamais surpayer.",
+    "userRole": "Fondateur-dirigeant, 62 ans, l'entreprise est votre oeuvre de vie. Vous voulez vendre mais preserver l'heritage et les emplois.",
+    "adversaryRole": "Warren Buffett, CEO de Berkshire Hathaway, dans son bureau d'Omaha",
+    "objective": "Vendre a 420M$ minimum avec garantie de conservation des emplois et de la marque pendant 10 ans",
+    "minimalThreshold": "350M$ avec garantie emplois 5 ans et conservation de la marque",
+    "batna": "Un fonds de private equity propose 400M$ mais restructurerait l'entreprise. Votre fils pourrait reprendre mais manque d'experience. Vous pouvez aussi ne pas vendre.",
+    "constraints": ["Vous avez promis a vos employes que l'acquéreur les garderait", "Votre sante decline — vous voulez regler la succession dans l'annee", "Le fonds PE a une deadline de 60 jours pour votre reponse"],
+    "difficulty": "cooperative",
+    "relationalStakes": "Si vous vendez a Buffett, vous restez probablement CEO 2-3 ans. La relation personnelle compte enormement — Buffett achete des gens autant que des entreprises."
+  },
+  "adversary": {
+    "identity": "Warren Buffett, 93 ans, 'l'Oracle d'Omaha', CEO de Berkshire Hathaway. L'investisseur le plus celebre du monde. Fortune personnelle de 120Md$. Bureau modeste, Coca-Cola sur la table, allure de grand-pere bienveillant qui cache un cerveau d'acier.",
+    "style": "Folksy, humble, desarmant de simplicite. Raconte des anecdotes. Pose des questions apparemment naives qui sont en fait chirurgicales. Ne negocie jamais — il fait UNE offre et attend. 'Take it or leave it' dit avec le sourire. Aucune urgence, aucune pression visible. Sa patience est son arme principale. Il vous met tellement a l'aise que vous en oubliez de negocier.",
+    "publicObjective": "Acheter une belle entreprise familiale a un prix raisonnable, la garder telle quelle, l'ajouter a la constellation Berkshire",
+    "hiddenObjective": "Buffett a identifie que votre marge nette de 18% pourrait monter a 24% avec les economies d'echelle Berkshire. Sur 10 ans, il recupere sa mise x3. Il le sait, vous non. Il veut acheter a 300-320M$ max.",
+    "batna": "Buffett a 120Md$ en cash. Il n'a besoin de rien. Il peut attendre 1 an, 5 ans, 10 ans. Il y a toujours une autre entreprise familiale a acheter. Le temps est toujours de son cote.",
+    "nonNegotiables": ["Pas d'earn-out — il paie cash, prix fixe", "Il ne participe jamais a des encheres", "Si le prix ne lui convient pas, il part sans rancune et ne revient pas"],
+    "timePressure": "Aucune. Buffett a tout le temps du monde. C'est VOUS qui avez des deadlines (sante, PE fund, succession). Il le sait sans jamais le mentionner.",
+    "emotionalProfile": { "confidence": 95, "frustration": 5, "egoThreat": 0 },
+    "likelyTactics": [
+      "Offre unique — 'Voici mon prix. Je ne negocie pas. Prenez votre temps.'",
+      "Patience absolue — capable d'attendre 6 mois votre reponse sans relancer",
+      "Charme desarmant — histoires personnelles, humour, vous met a l'aise au point d'oublier vos objectifs",
+      "Questions naives — 'Dites-moi, combien payez-vous de loyer ?' (il calcule en temps reel)",
+      "Flatterie sincere — il admire genuinement votre entreprise, ce qui rend le 'non' tres difficile",
+      "Comparaison douce — 'Mrs. B m'a vendu Nebraska Furniture Mart sur une poignee de main. Pas besoin d'avocats.'",
+      "Le silence confortable — il ne remplit jamais les blancs, vous si",
+      "Walk-away zero-drama — s'il part, il part vraiment. Pas de rappel, pas de contre-offre."
+    ],
+    "vulnerabilities": [
+      "Son ego est lie a sa reputation de 'fair dealer' — si vous prouvez que son offre n'est pas fair, ca le pique",
+      "Il deteste les encheres mais craint que le PE fund paye plus (il ne l'admettra pas)",
+      "A 93 ans, chaque acquisition est potentiellement une des dernieres — il y a un heritage a construire",
+      "Il respecte enormement les fondateurs qui connaissent leurs chiffres par coeur",
+      "Sa reputation publique est un levier — un article disant 'Buffett a lowballe un fondateur' lui ferait mal",
+      "Il est emotionnellement attache aux entreprises familiales — c'est sincere, pas tactique"
+    ]
+  },
+  "tiers": {
+    "cooperative": {},
+    "neutral": { "difficulty": "neutral" },
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

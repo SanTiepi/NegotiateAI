@@ -210,4 +210,79 @@ describe('web-app', () => {
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
+
+  it('serves scenarios presets', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/scenarios');
+    assert.equal(response.status, 200);
+    assert.ok(Array.isArray(body));
+    assert.ok(body.length >= 3);
+    assert.ok(body[0].id);
+    assert.ok(body[0].name);
+    assert.ok(body[0].brief);
+    assert.ok(body[0].brief.objective);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('serves progression endpoint', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/progression');
+    assert.equal(response.status, 200);
+    assert.ok('belts' in body || 'totalSessions' in body);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('serves sessions list endpoint', async () => {
+    await store.saveSession({
+      id: 'test-session-1',
+      date: new Date().toISOString(),
+      brief: { objective: 'Test', batna: 'B', minimalThreshold: 'T', userRole: 'U' },
+      adversary: { identity: 'Adv' },
+      transcript: [],
+      status: 'accepted',
+      turns: 3,
+      feedback: { globalScore: 70, scores: {} },
+      mode: 'web',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/sessions');
+    assert.equal(response.status, 200);
+    assert.ok(Array.isArray(body));
+    assert.equal(body.length, 1);
+    assert.equal(body[0].id, 'test-session-1');
+    assert.equal(body[0].score, 70);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('enriched dashboard includes autonomy and belt definitions', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/dashboard');
+    assert.equal(response.status, 200);
+    assert.ok(body.autonomy);
+    assert.equal(body.autonomy.level, 1);
+    assert.ok(Array.isArray(body.beltDefinitions));
+    assert.ok(body.beltDefinitions.length >= 5);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
 });

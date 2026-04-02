@@ -7,9 +7,10 @@ import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { computeHallOfFame, computeScenarioLeaderboard } from './leaderboard.mjs';
 
-const DEFAULT_DIR = join(homedir(), '.negotiate-ai');
+const DEFAULT_DIR = process.env.NEGOTIATE_AI_DATA_DIR || join(homedir(), '.negotiate-ai');
 const SESSIONS_FILE = 'sessions.jsonl';
 const PROGRESSION_FILE = 'progression.json';
+const ANALYTICS_FILE = 'analytics.jsonl';
 const MAX_SESSIONS = 50;
 
 function defaultProgression() {
@@ -78,6 +79,24 @@ export function createStore(options = {}) {
     async saveProgression(progression) {
       await ensureDir();
       await writeFile(join(dataDir, PROGRESSION_FILE), JSON.stringify(progression, null, 2), 'utf-8');
+    },
+
+    async appendAnalytics(event) {
+      await ensureDir();
+      const line = JSON.stringify(event) + '\n';
+      await appendFile(join(dataDir, ANALYTICS_FILE), line, 'utf-8');
+    },
+
+    async loadAnalytics(limit = 200) {
+      await ensureDir();
+      let raw;
+      try {
+        raw = await readFile(join(dataDir, ANALYTICS_FILE), 'utf-8');
+      } catch {
+        return [];
+      }
+      const lines = raw.trim().split('\n').filter(Boolean);
+      return lines.slice(-limit).map((l) => JSON.parse(l)).reverse();
     },
 
     async getDashboardStats() {

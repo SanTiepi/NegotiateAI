@@ -2,3 +2,4 @@
 - [2026-03-30] [deep] [5 modèles de monétisation, recommandation 3 étapes] Commercialisation NegotiateAI — du CLI au revenu. Pattern: on vend la confiance avant un moment à enjeu, pas un simulateur.
 - [2026-03-30] [deep+codex] [marché $3.6B, concurrents sales-only, MCP=distribution, 3 phases] Commercialisation avec données marché — le trou béant: personne ne fait négo universelle B2C. MCP server = move #1.
 - [2026-03-30] [explore] [12 profils, 5 collisions, 4 directions] WorldEngine appliqué au lancement — Ticker de négo (bookmaker×trader), Inoculation cognitive (immunologue×neurochirurgien), Arc narratif 4 actes (DJ×chorégraphe), Feed social d'exploits (urbaniste×Eyal). Pattern: NegotiateAI = microscope cognitif, pas simulateur.
+- [2026-04-02] [explore] [3 directions] Système d'objectifs NegotiateAI — briefing socratique vs triangle+grades vs fight card. Patterns: objectifs construits > sélectionnés, scoring multi-dim continu, hidden objective = vrai jeu.

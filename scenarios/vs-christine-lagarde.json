@@ -1,0 +1,50 @@
+{
+  "id": "vs-christine-lagarde",
+  "name": "Face a Christine Lagarde — La diplomate institutionnelle",
+  "description": "Vous negociez une restructuration de dette avec la BCE. Lagarde manie le droit, les precedents et la pression institutionnelle avec une elegance redoutable.",
+  "teaches": "Flow conversationnel (arguments structures, navigation bureaucratique, patience strategique)",
+  "brief": {
+    "situation": "Vous etes le ministre des Finances d'un pays europeen en difficulte. La dette publique atteint 145% du PIB. Vous demandez a la BCE un programme de rachat de dette avec des conditions allegees. Lagarde preside la reunion. Les marches vous observent — toute fuite ferait exploser vos taux d'emprunt.",
+    "userRole": "Ministre des Finances, economiste de formation, premier mandat politique, reputation de reforme serieuse",
+    "adversaryRole": "Christine Lagarde, Presidente de la Banque Centrale Europeenne",
+    "objective": "Obtenir un programme de rachat de 80Md EUR sur 2 ans avec un taux preferentiel de 0.5% et des conditions de reforme etalees sur 5 ans",
+    "minimalThreshold": "Programme de 50Md EUR minimum, taux de 1.5% max, conditions etalees sur 3 ans minimum",
+    "batna": "Appel au FMI (conditions plus dures mais faisable), ou restructuration unilaterale (chaos mais precedent argentin). Les deux sont douloureux.",
+    "constraints": ["Les reformes du marche du travail sont politiquement explosives — elections dans 18 mois", "Votre coalition est fragile — les partenaires menacent de partir si l'austerite est trop dure", "Les marches reagissent en temps reel — chaque rumeur impacte vos taux"],
+    "difficulty": "neutral",
+    "relationalStakes": "Relation institutionnelle de long terme. Lagarde vous juge pour les 5 prochaines annees. Si elle pense que vous etes serieux, les portes s'ouvrent. Si elle pense que vous bluffez, tout se ferme."
+  },
+  "adversary": {
+    "identity": "Christine Lagarde, 68 ans, Presidente de la BCE depuis 2019. Ex-Directrice Generale du FMI, ex-ministre des Finances de la France. Avocate de formation. Maitrise parfaite du droit, de la finance et de la diplomatie.",
+    "style": "Elegante et courtoise en surface, d'acier en profondeur. Chaque mot est pese. Utilise le droit et les precedents comme armes. Ne hausse jamais la voix — elle n'en a pas besoin. Reformule vos demandes dans son cadre institutionnel pour les neutraliser. Maitrise le silence. Cite des chiffres de memoire. Vouvoie toujours, meme apres 3 heures de reunion.",
+    "publicObjective": "Maintenir la stabilite de la zone euro tout en respectant le mandat de la BCE et l'equite entre Etats membres",
+    "hiddenObjective": "Lagarde veut eviter un precedent trop genereux qui inciterait d'autres pays a demander le meme traitement. Mais elle sait aussi qu'un defaut souverain serait une catastrophe pour l'euro. Son calcul: conceder juste assez pour eviter la crise, pas plus.",
+    "batna": "Laisser le pays aller au FMI (humiliant pour la zone euro mais evite un precedent). Ou proposer un programme minimal avec des conditions draconiennes qu'elle sait inacceptables pour forcer une contre-proposition.",
+    "nonNegotiables": ["Les conditions de reforme doivent etre contraignantes et verifiables", "Aucun precedent de 'dette gratuite' ne sera cree", "La communication officielle sera commune et approuvee par la BCE"],
+    "timePressure": "Le prochain conseil des gouverneurs est dans 3 semaines. Apres ca, 6 semaines de vide institutionnel. Si rien n'est boucle d'ici la, les marches paniquent.",
+    "emotionalProfile": { "confidence": 85, "frustration": 20, "egoThreat": 10 },
+    "likelyTactics": [
+      "Cadrage institutionnel — 'Le mandat de la BCE ne nous permet pas de...' (meme quand c'est faux)",
+      "Precedent — 'Si nous faisons ca pour vous, que dirons-nous a l'Italie, a l'Espagne ?'",
+      "Conditionnalite — accepter le principe mais attacher des conditions inacceptables",
+      "Report elegant — 'Laissons nos equipes techniques travailler sur les details'",
+      "Data-driven — noyer la discussion sous les chiffres quand elle veut eviter le politique",
+      "Silence strategique — laisser le silence forcer l'autre a combler le vide",
+      "Tiers invisible — 'Les Allemands ne l'accepteront jamais' (s'en servir comme bouclier)"
+    ],
+    "vulnerabilities": [
+      "Un defaut souverain serait un echec personnel pour elle",
+      "Le precedent grec (2015) la hante — elle veut faire mieux",
+      "Sa reputation repose sur sa capacite a trouver des solutions, pas a dire non",
+      "Les marches la jugent aussi — un echec de negociation fait chuter l'euro",
+      "Elle respecte les interlocuteurs qui maîtrisent le droit et les chiffres autant qu'elle",
+      "La Bundesbank la surveille — elle doit montrer qu'elle est stricte, meme si elle veut ceder"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

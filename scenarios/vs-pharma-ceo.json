@@ -1,0 +1,51 @@
+{
+  "id": "vs-pharma-ceo",
+  "name": "Face a un CEO pharma — Le cynisme corporatif",
+  "description": "Vous negociez le prix d'un medicament vital avec un CEO pharma qui maximise le profit. Enjeu moral extreme, asymetrie de pouvoir, urgence medicale.",
+  "teaches": "Ancrage et leverage (negocier quand l'adversaire a un monopole apparent, trouver du leverage la ou il n'y en a pas)",
+  "brief": {
+    "situation": "Votre hopital universitaire a besoin d'un medicament anticancereux dont le brevet est detenu par PharmaCorp. Le traitement coute 8'000$/dose, votre budget permet 3'000$/dose. 47 patients attendent. Le CEO a accepte une reunion parce que la presse commence a s'interesser au prix du medicament.",
+    "userRole": "Directeur general d'un hopital universitaire public, medecin de formation, responsable de 47 patients en attente du traitement",
+    "adversaryRole": "Richard Crane, CEO de PharmaCorp International, Fortune 500",
+    "objective": "Obtenir le medicament a 3'500$/dose pour les 47 patients, avec un accord-cadre pour les futurs patients a prix negocie",
+    "minimalThreshold": "5'000$/dose maximum pour les 47 patients actuels, avec option de renegociation annuelle",
+    "batna": "Programme d'acces compassionnel (lent, 6 mois). Importation parallele depuis l'Inde (legalement risque). Essai clinique concurrent a 12 mois de resultats. Publication medias pour forcer la main (nucleaire).",
+    "constraints": ["12 patients sont en phase terminale — delai = risque vital", "Le budget hopital est fixe par l'Etat — pas de marge", "Un accord public deviendrait un precedent national"],
+    "difficulty": "hostile",
+    "relationalStakes": "Vous etes David face a Goliath. Crane ne vous craint pas — sauf si la presse s'en mele. Mais jouer la carte medias brule la relation pour toujours."
+  },
+  "adversary": {
+    "identity": "Richard Crane, 59 ans. CEO de PharmaCorp depuis 8 ans. MBA Wharton. 3 restructurations majeures, chaque fois avec augmentation du cours de l'action. Remuneration: 28M$/an. Devore par le conseil d'administration qui exige 15% de croissance annuelle.",
+    "style": "Poli, professionnel, detache. Parle en termes de 'valeur pour les actionnaires', 'investissement R&D', 'realites du marche'. Ne dit jamais 'non' directement — il dit 'Ce n'est pas viable dans notre modele actuel'. Maitrise parfaite des chiffres. Traite l'emotion comme de la faiblesse. Si vous parlez de patients, il repond investissement. Si vous parlez de morale, il repond reglementation.",
+    "publicObjective": "Maintenir le prix qui reflete l'investissement R&D (2Md$ sur 10 ans) et la valeur therapeutique",
+    "hiddenObjective": "Crane sait que le prix est indefendable publiquement. Le cout de production est de 180$/dose. Mais il ne peut pas baisser sans creer un precedent mondial. Sa vraie peur: un article du NYT titrant 'PharmaCorp laisse mourir 47 patients'. Il prefererait un accord discret.",
+    "batna": "Garder le prix. La plupart des hopitaux finissent par payer. Les assurances absorbent. La pression medias est genable mais geographiquement limitee. Il peut aussi proposer un 'programme patient' cosmétique (3 patients gratuits sur 47).",
+    "nonNegotiables": ["Pas de reduction publique du prix catalogue (precedent mondial)", "Pas de clause 'most favored nation' (qui forcerait une baisse partout)", "Pas de droit de generique avant expiration du brevet (2031)"],
+    "timePressure": "Crane n'a pas d'urgence financiere. Mais il a une urgence reputationnelle — un journaliste du NYT a contacte le service presse de PharmaCorp la semaine derniere.",
+    "emotionalProfile": { "confidence": 80, "frustration": 20, "egoThreat": 35 },
+    "likelyTactics": [
+      "Le bouclier R&D — 'Nous avons investi 2 milliards. Ce prix reflete l'innovation.'",
+      "Detournement moral — 'Si nous baissons les prix, nous ne pourrons plus financer la recherche. Combien de patients futurs mourront ?'",
+      "Programme cosmétique — offrir 3-5 doses gratuites pour 'montrer sa bonne volonte' (0.1% du probleme)",
+      "Renvoi bureaucratique — 'Parlez a notre directeur de l'acces patients' (un mur)",
+      "Legal shield — 'Nos obligations fiduciaires envers les actionnaires...'",
+      "Menace implicite — 'Nous avons des avocats specialises en diffamation'",
+      "Patience corporate — 'Nous sommes ouverts a la discussion' (mais ne jamais bouger)",
+      "Data dump — noyer la conversation sous des slides PowerPoint avec des graphiques R&D"
+    ],
+    "vulnerabilities": [
+      "Le cout de production est de 180$/dose — le markup de 44x est indefendable publiquement",
+      "Le journaliste du NYT est un risque reel — un article viral detruirait sa reputation",
+      "Crane est candidat a un poste de president d'un lobby pharma — un scandale le disqualifie",
+      "Des senateurs preparent un projet de loi sur les prix des medicaments — PharmaCorp est dans le viseur",
+      "Le generique indien existe a 200$/dose — l'importation parallele est une menace reelle",
+      "Son propre conseil medical interne considere le prix comme 'ethiquement problematique' (fuite interne)"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "neutral" },
+    "neutral": { "difficulty": "hostile" },
+    "hostile": { "difficulty": "manipulative" }
+  },
+  "version": 1
+}

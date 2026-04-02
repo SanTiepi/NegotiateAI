@@ -3,45 +3,367 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NegotiateAI Web</title>
+    <title>NegotiateAI</title>
     <link rel="stylesheet" href="/styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
   </head>
   <body>
-    <main class="app">
-      <section class="card">
-        <h1>NegotiateAI</h1>
-        <p class="subtitle">Simulateur de négociation en chat, sans CLI.</p>
+    <!-- NAV -->
+    <nav class="nav">
+      <div class="nav-brand" data-view="dashboard">
+        <span class="nav-logo">N</span>
+        <span class="nav-title">NegotiateAI</span>
+      </div>
+      <div class="nav-links">
+        <button class="nav-link active" data-view="dashboard">Dashboard</button>
+        <button class="nav-link" data-view="setup">Nouvelle session</button>
+        <button class="nav-link" data-view="history">Historique</button>
+      </div>
+    </nav>
 
-        <form id="setup-form" class="stack">
-          <input name="situation" placeholder="Situation">
-          <input name="userRole" placeholder="Votre rôle">
-          <input name="adversaryRole" placeholder="Rôle adverse">
-          <input name="objective" placeholder="Objectif" required>
-          <input name="minimalThreshold" placeholder="Seuil minimal" required>
-          <input name="batna" placeholder="BATNA" required>
-          <select name="difficulty">
-            <option value="neutral">neutral</option>
-            <option value="cooperative">cooperative</option>
-            <option value="hostile">hostile</option>
-            <option value="manipulative">manipulative</option>
-          </select>
-          <button type="submit">Démarrer</button>
-        </form>
+    <!-- VIEW: DASHBOARD -->
+    <main id="view-dashboard" class="view active">
+      <div class="container">
+        <header class="page-header">
+          <h1>Tableau de bord</h1>
+          <button class="btn btn-primary" data-view="setup">Nouvelle session</button>
+        </header>
 
-        <div id="chat" class="chat hidden">
-          <div id="status" class="status"></div>
-          <div id="meta" class="meta hidden">
-            <div id="ticker" class="panel"></div>
-            <div id="coach" class="panel"></div>
+        <!-- Stats cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="d-sessions">0</div>
+            <div class="stat-label">Sessions</div>
           </div>
-          <div id="messages" class="messages"></div>
-          <form id="turn-form" class="turn-row">
-            <input id="message-input" placeholder="Votre message" autocomplete="off">
-            <button type="submit">Envoyer</button>
+          <div class="stat-card accent">
+            <div class="stat-value" id="d-score">—</div>
+            <div class="stat-label">Score moyen</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="d-streak">0</div>
+            <div class="stat-label">Streak</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="d-autonomy">—</div>
+            <div class="stat-label">Niveau</div>
+          </div>
+        </div>
+
+        <!-- Belts + Progression -->
+        <div class="grid-2">
+          <section class="card">
+            <h2>Ceintures</h2>
+            <div id="d-belts" class="belts-grid"></div>
+          </section>
+          <section class="card">
+            <h2>Points faibles</h2>
+            <div id="d-weaknesses" class="weakness-list"></div>
+            <div class="mt-12">
+              <h3>Prochain palier</h3>
+              <p id="d-gap" class="text-muted">—</p>
+            </div>
+          </section>
+        </div>
+
+        <!-- Empty state -->
+        <div id="d-empty" class="empty-state hidden">
+          <div class="empty-icon">🎯</div>
+          <h2>Bienvenue sur NegotiateAI</h2>
+          <p>Lance ta premiere session pour commencer a t'entrainer.</p>
+          <button class="btn btn-primary btn-lg" data-view="setup">Commencer</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW: SETUP -->
+    <main id="view-setup" class="view">
+      <div class="container">
+        <header class="page-header">
+          <h1>Nouvelle session</h1>
+        </header>
+
+        <h2 class="section-title">Scenarios rapides</h2>
+        <div id="presets" class="presets-grid"></div>
+
+        <div class="divider"><span>ou scenario personnalise</span></div>
+
+        <form id="setup-form" class="setup-form">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Situation</label>
+              <input name="situation" placeholder="Decrivez le contexte de la negociation">
+            </div>
+            <div class="form-group">
+              <label>Votre role</label>
+              <input name="userRole" placeholder="Ex: Acheteur, Employe...">
+            </div>
+            <div class="form-group">
+              <label>Role adverse</label>
+              <input name="adversaryRole" placeholder="Ex: Vendeur, Manager...">
+            </div>
+            <div class="form-group full">
+              <label>Objectif <span class="required">*</span></label>
+              <input name="objective" placeholder="Ce que vous voulez obtenir" required>
+            </div>
+            <div class="form-group">
+              <label>Seuil minimal <span class="required">*</span></label>
+              <input name="minimalThreshold" placeholder="Le minimum acceptable" required>
+            </div>
+            <div class="form-group">
+              <label>BATNA <span class="required">*</span></label>
+              <input name="batna" placeholder="Votre plan B" required>
+            </div>
+            <div class="form-group">
+              <label>Difficulte</label>
+              <div class="difficulty-selector">
+                <label class="diff-option"><input type="radio" name="difficulty" value="cooperative"><span class="diff-badge cooperative">Cooperatif</span></label>
+                <label class="diff-option"><input type="radio" name="difficulty" value="neutral" checked><span class="diff-badge neutral">Neutre</span></label>
+                <label class="diff-option"><input type="radio" name="difficulty" value="hostile"><span class="diff-badge hostile">Hostile</span></label>
+                <label class="diff-option"><input type="radio" name="difficulty" value="manipulative"><span class="diff-badge manipulative">Manipulateur</span></label>
+              </div>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg">Lancer la session</button>
+        </form>
+      </div>
+    </main>
+
+    <!-- VIEW: BRIEFING -->
+    <main id="view-briefing" class="view">
+      <div class="container" style="max-width:720px">
+        <header class="page-header">
+          <h1>Briefing</h1>
+        </header>
+
+        <div class="card" style="margin-bottom:16px">
+          <div id="b-context" class="briefing-context"></div>
+        </div>
+
+        <div class="card" style="margin-bottom:16px">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <h2 style="margin:0">Vos chances</h2>
+            <div id="b-odds" class="odds-badge">50%</div>
+          </div>
+          <p id="b-odds-msg" class="text-muted" style="margin-top:4px"></p>
+        </div>
+
+        <div class="card">
+          <h2>Definissez vos objectifs</h2>
+          <p class="text-muted" style="margin-bottom:16px">Formulez dans vos mots. Les suggestions sont modifiables.</p>
+          <form id="briefing-form" class="briefing-fields">
+            <div class="form-group">
+              <label>Qu'est-ce qui vous ferait partir content ?</label>
+              <textarea name="objective" rows="2" required placeholder="Votre objectif ideal..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>En dessous de quoi vous refusez ?</label>
+              <textarea name="threshold" rows="2" required placeholder="Le minimum acceptable..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Si ca echoue, quel est votre plan B ?</label>
+              <textarea name="batna" rows="2" required placeholder="Votre meilleure alternative..."></textarea>
+            </div>
+            <div class="form-group">
+              <label>Comment voulez-vous que la relation soit apres ?</label>
+              <input name="relationalGoal" placeholder="Partenariat long terme / Transaction pure / Peu importe">
+            </div>
+            <div class="form-group">
+              <label>Quelle approche allez-vous utiliser ?</label>
+              <input name="strategy" placeholder="Ecoute d'abord / Ancrage haut / Collaboration / Pression...">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" style="margin-top:12px">Accepter le defi</button>
           </form>
         </div>
-      </section>
+      </div>
     </main>
+
+    <!-- VIEW: NEGOTIATION -->
+    <main id="view-negotiate" class="view">
+      <div class="negotiate-layout">
+        <!-- Top bar -->
+        <div class="nego-topbar">
+          <div class="topbar-left">
+            <span id="n-act" class="act-badge">Ouverture</span>
+            <span id="n-turn" class="turn-counter">Tour 0/12</span>
+            <span id="n-status" class="session-status">active</span>
+          </div>
+          <div class="topbar-right">
+            <span id="n-adversary" class="adversary-name"></span>
+          </div>
+        </div>
+
+        <div class="nego-body">
+          <!-- Chat -->
+          <div class="chat-panel">
+            <div id="n-messages" class="messages"></div>
+            <form id="turn-form" class="turn-form">
+              <div class="input-row">
+                <input id="msg-input" placeholder="Votre message..." autocomplete="off" autofocus>
+                <button type="submit" class="btn btn-primary" id="btn-send">Envoyer</button>
+              </div>
+              <div class="input-actions">
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate">Simuler avant d'envoyer</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-quit">/quit</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Side panel: indicators -->
+          <aside class="indicators-panel">
+            <!-- Ticker -->
+            <div class="indicator-section">
+              <h3>Indicateurs</h3>
+              <div class="gauge-list">
+                <div class="gauge" id="g-deal">
+                  <div class="gauge-header"><span class="gauge-label">Qualite du deal</span><span class="gauge-value">50%</span></div>
+                  <div class="gauge-track"><div class="gauge-fill green" style="width:50%"></div></div>
+                </div>
+                <div class="gauge" id="g-leverage">
+                  <div class="gauge-header"><span class="gauge-label">Leverage</span><span class="gauge-value">0</span></div>
+                  <div class="gauge-track signed"><div class="gauge-fill-signed" style="--lev:0"></div></div>
+                </div>
+                <div class="gauge" id="g-bias">
+                  <div class="gauge-header"><span class="gauge-label">Risque de biais</span><span class="gauge-value">50%</span></div>
+                  <div class="gauge-track"><div class="gauge-fill red" style="width:50%"></div></div>
+                </div>
+                <div class="gauge" id="g-deal-prob">
+                  <div class="gauge-header"><span class="gauge-label">Probabilite d'accord</span><span class="gauge-value">50%</span></div>
+                  <div class="gauge-track"><div class="gauge-fill blue" style="width:50%"></div></div>
+                </div>
+                <div class="gauge" id="g-tension">
+                  <div class="gauge-header"><span class="gauge-label">Tension</span><span class="gauge-value">30%</span></div>
+                  <div class="gauge-track"><div class="gauge-fill amber" style="width:30%"></div></div>
+                </div>
+                <div class="gauge" id="g-momentum">
+                  <div class="gauge-header"><span class="gauge-label">Momentum</span><span class="gauge-value trend-stable">stable</span></div>
+                  <div class="gauge-track"><div class="gauge-fill green" style="width:50%"></div></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coaching -->
+            <div class="indicator-section">
+              <h3>Coaching</h3>
+              <div id="n-coaching" class="coaching-box">En attente du premier tour...</div>
+            </div>
+
+            <!-- Round score -->
+            <div class="indicator-section">
+              <h3>Score du round</h3>
+              <div id="n-round" class="round-display">
+                <div class="round-points" id="n-round-pts">0</div>
+                <div class="round-label" id="n-round-label">En attente</div>
+                <div class="round-cumul text-muted" id="n-round-cumul">Cumulatif: 0</div>
+              </div>
+            </div>
+
+            <!-- Signals -->
+            <div class="indicator-section">
+              <h3>Signaux</h3>
+              <div id="n-signals" class="signals-box">—</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <!-- Simulate modal -->
+      <div id="simulate-modal" class="modal hidden">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h2>Simulation pre-envoi</h2>
+            <button class="modal-close" id="sim-close">&times;</button>
+          </div>
+          <div id="sim-body" class="modal-body">
+            <div class="loading">Simulation en cours...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW: RESULTS -->
+    <main id="view-results" class="view">
+      <div class="container">
+        <header class="page-header">
+          <h1>Resultats</h1>
+        </header>
+
+        <div class="results-hero">
+          <div id="r-grade-badge" class="grade-badge">—</div>
+          <div id="r-grade-label" class="grade-label"></div>
+          <div id="r-grade-desc" class="verdict"></div>
+        </div>
+
+        <!-- Triangle -->
+        <div class="card" style="margin-bottom:16px">
+          <h2>Triangle de performance</h2>
+          <div class="triangle-grid">
+            <div class="tri-axis">
+              <div class="tri-label">Transaction</div>
+              <div class="tri-bar-track"><div class="tri-bar-fill green" id="r-tri-trans" style="width:0%"></div></div>
+              <div class="tri-value" id="r-tri-trans-v">0</div>
+            </div>
+            <div class="tri-axis">
+              <div class="tri-label">Relation</div>
+              <div class="tri-bar-track"><div class="tri-bar-fill blue" id="r-tri-rel" style="width:0%"></div></div>
+              <div class="tri-value" id="r-tri-rel-v">0</div>
+            </div>
+            <div class="tri-axis">
+              <div class="tri-label">Intelligence</div>
+              <div class="tri-bar-track"><div class="tri-bar-fill amber" id="r-tri-intel" style="width:0%"></div></div>
+              <div class="tri-value" id="r-tri-intel-v">0</div>
+            </div>
+          </div>
+          <div id="r-discovery" class="text-muted" style="margin-top:8px"></div>
+        </div>
+
+        <!-- Rounds summary -->
+        <div class="card" style="margin-bottom:16px">
+          <h2>Rounds</h2>
+          <div id="r-rounds" class="rounds-summary"></div>
+        </div>
+
+        <div class="grid-2">
+          <section class="card">
+            <h2>Dimensions</h2>
+            <div id="r-dimensions" class="dimensions-list"></div>
+          </section>
+          <section class="card">
+            <h2>Biais detectes</h2>
+            <div id="r-biases" class="biases-list"></div>
+          </section>
+        </div>
+
+        <div class="grid-2">
+          <section class="card">
+            <h2>Tactiques utilisees</h2>
+            <div id="r-tactics" class="tags-list"></div>
+          </section>
+          <section class="card">
+            <h2>Recommandations</h2>
+            <ul id="r-recs" class="recs-list"></ul>
+          </section>
+        </div>
+
+        <div class="results-actions">
+          <button class="btn btn-primary" data-view="setup">Nouvelle session</button>
+          <button class="btn btn-outline" data-view="dashboard">Dashboard</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW: HISTORY -->
+    <main id="view-history" class="view">
+      <div class="container">
+        <header class="page-header">
+          <h1>Historique</h1>
+        </header>
+        <div id="h-list" class="history-list"></div>
+        <div id="h-empty" class="empty-state hidden">
+          <p>Aucune session enregistree.</p>
+        </div>
+      </div>
+    </main>
+
     <script type="module" src="/app.js"></script>
   </body>
 </html>
