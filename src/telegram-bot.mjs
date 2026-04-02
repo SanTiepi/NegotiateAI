@@ -6,6 +6,9 @@ import { generateDaily, dailyAlreadyPlayed } from './daily.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs';
 
+const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
+const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
+
 function jsonHeaders() {
   return {
     'content-type': 'application/json; charset=utf-8',
@@ -266,4 +269,100 @@ export function formatTurnReply(result) {
   if (result.coaching?.tip) lines.push(`Tip: ${result.coaching.tip}`);
   if (result.sessionOver) lines.push(`Fin: ${result.endReason || 'session terminée'}`);
   return lines.filter(Boolean).join('\n');
+}
+
+export function createTelegramPollingRuntime({
+  bot,
+  token,
+  apiBaseUrl = 'https://api.telegram.org',
+  fetchImpl = globalThis.fetch,
+  pollTimeoutSeconds = DEFAULT_POLL_TIMEOUT_SECONDS,
+  idleDelayMs = DEFAULT_POLL_IDLE_DELAY_MS,
+  onError = () => {},
+} = {}) {
+  if (!bot || typeof bot.handleMessage !== 'function') {
+    throw new Error('createTelegramPollingRuntime requires a bot with handleMessage(update)');
+  }
+  if (!token) throw new Error('createTelegramPollingRuntime requires a Telegram token');
+  if (typeof fetchImpl !== 'function') throw new Error('createTelegramPollingRuntime requires fetch');
+
+  let offset = 0;
+  let stopped = false;
+
+  async function call(method, payload = {}) {
+    const response = await fetchImpl(`${apiBaseUrl}/bot${token}/${method}`, {
+      method: 'POST',
+      headers: jsonHeaders(),
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Telegram ${method} failed with ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  async function deleteWebhook({ dropPendingUpdates = false } = {}) {
+    return call('deleteWebhook', { drop_pending_updates: dropPendingUpdates });
+  }
+
+  async function fetchUpdates() {
+    const body = await call('getUpdates', {
+      offset,
+      timeout: pollTimeoutSeconds,
+      allowed_updates: ['message'],
+    });
+    const updates = Array.isArray(body?.result) ? body.result : [];
+    if (updates.length) {
+      offset = updates.at(-1).update_id + 1;
+    }
+    return updates;
+  }
+
+  async function pollOnce() {
+    const updates = await fetchUpdates();
+    const results = [];
+    for (const update of updates) {
+      results.push(await bot.handleMessage(update));
+    }
+    return { updates, results };
+  }
+
+  async function start() {
+    stopped = false;
+    await deleteWebhook({ dropPendingUpdates: false });
+    while (!stopped) {
+      try {
+        const { updates } = await pollOnce();
+        if (updates.length === 0 && idleDelayMs > 0) {
+          await delay(idleDelayMs);
+        }
+      } catch (error) {
+        onError(error);
+        if (!stopped && idleDelayMs > 0) {
+          await delay(idleDelayMs);
+        }
+      }
+    }
+  }
+
+  function stop() {
+    stopped = true;
+  }
+
+  return {
+    deleteWebhook,
+    fetchUpdates,
+    pollOnce,
+    start,
+    stop,
+    getOffset() {
+      return offset;
+    },
+  };
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

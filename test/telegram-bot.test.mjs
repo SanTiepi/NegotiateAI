@@ -4,7 +4,7 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createMockProvider } from '../src/provider.mjs';
-import { createTelegramBot, parseScenarioSeed, formatTurnReply } from '../src/telegram-bot.mjs';
+import { createTelegramBot, createTelegramPollingRuntime, parseScenarioSeed, formatTurnReply } from '../src/telegram-bot.mjs';
 import { createStore } from '../src/store.mjs';
 
 const provider = createMockProvider({
@@ -198,5 +198,52 @@ describe('telegram-bot', () => {
     assert.match(text, /Réponse/);
     assert.match(text, /Tip/);
     assert.match(text, /Done/);
+  });
+
+  it('polling runtime removes webhook then dispatches fetched updates', async () => {
+    const sent = [];
+    const fetchCalls = [];
+    const bot = createTelegramBot({
+      provider,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    const runtime = createTelegramPollingRuntime({
+      bot,
+      token: 'token-123',
+      fetchImpl: async (url, options) => {
+        fetchCalls.push({ url, body: JSON.parse(options.body) });
+        if (url.endsWith('/deleteWebhook')) {
+          return { ok: true, async json() { return { ok: true, result: true }; } };
+        }
+        if (url.endsWith('/getUpdates')) {
+          return {
+            ok: true,
+            async json() {
+              return {
+                ok: true,
+                result: [{ update_id: 10, message: { chat: { id: 51 }, text: '/help' } }],
+              };
+            },
+          };
+        }
+        throw new Error(`Unexpected url: ${url}`);
+      },
+    });
+
+    await runtime.deleteWebhook();
+    const result = await runtime.pollOnce();
+
+    assert.equal(result.updates.length, 1);
+    assert.equal(result.results[0].command, 'start');
+    assert.equal(runtime.getOffset(), 11);
+    assert.match(sent.at(-1).text, /Bienvenue sur NegotiateAI/);
+    assert.equal(fetchCalls[0].body.drop_pending_updates, false);
+    assert.equal(fetchCalls[1].body.offset, 0);
+    assert.equal(fetchCalls[1].body.timeout, 25);
   });
 });
