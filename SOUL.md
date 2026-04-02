@@ -30,6 +30,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch dev-runner valide : si `git log -10 --oneline` montre deja simulate-before-send, war-room, coach L1-L3, autonomy ladder et MCP hardening, et que `npm test` reste a 277 verts, ne pas reouvrir artificiellement une feature
 - Si le top-10 git est compose des 5 feats cibles suivies de commits `docs: refresh soul after zero-delta validation batch`, traiter le run comme maintenance documentaire uniquement
 - Le commit Simulate Before Send peut sortir du top-10 apres plusieurs batches doc ; en cas de doute, verifier aussi `git log --grep="simulate" -n 5` avant de rouvrir la feature
+- Batch cron nocturne fiable : si `git log -10` ne montre que 4 feats SOUL mais `git log --grep="simulate" -n 5` retrouve Simulate Before Send et que `npm test` reste a 277 verts, traiter le run comme zero-delta documentaire
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -47,6 +48,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch audit prioritaire: lire d'abord `CLAUDE.md`, `SOUL.md`, `git log -10 --oneline`, puis lancer `npm test`; si tout confirme l'etat cible, limiter le commit a la doc de memoire operative
 - Batch zero-delta recurrent: ignorer les fichiers workspace non suivis et ne committer que `SOUL.md` avec un message `docs: refresh soul after zero-delta validation batch`
 - Audit prioritaire robuste: si le top-10 ne montre que 4 feats SOUL, confirmer la 5e via `git log --grep="simulate" -n 5` puis conserver un batch documentaire si `npm test` reste a 277 verts
+- Batch cron zero-delta: apres validation `git log -10` + grep simulate + `npm test`, ne toucher qu'a `SOUL.md` puis committer `docs: refresh soul after zero-delta validation batch`
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
