@@ -42,6 +42,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id/replay), sans recalcul produit cote navigateur
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
+- Web app /api/versus: rester un simple adaptateur HTTP de adjudicateVersusRound, avec validation des champs via le module pur et sans logique de scoring dupliquee
 - Mode versus: garder l'arbitrage pur et testable (2 humains in, verdict structure out), avec fallback deterministic si le provider echoue
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
@@ -55,6 +56,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Frontend web: afficher le coaching/ticker sans framework ni logique metier dupliquee; parser seulement les champs JSON exposes par l'API
 - API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/profile, /api/hall-of-fame, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
 - Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
+- Versus API web: POST /api/versus -> adjudicateVersusRound(...) avec payload mince { brief, playerA, playerB, transcript? } et reponse directement exploitable par un frontend statique
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars et validation explicite des tiers autorises
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot

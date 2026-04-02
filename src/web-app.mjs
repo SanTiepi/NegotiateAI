@@ -22,6 +22,7 @@ import { generateVaccinationCard, formatShareableCard } from './vaccination.mjs'
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { generateBriefing, buildObjectiveContract } from './briefing.mjs';
 import { scoreRound, buildFightCard } from './fight-card.mjs';
+import { adjudicateVersusRound } from './versus.mjs';
 
 const SCENARIO_PRESETS = [
   {
@@ -416,6 +417,18 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         }
         const progression = await store.loadProgression();
         json(res, 200, generateBriefing(scenario, progression));
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/versus') {
+        const body = await readBody(req);
+        const judgment = await adjudicateVersusRound({
+          brief: body.brief,
+          playerA: body.playerA,
+          playerB: body.playerB,
+          transcript: body.transcript,
+        }, llmProvider);
+        json(res, 200, judgment);
         return;
       }
 

@@ -61,6 +61,15 @@ const provider = createMockProvider({
       recommendedRewrite: `Version revue: ${message}`,
     };
   },
+  versusJudgment: {
+    winner: 'playerA',
+    scoreA: { clarity: 84, leverage: 80, emotionalControl: 78, batnaDiscipline: 82, total: 81 },
+    scoreB: { clarity: 71, leverage: 68, emotionalControl: 75, batnaDiscipline: 64, total: 70 },
+    rationale: 'Player A framed a clearer ask with stronger BATNA discipline.',
+    coachingA: ['Keep the same clarity while adding one discovery question.'],
+    coachingB: ['State your BATNA sooner and tighten your ask.'],
+    swingFactors: ['Clarity', 'BATNA discipline'],
+  },
 });
 
 let app;
@@ -359,6 +368,38 @@ describe('web-app', () => {
     assert.equal(body.bestReport.approvalScore, 84);
     assert.equal(body.reports.length, 2);
     assert.equal(body.reports[1].approvalScore, 67);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('adjudicates a versus round over the web api', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/versus', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        brief: {
+          situation: 'Nego salariale',
+          userRole: 'Candidate',
+          adversaryRole: 'Hiring manager',
+          objective: 'Signer avec 140k CHF',
+          minimalThreshold: '130k CHF minimum',
+          batna: 'Autre offre a 135k CHF',
+        },
+        playerA: { name: 'A', message: 'Je peux avancer vite et j’ai une autre option a 135k, donc 140k est coherent.' },
+        playerB: { name: 'B', message: 'Je suis motive et ouvert a discuter.' },
+      }),
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(body.winner, 'playerA');
+    assert.equal(body.scoreA.total, 81);
+    assert.equal(body.scoreB.total, 70);
+    assert.match(body.rationale, /player a/i);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
