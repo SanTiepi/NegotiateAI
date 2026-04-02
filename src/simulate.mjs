@@ -5,6 +5,8 @@ import { createSession, processTurn } from './engine.mjs';
 import { detectUserTechniques } from './tactics.mjs';
 import { analyzeTurnForBias } from './biasTracker.mjs';
 
+const MAX_BATCH_VARIANTS = 5;
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
@@ -113,6 +115,9 @@ export async function simulateBeforeSendBatch({ brief, adversary, offerMessages,
   if (!Array.isArray(offerMessages) || offerMessages.length === 0) {
     throw new Error('simulateBeforeSendBatch requires a non-empty offerMessages array');
   }
+  if (offerMessages.length > MAX_BATCH_VARIANTS) {
+    throw new Error(`simulateBeforeSendBatch supports up to ${MAX_BATCH_VARIANTS} variants per batch`);
+  }
 
   const normalized = offerMessages.map((message) => {
     if (typeof message !== 'string' || message.trim().length === 0) {
@@ -137,6 +142,45 @@ export async function simulateBeforeSendBatch({ brief, adversary, offerMessages,
     reports,
     bestIndex: ranked[0].index,
     bestReport: ranked[0].report,
+    summary: summarizeBatchDecision(reports, ranked[0].index),
+  };
+}
+
+export function summarizeBatchDecision(reports, bestIndex) {
+  if (!Array.isArray(reports) || reports.length === 0) {
+    throw new Error('summarizeBatchDecision requires a non-empty reports array');
+  }
+
+  const bestReport = reports[bestIndex];
+  if (!bestReport) {
+    throw new Error('summarizeBatchDecision requires a valid bestIndex');
+  }
+
+  const ranked = reports
+    .map((report, index) => ({
+      index,
+      score: report.approvalScore,
+      verdict: report.sendVerdict,
+      riskLevel: report.riskLevel,
+    }))
+    .sort((a, b) => b.score - a.score);
+
+  const runnerUp = ranked.find((entry) => entry.index !== bestIndex) || null;
+  const scoreGap = runnerUp ? bestReport.approvalScore - runnerUp.score : bestReport.approvalScore;
+  const confidence = scoreGap >= 12 ? 'high' : scoreGap >= 5 ? 'medium' : 'tight';
+
+  return {
+    headline: `Best option: #${bestIndex + 1} (${bestReport.approvalScore}/100, ${bestReport.sendVerdict})`,
+    confidence,
+    scoreGap,
+    recommendedRewrite: bestReport.recommendedRewrite,
+    topComparisons: ranked.slice(0, 3).map((entry, rank) => ({
+      rank: rank + 1,
+      index: entry.index,
+      approvalScore: entry.score,
+      sendVerdict: entry.verdict,
+      riskLevel: entry.riskLevel,
+    })),
   };
 }
 

@@ -96,6 +96,10 @@ export async function runSimulateBatchCli({
     stdout.write(`\n${c.bold}${c.cyan}═══ NegotiateAI — Simulate Batch Verdict ═══${c.reset}\n\n`);
     stdout.write(`  ${c.dim}Variantes:${c.reset} ${messages.length}\n`);
     stdout.write(`  ${c.dim}Meilleure option:${c.reset} #${batch.bestIndex + 1}\n\n`);
+    if (batch.summary) {
+      stdout.write(`  ${c.dim}Lecture rapide:${c.reset} ${batch.summary.headline}\n`);
+      stdout.write(`  ${c.dim}Confiance:${c.reset} ${batch.summary.confidence} · écart ${batch.summary.scoreGap}\n\n`);
+    }
 
     batch.reports.forEach((report, index) => {
       const isBest = index === batch.bestIndex;

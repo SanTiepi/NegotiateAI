@@ -623,6 +623,41 @@ describe('web-app', () => {
     assert.equal(body.bestReport.approvalScore, 84);
     assert.equal(body.reports.length, 2);
     assert.equal(body.reports[1].approvalScore, 67);
+    assert.equal(body.summary.headline, 'Best option: #1 (84/100, send)');
+    assert.equal(body.summary.topComparisons[0].index, 0);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('rejects batch simulation requests above 5 variants', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await request('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        brief: {
+          situation: 'Achat appartement',
+          userRole: 'Acheteur',
+          adversaryRole: 'Vendeuse',
+          objective: 'Acheter a 480k',
+          minimalThreshold: '500k max',
+          batna: 'Continuer les visites',
+        },
+      }),
+    });
+
+    const { response, body } = await request('/api/session/sess-test/simulate-batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ messages: ['A', 'B', 'C', 'D', 'E', 'F'] }),
+    });
+
+    assert.equal(response.status, 400);
+    assert.match(body.error, /up to 5 messages/i);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

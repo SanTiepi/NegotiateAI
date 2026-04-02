@@ -32,6 +32,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Rapports Telegram : maximum 1500 caractères, y compris les résumés Simulate Before Send v2
 - Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
 - Les filtres d'analytics web (`mode`, `difficulty`, `scenarioId`, `type`) doivent dégrader proprement vers des stats vides sans casser l'autonomie, l'UI layer, ni les résumés agrégés
+- Simulate Before Send v2 reste borné à 5 variantes par batch sur tous les canaux (CLI, web, Telegram) avec un résumé compact orienté décision
 
 ## Patterns
 
@@ -43,6 +44,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Dashboard API : préférer des filtres query string côté route (`/api/dashboard?mode=...&difficulty=...&scenarioId=...`) plutôt que dupliquer la logique d'agrégation
 - Analytics API web : exposer une vue brute filtrable (`/api/analytics`) et une vue agrégée déterministe (`/api/analytics/summary`) avec les mêmes query filters
 - Telegram : toute feature d'analyse doit produire un résumé compact orienté décision (meilleure option + score + rewrite)
+- Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
 
 ## Règle critique
 

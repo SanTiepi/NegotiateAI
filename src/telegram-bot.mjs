@@ -295,6 +295,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     const lines = [
       `Simulate Before Send v2 — ${variants.length} variantes`,
       `Meilleure option: #${batch.bestIndex + 1} (${batch.bestReport.approvalScore}/100, ${batch.bestReport.sendVerdict})`,
+      batch.summary ? `Confiance: ${batch.summary.confidence} · Écart: ${batch.summary.scoreGap}` : null,
       '',
       ...batch.reports.map((report, index) => `#${index + 1} · ${report.approvalScore}/100 · ${report.sendVerdict} · ${report.predictedOutcome}`),
       '',

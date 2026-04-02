@@ -842,6 +842,17 @@ function renderSimulation(report) {
 function renderSimulationBatch(messages, batch) {
   const results = document.getElementById('sim-results');
   const verdictLabel = { send: 'Envoyer', revise: 'À réviser', do_not_send: 'Ne pas envoyer' };
+  const summary = batch.summary ? `
+    <div class="sim-card best" style="margin-bottom:16px">
+      <div class="sim-card-head">
+        <strong>Résumé décisionnel</strong>
+        <span class="badge">${escapeHtml(batch.summary.confidence || '')}</span>
+      </div>
+      <p class="text-muted">${escapeHtml(batch.summary.headline || '')}</p>
+      ${typeof batch.summary.scoreGap === 'number' ? `<p class="text-muted">Écart avec la variante suivante: ${batch.summary.scoreGap} point(s)</p>` : ''}
+      ${batch.summary.recommendedRewrite ? `<div class="sim-section"><h4>Rewrite recommandé</h4><div class="sim-rewrite">${escapeHtml(batch.summary.recommendedRewrite)}</div></div>` : ''}
+    </div>
+  ` : '';
   const cards = (batch.reports || []).map((report, index) => {
     const isBest = index === batch.bestIndex;
     const riskLabel = report.riskLevel === 'low' ? 'Risque faible' : report.riskLevel === 'medium' ? 'Risque moyen' : 'Risque élevé';
@@ -862,7 +873,7 @@ function renderSimulationBatch(messages, batch) {
     `;
   }).join('');
 
-  results.innerHTML = cards || '<p class="text-muted">Aucun résultat.</p>';
+  results.innerHTML = `${summary}${cards}` || '<p class="text-muted">Aucun résultat.</p>';
 }
 
 // ============================================================

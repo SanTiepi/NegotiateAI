@@ -877,6 +877,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           json(res, 400, { error: 'messages array is required' });
           return;
         }
+        if (body.messages.length > 5) {
+          json(res, 400, { error: 'simulate-batch supports up to 5 messages per request' });
+          return;
+        }
         const batch = await simulateBeforeSendBatch({
           brief: session.brief,
           adversary: session.adversary,

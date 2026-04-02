@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { simulateBeforeSend, simulateBeforeSendBatch, assertValidOfferSimulationReport } from '../src/simulate.mjs';
+import { simulateBeforeSend, simulateBeforeSendBatch, summarizeBatchDecision, assertValidOfferSimulationReport } from '../src/simulate.mjs';
 import { createMockProvider } from '../src/provider.mjs';
 
 const MOCK_BRIEF = {
@@ -149,6 +149,37 @@ describe('simulateBeforeSend', () => {
     assert.equal(batch.reports.length, 3);
     assert.equal(batch.bestIndex, 1);
     assert.equal(batch.bestReport.approvalScore, 84);
+    assert.equal(batch.summary.headline, 'Best option: #2 (84/100, send)');
+    assert.equal(batch.summary.confidence, 'medium');
+    assert.equal(batch.summary.scoreGap, 5);
+    assert.equal(batch.summary.topComparisons[0].index, 1);
+  });
+
+  it('rejects batches larger than 5 variants', async () => {
+    const provider = createMockProvider({});
+
+    await assert.rejects(() => simulateBeforeSendBatch({
+      brief: MOCK_BRIEF,
+      adversary: MOCK_ADVERSARY,
+      provider,
+      offerMessages: ['A', 'B', 'C', 'D', 'E', 'F'],
+    }), { message: /up to 5 variants/i });
+  });
+});
+
+describe('summarizeBatchDecision', () => {
+  it('builds a compact leaderboard for batch simulations', () => {
+    const summary = summarizeBatchDecision([
+      { approvalScore: 61, sendVerdict: 'revise', riskLevel: 'medium', recommendedRewrite: 'A' },
+      { approvalScore: 84, sendVerdict: 'send', riskLevel: 'low', recommendedRewrite: 'B' },
+      { approvalScore: 79, sendVerdict: 'send', riskLevel: 'medium', recommendedRewrite: 'C' },
+    ], 1);
+
+    assert.equal(summary.headline, 'Best option: #2 (84/100, send)');
+    assert.equal(summary.confidence, 'medium');
+    assert.equal(summary.scoreGap, 5);
+    assert.equal(summary.recommendedRewrite, 'B');
+    assert.deepEqual(summary.topComparisons.map((entry) => entry.index), [1, 2, 0]);
   });
 });
 
