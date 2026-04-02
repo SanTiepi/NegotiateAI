@@ -47,6 +47,7 @@ describe('vaccination', () => {
     assert.equal(card.negotiatorLevel, 'Débutant');
     assert.equal(card.belt, 'Aucune');
     assert.equal(card.biases.length, 5);
+    assert.equal(card.autonomy.level, 1);
   });
 
   it('bias status: immunized when frequency < 0.15 and exposures >= 5', () => {
@@ -169,6 +170,7 @@ describe('vaccination', () => {
     assert.ok(output.length > 0);
     assert.ok(!output.includes('\x1b['), 'Should not contain ANSI escape codes');
     assert.ok(output.includes('Mon profil NegotiateAI'));
+    assert.ok(output.includes('Autonomie: L'));
     assert.ok(output.includes('negotiateai.app'));
   });
 

@@ -3,6 +3,7 @@
 
 import { BIAS_TYPES } from './biasTracker.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
+import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -172,6 +173,7 @@ export function generateVaccinationCard(progression, sessions) {
   // Level
   const negotiatorLevel = computeNegotiatorLevel(totalSessions, avgScore, earnedBelts.length);
   const nextMilestone = computeNextMilestone(negotiatorLevel, totalSessions, avgScore, earnedBelts.length);
+  const autonomy = evaluateAutonomyLevel({ totalSessions, avgScore, earnedBelts: earnedBelts.length });
 
   return {
     generatedDate: new Date().toISOString().split('T')[0],
@@ -182,6 +184,13 @@ export function generateVaccinationCard(progression, sessions) {
     weaknesses,
     negotiatorLevel,
     nextMilestone,
+    autonomy: {
+      level: autonomy.level,
+      label: autonomy.label,
+      key: autonomy.key,
+      nextLabel: autonomy.next?.label || null,
+      unlockGap: describeAutonomyGap(autonomy),
+    },
   };
 }
 
@@ -230,6 +239,8 @@ export function formatVaccinationCard(card) {
   lines.push(row(''));
   lines.push(row(`${c.bold}Forces:${c.reset} ${card.strengths.join(', ')}`));
   lines.push(row(`${c.bold}À travailler:${c.reset} ${card.weaknesses.join(', ')}`));
+  lines.push(row(`${c.bold}Autonomie:${c.reset} L${card.autonomy.level} — ${card.autonomy.label}`));
+  lines.push(row(`${c.bold}Unlock:${c.reset} ${card.autonomy.unlockGap}`));
   lines.push(row(`${c.bold}Prochain objectif:${c.reset} ${card.nextMilestone}`));
   lines.push(bot);
 
@@ -249,6 +260,7 @@ export function formatShareableCard(card) {
   const lines = [];
   lines.push('\uD83E\uDDE0 Mon profil NegotiateAI');
   lines.push(`Niveau: ${card.negotiatorLevel} | Ceinture: ${card.belt} | ${card.totalSessions} sessions`);
+  lines.push(`Autonomie: L${card.autonomy.level} — ${card.autonomy.label}`);
   lines.push('');
   lines.push('Biais cognitifs:');
 
