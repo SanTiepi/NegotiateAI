@@ -416,6 +416,19 @@ h3 { font-size: .9rem; font-weight: 600; color: var(--text-2); margin-bottom: 8p
 .modal-body { padding: 16px; }
 .loading { text-align: center; padding: 30px; color: var(--text-muted); }
 
+.sim-actions { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
+.sim-textarea {
+  width:100%; padding:12px; border-radius: var(--radius-sm);
+  border:1px solid var(--border); background: var(--bg); color: var(--text);
+  font: inherit; resize: vertical; margin-bottom: 8px;
+}
+.sim-textarea:focus { outline:none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.sim-results-block { margin-top: 12px; display:flex; flex-direction:column; gap:12px; }
+.sim-card { border:1px solid var(--border); border-radius: var(--radius); padding:12px; background: var(--bg); }
+.sim-card.best { border-color: var(--green); box-shadow: 0 8px 24px rgba(34,197,94,.12); }
+.sim-card-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.sim-card-meta { display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0; }
+.sim-variant { white-space: pre-wrap; color: var(--text-2); }
 .sim-verdict { font-size: 1rem; font-weight: 700; margin-bottom: 10px; padding: 10px 14px; border-radius: var(--radius-sm); }
 .sim-verdict.send { background: var(--green-bg); color: var(--green); }
 .sim-verdict.revise { background: var(--amber-bg); color: var(--amber); }
@@ -424,7 +437,7 @@ h3 { font-size: .9rem; font-weight: 600; color: var(--text-2); margin-bottom: 8p
 .sim-section { margin-top: 14px; }
 .sim-section h4 { font-size: .8rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
 .sim-list { padding-left: 16px; } .sim-list li { font-size: .85rem; color: var(--text-2); margin-bottom: 3px; }
-.sim-rewrite { padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px dashed var(--primary); font-size: .85rem; color: var(--text-2); }
+.sim-rewrite { padding: 10px; background: var(--bg); border-radius: var(--radius-sm); border: 1px dashed var(--primary); font-size: .85rem; color: var(--text-2); white-space: pre-wrap; }
 
 /* ── Results ───────────────────────────────────────────────── */
 .results-hero { text-align: center; margin-bottom: 24px; }

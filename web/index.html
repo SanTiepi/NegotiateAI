@@ -311,6 +311,7 @@
               </div>
               <div class="input-actions">
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate">Simuler avant d'envoyer</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate-batch">Comparer 5 variantes</button>
                 <button type="button" class="btn btn-voice btn-sm" id="btn-voice" title="Mode vocal">&#127908; Parler</button>
                 <label class="voice-toggle"><input type="checkbox" id="chk-tts"> &#128264; Lire les reponses</label>
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-quit">/quit</button>
@@ -384,7 +385,27 @@
             <button class="modal-close" id="sim-close">&times;</button>
           </div>
           <div id="sim-body" class="modal-body">
-            <div class="loading">Simulation en cours...</div>
+            <div class="sim-actions">
+              <div>
+                <h3>Draft courant</h3>
+                <p class="text-muted">Analyse un seul message avant envoi.</p>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm" id="sim-run-single">Analyser ce draft</button>
+            </div>
+            <textarea id="sim-single-input" class="sim-textarea" rows="4" placeholder="Ton message courant..."></textarea>
+
+            <div class="divider compact"><span>ou batch v2</span></div>
+
+            <div class="sim-actions">
+              <div>
+                <h3>Comparer jusqu'a 5 variantes</h3>
+                <p class="text-muted">Une formulation par ligne. L'API classe automatiquement la meilleure.</p>
+              </div>
+              <button type="button" class="btn btn-outline btn-sm" id="sim-run-batch">Comparer</button>
+            </div>
+            <textarea id="sim-batch-input" class="sim-textarea" rows="8" placeholder="Variante 1&#10;Variante 2&#10;Variante 3&#10;Variante 4&#10;Variante 5"></textarea>
+
+            <div id="sim-results" class="sim-results-block"></div>
           </div>
         </div>
       </div>

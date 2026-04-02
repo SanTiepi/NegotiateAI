@@ -703,21 +703,53 @@ function updateSignals(signals) {
 // SIMULATE BEFORE SEND
 // ============================================================
 
-document.getElementById('btn-simulate').addEventListener('click', async () => {
-  const input = document.getElementById('msg-input');
-  const text = input.value.trim();
+function openSimulationModal({ batch = false } = {}) {
+  const currentDraft = document.getElementById('msg-input').value.trim();
+  if (!currentDraft || !currentSessionId) return;
+
+  document.getElementById('sim-single-input').value = currentDraft;
+  document.getElementById('sim-batch-input').value = batch
+    ? [currentDraft, '', '', '', ''].join('\n')
+    : currentDraft;
+  document.getElementById('sim-results').innerHTML = '';
+  document.getElementById('simulate-modal').classList.remove('hidden');
+}
+
+document.getElementById('btn-simulate').addEventListener('click', () => openSimulationModal());
+document.getElementById('btn-simulate-batch').addEventListener('click', () => openSimulationModal({ batch: true }));
+
+document.getElementById('sim-run-single').addEventListener('click', async () => {
+  const text = document.getElementById('sim-single-input').value.trim();
   if (!text || !currentSessionId) return;
 
-  const modal = document.getElementById('simulate-modal');
-  const body = document.getElementById('sim-body');
-  modal.classList.remove('hidden');
-  body.innerHTML = '<div class="loading"><div class="spinner">Simulation en cours — analyse de 3 scenarios...</div></div>';
+  const results = document.getElementById('sim-results');
+  results.innerHTML = '<div class="loading"><div class="spinner">Simulation en cours...</div></div>';
 
   try {
     const report = await post(`/api/session/${encodeURIComponent(currentSessionId)}/simulate`, { message: text });
     renderSimulation(report);
   } catch (err) {
-    body.innerHTML = `<p style="color:var(--red)">Erreur: ${err.message}</p>`;
+    results.innerHTML = `<p style="color:var(--red)">Erreur: ${err.message}</p>`;
+  }
+});
+
+document.getElementById('sim-run-batch').addEventListener('click', async () => {
+  const messages = document.getElementById('sim-batch-input').value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, 5);
+
+  if (messages.length === 0 || !currentSessionId) return;
+
+  const results = document.getElementById('sim-results');
+  results.innerHTML = '<div class="loading"><div class="spinner">Comparaison des variantes...</div></div>';
+
+  try {
+    const batch = await post(`/api/session/${encodeURIComponent(currentSessionId)}/simulate-batch`, { messages });
+    renderSimulationBatch(messages, batch);
+  } catch (err) {
+    results.innerHTML = `<p style="color:var(--red)">Erreur: ${err.message}</p>`;
   }
 });
 
@@ -726,28 +758,52 @@ document.getElementById('sim-close').addEventListener('click', () => {
 });
 
 function renderSimulation(report) {
-  const body = document.getElementById('sim-body');
+  const results = document.getElementById('sim-results');
   const verdictLabel = { send: 'Envoyer', revise: 'A reviser', do_not_send: 'Ne pas envoyer' };
 
-  body.innerHTML = `
-    <div class="sim-verdict ${report.sendVerdict}">${verdictLabel[report.sendVerdict] || report.sendVerdict}</div>
-    <div class="sim-score" style="color:${report.approvalScore > 65 ? 'var(--green)' : report.approvalScore > 40 ? 'var(--amber)' : 'var(--red)'}">${report.approvalScore}/100</div>
-    <p style="text-align:center;color:var(--text-muted);margin-bottom:16px">${report.predictedOutcome}</p>
+  results.innerHTML = `
+    <div class="sim-card best">
+      <div class="sim-verdict ${report.sendVerdict}">${verdictLabel[report.sendVerdict] || report.sendVerdict}</div>
+      <div class="sim-score" style="color:${report.approvalScore > 65 ? 'var(--green)' : report.approvalScore > 40 ? 'var(--amber)' : 'var(--red)'}">${report.approvalScore}/100</div>
+      <p style="text-align:center;color:var(--text-muted);margin-bottom:16px">${report.predictedOutcome}</p>
 
-    <div class="sim-section">
-      <h4>Reaction simulee de l'adversaire</h4>
-      <p style="font-style:italic;color:var(--text-2);padding:8px 12px;background:var(--bg);border-radius:8px">"${report.simulatedResponse}"</p>
-    </div>
+      <div class="sim-section">
+        <h4>Reaction simulee de l'adversaire</h4>
+        <p style="font-style:italic;color:var(--text-2);padding:8px 12px;background:var(--bg);border-radius:8px">"${report.simulatedResponse}"</p>
+      </div>
 
-    ${report.strengths?.length ? `<div class="sim-section"><h4>Points forts</h4><ul class="sim-list">${report.strengths.map((s) => `<li>${s}</li>`).join('')}</ul></div>` : ''}
-    ${report.vulnerabilities?.length ? `<div class="sim-section"><h4>Vulnerabilites</h4><ul class="sim-list">${report.vulnerabilities.map((v) => `<li>${v}</li>`).join('')}</ul></div>` : ''}
-    ${report.likelyObjections?.length ? `<div class="sim-section"><h4>Objections probables</h4><ul class="sim-list">${report.likelyObjections.map((o) => `<li>${o}</li>`).join('')}</ul></div>` : ''}
-    ${report.recommendedRewrite ? `<div class="sim-section"><h4>Reformulation suggeree</h4><div class="sim-rewrite">${report.recommendedRewrite}</div></div>` : ''}
-
-    <div style="text-align:center;margin-top:20px">
-      <button class="btn btn-primary" onclick="document.getElementById('simulate-modal').classList.add('hidden')">Compris</button>
+      ${report.strengths?.length ? `<div class="sim-section"><h4>Points forts</h4><ul class="sim-list">${report.strengths.map((s) => `<li>${s}</li>`).join('')}</ul></div>` : ''}
+      ${report.vulnerabilities?.length ? `<div class="sim-section"><h4>Vulnerabilites</h4><ul class="sim-list">${report.vulnerabilities.map((v) => `<li>${v}</li>`).join('')}</ul></div>` : ''}
+      ${report.likelyObjections?.length ? `<div class="sim-section"><h4>Objections probables</h4><ul class="sim-list">${report.likelyObjections.map((o) => `<li>${o}</li>`).join('')}</ul></div>` : ''}
+      ${report.recommendedRewrite ? `<div class="sim-section"><h4>Reformulation suggeree</h4><div class="sim-rewrite">${report.recommendedRewrite}</div></div>` : ''}
     </div>
   `;
+}
+
+function renderSimulationBatch(messages, batch) {
+  const results = document.getElementById('sim-results');
+  const verdictLabel = { send: 'Envoyer', revise: 'A reviser', do_not_send: 'Ne pas envoyer' };
+  const cards = (batch.reports || []).map((report, index) => {
+    const isBest = index === batch.bestIndex;
+    const riskLabel = report.riskLevel === 'low' ? 'Risque faible' : report.riskLevel === 'medium' ? 'Risque moyen' : 'Risque eleve';
+    return `
+      <div class="sim-card ${isBest ? 'best' : ''}">
+        <div class="sim-card-head">
+          <strong>${isBest ? 'Meilleure variante' : `Variante ${index + 1}`}</strong>
+          <span class="badge">${report.approvalScore}/100</span>
+        </div>
+        <div class="sim-variant">${escapeHtml(messages[index] || '')}</div>
+        <div class="sim-card-meta">
+          <span class="badge">${verdictLabel[report.sendVerdict] || report.sendVerdict}</span>
+          <span class="chip">${riskLabel}</span>
+        </div>
+        <p class="text-muted">${escapeHtml(report.predictedOutcome || '')}</p>
+        ${report.recommendedRewrite ? `<div class="sim-section"><h4>Rewrite suggeree</h4><div class="sim-rewrite">${escapeHtml(report.recommendedRewrite)}</div></div>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  results.innerHTML = cards || '<p class="text-muted">Aucun resultat.</p>';
 }
 
 // ============================================================

@@ -122,6 +122,8 @@ describe('web-app', () => {
     assert.match(html, /data-view="academy"/);
     assert.match(html, /id="view-academy"/);
     assert.match(html, /id="history-replay"/);
+    assert.match(html, /id="btn-simulate-batch"/);
+    assert.match(html, /id="sim-run-batch"/);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
