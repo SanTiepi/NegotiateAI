@@ -46,6 +46,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Academy web actions: jouer le daily ou le scenario of the week via briefing/session existants, et exporter le hall of fame via /api/hall-of-fame/export sans logique metier dupliquee dans le frontend
 - Drills web/Telegram: reutiliser la meme source de verite de progression (weakDimensions + biasProfile.nextDrillDate) pour les recommandations et la repetition espacee, sans scheduler parallele cote UI/bot
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
+- Simulate Before Send v2 CLI: le runner batch terminal doit supporter soit `--scenario <id> [--tier]`, soit `--brief` + `--adversary`, lire `messages` depuis un fichier (1 ligne = 1 variante, max 5), et injecter provider/readFile/loadScenario en test
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
 - Frontend web simulate-batch: permettre jusqu'a 5 variantes cote UI, une formulation par ligne, et se contenter d'afficher bestIndex/reports sans reclasser cote navigateur
 - Web app /api/versus: rester un simple adaptateur HTTP de adjudicateVersusRound, avec validation des champs via le module pur et sans logique de scoring dupliquee
@@ -92,6 +93,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Export hall of fame web: servir le texte partageable directement depuis le formatter pur, avec option JSON pour les integrateurs
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram
 - Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI
+- CLI Simulate Batch: `src/cli/simulate-batch-cli.mjs` doit rester un adaptateur fin de `simulateBeforeSendBatch(...)` avec rendu terminal seulement, sans logique de ranking supplementaire et sans generation d'adversaire implicite hors scenario packagé
 - Mode versus: module pur src/versus.mjs avec adjudicateVersusRound({ brief, playerA, playerB, transcript? }, provider) -> verdict structure
 - Persistance locale: store.mjs comme couche d'acces unique pour sessions/progression afin d'eviter la duplication de logique
 - Progressive UI web: calculer la couche via un module pur (sessions -> layer), exposer `uiLayer`/`uiLayerDefinitions` au profil, et filtrer les payloads de tour uniquement quand le mode progressif est explicitement active
