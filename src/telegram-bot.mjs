@@ -11,6 +11,7 @@ import { recommendBiasTraining } from './biasTracker.mjs';
 import { simulateBeforeSendBatch } from './simulate.mjs';
 import { buildFightCard } from './fight-card.mjs';
 import { computeDashboardStats, buildPlayerDashboard } from './dashboard.mjs';
+import { generateReplay } from './replay.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -343,6 +344,51 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     ].join('\n\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
+  async function sendReplay(chatId, requestedSessionId = null) {
+    if (!store) {
+      return sendMessage(chatId, 'Replay indisponible: aucun store persistant n’est configuré.');
+    }
+
+    const playerId = getPlayerId(chatId);
+    const sessions = await store.loadSessions();
+    const telegramSessions = sessions.filter((session) => (
+      (session.mode || 'cli') === 'telegram'
+      && (session.playerId || null) === playerId
+    ));
+
+    if (telegramSessions.length === 0) {
+      return sendMessage(chatId, 'Aucune session Telegram terminée à rejouer pour l’instant.');
+    }
+
+    const targetSession = requestedSessionId
+      ? telegramSessions.find((session) => session.id === requestedSessionId)
+      : telegramSessions[0];
+
+    if (!targetSession) {
+      return sendMessage(chatId, `Replay introuvable: ${requestedSessionId}. Utilise /replay pour la dernière session.`);
+    }
+
+    const replay = await generateReplay(targetSession, provider);
+    const lines = [
+      `Replay Telegram — ${targetSession.scenarioId || targetSession.id}`,
+      replay.summary || 'Résumé indisponible.',
+      '',
+    ];
+
+    for (const turn of (replay.turns || []).slice(-3)) {
+      lines.push(`#${turn.turnNumber} · ${turn.momentumLabel}`);
+      lines.push(`Toi: ${turn.userMessage}`);
+      lines.push(`Adv: ${turn.adversaryMessage}`);
+      if (turn.biasDetected) lines.push(`Biais: ${turn.biasDetected}`);
+      if (turn.alternativeSuggestion) lines.push(`Alternative: ${turn.alternativeSuggestion}`);
+      if (turn.annotation) lines.push(`Note: ${turn.annotation}`);
+      lines.push('');
+    }
+
+    lines.push(`Session: ${targetSession.id}`);
+    return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
+  }
+
   async function runBatchSimulation(chatId, text) {
     const session = sessions.get(getSessionKey(chatId));
     if (!session) {
@@ -390,7 +436,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /sim variante 1 | variante 2 pour tester plusieurs formulations, /profile pour voir ton profil, /dashboard pour le résumé scoring, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /sim variante 1 | variante 2 pour tester plusieurs formulations, /profile pour voir ton profil, /dashboard pour le résumé scoring, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs, /halloffame pour les meilleures sessions et /replay pour revoir ta dernière session annotée.');
       return { ok: true, command: 'start' };
     }
 
@@ -427,6 +473,16 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/halloffame') {
       await sendHallOfFame(chatId);
       return { ok: true, command: 'halloffame' };
+    }
+
+    if (text === '/replay') {
+      await sendReplay(chatId);
+      return { ok: true, command: 'replay' };
+    }
+
+    if (text.startsWith('/replay ')) {
+      await sendReplay(chatId, text.slice(8).trim());
+      return { ok: true, command: 'replay' };
     }
 
     if (text === '/daily') {

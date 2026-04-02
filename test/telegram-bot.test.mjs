@@ -284,6 +284,158 @@ describe('telegram-bot', () => {
     assert.equal(bot.sessions.size, 1);
   });
 
+  it('serves compact annotated replays scoped to the current telegram player', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-replay-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    await store.saveSession({
+      id: 'telegram-replay-target',
+      date: '2026-04-02T12:00:00.000Z',
+      brief: {
+        situation: 'Achat immobilier',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeur',
+        objective: 'Signer à 900000 CHF',
+        minimalThreshold: '920000 CHF',
+        batna: 'Autre bien',
+        difficulty: 'neutral',
+        relationalStakes: 'high',
+        constraints: [],
+      },
+      adversary: { identity: 'Mme Seller' },
+      transcript: [
+        { role: 'user', content: 'Je peux signer vite.' },
+        { role: 'adversary', content: 'Le prix affiché reste la référence.' },
+        { role: 'user', content: 'Si nous clôturons cette semaine, je peux simplifier.' },
+        { role: 'adversary', content: 'Je peux bouger un peu, pas de 10%.' },
+      ],
+      status: 'accepted',
+      turns: 2,
+      scenarioId: 'swiss-property-purchase',
+      feedback: {
+        globalScore: 83,
+        scores: {
+          outcomeLeverage: 19,
+          batnaDiscipline: 17,
+          emotionalRegulation: 17,
+          biasResistance: 14,
+          conversationalFlow: 16,
+        },
+        biasesDetected: [],
+        tacticsUsed: [],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+      mode: 'telegram',
+      playerId: 'telegram:42',
+    });
+    await store.saveSession({
+      id: 'telegram-replay-other-player',
+      date: '2026-04-02T13:00:00.000Z',
+      brief: {
+        situation: 'Autre négo',
+        userRole: 'Freelance',
+        adversaryRole: 'Client',
+        objective: '1100 CHF/jour',
+        minimalThreshold: '950 CHF/jour',
+        batna: 'Autre mission',
+        difficulty: 'hostile',
+        relationalStakes: 'medium',
+        constraints: [],
+      },
+      adversary: { identity: 'Client A' },
+      transcript: [
+        { role: 'user', content: 'Message A' },
+        { role: 'adversary', content: 'Message B' },
+      ],
+      status: 'ended',
+      turns: 1,
+      feedback: {
+        globalScore: 60,
+        scores: {
+          outcomeLeverage: 12,
+          batnaDiscipline: 12,
+          emotionalRegulation: 12,
+          biasResistance: 12,
+          conversationalFlow: 12,
+        },
+        biasesDetected: [],
+        tacticsUsed: [],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+      mode: 'telegram',
+      playerId: 'telegram:777',
+    });
+
+    const replayProvider = createMockProvider({
+      adversary: {
+        identity: 'Mme Test',
+        style: 'Ferme',
+        publicObjective: 'Signer',
+        hiddenObjective: 'Maximiser la marge',
+        batna: 'Autre offre',
+        nonNegotiables: ['Pas sous 100'],
+        timePressure: 'Cette semaine',
+        emotionalProfile: { confidence: 70, frustration: 20, egoThreat: 10 },
+        likelyTactics: ['scarcity'],
+        vulnerabilities: ['Fin de mois'],
+      },
+      turn: {
+        adversaryResponse: 'Je peux discuter, mais pas trop.',
+        sessionOver: true,
+        endReason: 'Done',
+        sessionStatus: 'accepted',
+      },
+      coaching: {
+        biasDetected: null,
+        alternative: null,
+        momentum: 'stable',
+        tip: 'Reste concret.',
+      },
+      feedback: {
+        globalScore: 76,
+        scores: {
+          outcomeLeverage: 18,
+          batnaDiscipline: 15,
+          emotionalRegulation: 18,
+          biasResistance: 11,
+          conversationalFlow: 14,
+        },
+        biasesDetected: [],
+        tacticsUsed: ['labeling'],
+        missedOpportunities: [],
+        recommendations: ['Continue.'],
+      },
+      replay: {
+        turns: [
+          { turnNumber: 1, biasDetected: null, alternativeSuggestion: 'Ouvre avec un ancrage plus net.', momentumLabel: 'stable', annotation: 'Bonne ouverture.' },
+          { turnNumber: 2, biasDetected: 'anchoring', alternativeSuggestion: 'Conteste le prix affiché.', momentumLabel: 'gaining', annotation: 'Tu reprends la main.' },
+        ],
+        summary: 'Belle progression sur la deuxième séquence.',
+      },
+    });
+
+    const sent = [];
+    const bot = createTelegramBot({
+      provider: replayProvider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    const result = await bot.handleMessage({ message: { chat: { id: 42 }, text: '/replay' } });
+    assert.equal(result.command, 'replay');
+    assert.match(sent.at(-1).text, /Replay Telegram/);
+    assert.match(sent.at(-1).text, /Belle progression/);
+    assert.match(sent.at(-1).text, /Biais: anchoring/);
+    assert.match(sent.at(-1).text, /telegram-replay-target/);
+    assert.doesNotMatch(sent.at(-1).text, /telegram-replay-other-player/);
+  });
+
   it('scopes telegram profile and dashboard to the current chat player id', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-scope-'));
     tempDirs.push(dir);
@@ -435,6 +587,7 @@ describe('telegram-bot', () => {
     assert.match(sent.at(-1).text, /\/dashboard/);
     assert.match(sent.at(-1).text, /\/drills/);
     assert.match(sent.at(-1).text, /\/weekly/);
+    assert.match(sent.at(-1).text, /\/replay/);
     assert.equal(fetchCalls[0].body.drop_pending_updates, false);
     assert.equal(fetchCalls[1].body.offset, 0);
     assert.equal(fetchCalls[1].body.timeout, 25);
