@@ -29,6 +29,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app temps reel: exposer coaching/ticker/actTransition via JSON mince pour que le frontend reste statique et facilement testable
 - Web app API avancee: daily/drills/replay doivent reposer sur les modules purs existants (daily.mjs, drill.mjs, replay.mjs) et sur les sessions persistées, jamais sur un etat frontend implicite
 - Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
+- Telegram bot: supporter des commandes courtes et deterministes (/help, /scenarios, /scenario <id> [tier], /profile) sans dupliquer la logique scenario/profil hors des modules purs
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
@@ -51,6 +52,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/profile, /api/hall-of-fame, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
 - Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
+- Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)

@@ -63,6 +63,27 @@ describe('telegram-bot', () => {
     assert.equal(brief.batna, 'autre offre');
   });
 
+  it('lists packaged scenarios and can start a swiss scenario preset', async () => {
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 7 }, text: '/scenarios' } });
+    assert.match(sent[0].text, /swiss-lease-renegotiation/);
+
+    await bot.handleMessage({ message: { chat: { id: 7 }, text: '/scenario swiss-property-purchase hostile' } });
+    assert.equal(bot.sessions.size, 1);
+    assert.match(sent[1].text, /Session créée avec/);
+    const activeSession = bot.sessions.get('telegram:7');
+    assert.equal(activeSession.brief.difficulty, 'hostile');
+  });
+
   it('creates a session, persists completed Telegram sessions, and updates progression', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-'));
     tempDirs.push(dir);
@@ -91,6 +112,29 @@ describe('telegram-bot', () => {
     assert.equal(stats.totalSessions, 1);
     assert.equal(stats.averageScore, 76);
     assert.equal(stats.currentStreak, 1);
+  });
+
+  it('returns a Telegram profile summary when a store is configured', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-profile-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/new Obtenir 10% | 5% mini | autre offre' } });
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: 'Je veux avancer vite.' } });
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
+
+    assert.match(sent.at(-1).text, /Profil NegotiateAI Telegram/);
+    assert.match(sent.at(-1).text, /Sessions: 1/);
   });
 
   it('formatTurnReply includes coaching and ending when present', () => {
