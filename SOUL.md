@@ -26,6 +26,8 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Brief DOIT avoir objective + minimalThreshold + batna
 - npm test avec --test-isolation=none sur Windows
 - Web app: isoler la logique HTTP dans un createWebApp testable, et injecter provider + sessionIdFactory pour eviter tout appel reel en test
+- Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
+- Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
 
@@ -35,6 +37,8 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Scenario: buildBrief(rawInput) -> Brief valide
 - HTTP server: native node:http, pas Express
 - Web app MVP: GET / + assets statiques, POST /api/session pour creer la session, POST /api/session/:id/turn pour discuter; garder la reponse JSON mince et branchee directement sur engine.mjs
+- Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
+- Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI
 
 ## REGLE CRITIQUE
 Si git log montre que les 5 anciennes priorites sont faites et npm test est vert, NE FAIS PAS un commit "docs: refresh soul". Passe directement a la PROCHAINE priorite de la liste ci-dessus (web app, telegram bot, scenarios immobiliers...). Il y a TOUJOURS quelque chose a faire.

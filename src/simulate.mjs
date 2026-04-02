@@ -109,6 +109,37 @@ Give a practical pre-send verdict in the same language as the candidate message.
   return report;
 }
 
+export async function simulateBeforeSendBatch({ brief, adversary, offerMessages, provider, transcript = [] }) {
+  if (!Array.isArray(offerMessages) || offerMessages.length === 0) {
+    throw new Error('simulateBeforeSendBatch requires a non-empty offerMessages array');
+  }
+
+  const normalized = offerMessages.map((message) => {
+    if (typeof message !== 'string' || message.trim().length === 0) {
+      throw new Error('simulateBeforeSendBatch offerMessages must contain non-empty strings');
+    }
+    return message;
+  });
+
+  const reports = await Promise.all(
+    normalized.map((offerMessage) => simulateBeforeSend({ brief, adversary, offerMessage, provider, transcript })),
+  );
+
+  const ranked = reports
+    .map((report, index) => ({ report, index }))
+    .sort((a, b) => {
+      if (b.report.approvalScore !== a.report.approvalScore) return b.report.approvalScore - a.report.approvalScore;
+      const riskOrder = { low: 0, medium: 1, high: 2 };
+      return riskOrder[a.report.riskLevel] - riskOrder[b.report.riskLevel];
+    });
+
+  return {
+    reports,
+    bestIndex: ranked[0].index,
+    bestReport: ranked[0].report,
+  };
+}
+
 export function assertValidOfferSimulationReport(report) {
   if (!report || typeof report !== 'object') throw new Error('OfferSimulationReport must be an object');
   if (!['send', 'revise', 'do_not_send'].includes(report.sendVerdict)) {

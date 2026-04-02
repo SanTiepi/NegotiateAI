@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { simulateBeforeSend, assertValidOfferSimulationReport } from '../src/simulate.mjs';
+import { simulateBeforeSend, simulateBeforeSendBatch, assertValidOfferSimulationReport } from '../src/simulate.mjs';
 import { createMockProvider } from '../src/provider.mjs';
 
 const MOCK_BRIEF = {
@@ -122,6 +122,33 @@ describe('simulateBeforeSend', () => {
       offerMessage: '   ',
       provider,
     }), { message: /offerMessage/i });
+  });
+
+  it('ranks a batch of offer variants and returns the best one', async () => {
+    const provider = createMockProvider({
+      turn: {
+        adversaryResponse: 'Montre-moi plus de valeur.',
+        sessionOver: false,
+        endReason: null,
+      },
+      coaching: { biasDetected: null, alternative: null, momentum: 'stable', tip: 'Reste spécifique.' },
+      offerSimulation: ({ prompt }) => {
+        if (prompt.includes('Version A')) return { ...MOCK_REPORT, approvalScore: 61, sendVerdict: 'revise', riskLevel: 'medium' };
+        if (prompt.includes('Version B')) return { ...MOCK_REPORT, approvalScore: 84, sendVerdict: 'send', riskLevel: 'low' };
+        return { ...MOCK_REPORT, approvalScore: 79, sendVerdict: 'send', riskLevel: 'medium' };
+      },
+    });
+
+    const batch = await simulateBeforeSendBatch({
+      brief: MOCK_BRIEF,
+      adversary: MOCK_ADVERSARY,
+      provider,
+      offerMessages: ['Version A', 'Version B', 'Version C'],
+    });
+
+    assert.equal(batch.reports.length, 3);
+    assert.equal(batch.bestIndex, 1);
+    assert.equal(batch.bestReport.approvalScore, 84);
   });
 });
 
