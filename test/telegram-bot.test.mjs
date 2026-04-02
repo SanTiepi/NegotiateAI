@@ -117,7 +117,7 @@ describe('telegram-bot', () => {
     assert.equal(bot.sessions.size, 0);
   });
 
-  it('creates a session, persists completed Telegram sessions, and updates progression', async () => {
+  it('creates a session, persists completed Telegram sessions, logs analytics, and updates progression', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-'));
     tempDirs.push(dir);
     const store = createStore({ dataDir: dir });
@@ -145,6 +145,38 @@ describe('telegram-bot', () => {
     assert.equal(stats.totalSessions, 1);
     assert.equal(stats.averageScore, 76);
     assert.equal(stats.currentStreak, 1);
+
+    const analytics = await store.loadAnalytics();
+    assert.equal(analytics.length, 1);
+    assert.equal(analytics[0].mode, 'telegram');
+    assert.equal(analytics[0].globalScore, 76);
+    assert.equal(analytics[0].grade, 'B');
+  });
+
+  it('persists preset scenario ids for completed telegram scenario runs', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-scenario-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 77 }, text: '/scenario swiss-property-purchase hostile' } });
+    await bot.handleMessage({ message: { chat: { id: 77 }, text: 'Je propose une signature rapide.' } });
+
+    const sessions = await store.loadSessions();
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].scenarioId, 'swiss-property-purchase');
+    assert.equal(sessions[0].mode, 'telegram');
+    assert.equal(sessions[0].fightCard?.grade?.grade, 'B');
+    assert.match(sent.at(-1).text, /Je peux discuter/);
   });
 
   it('returns academy summaries for profile, drills, weekly, leaderboard and hall of fame', async () => {

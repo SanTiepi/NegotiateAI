@@ -10,6 +10,7 @@ import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { formatHallOfFameStories } from './hall-of-fame.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
 import { simulateBeforeSendBatch } from './simulate.mjs';
+import { buildFightCard } from './fight-card.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -56,19 +57,42 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!store) return;
 
     const feedback = await analyzeFeedback(session, provider);
+    const fightCard = buildFightCard(feedback, session, session._objectiveContract || null);
+    const sessionDate = new Date().toISOString();
+
     await store.saveSession({
       id: `telegram-${chatId}-${Date.now()}`,
-      date: new Date().toISOString(),
+      date: sessionDate,
       brief: session.brief,
       adversary: session.adversary,
       transcript: session.transcript,
       status: session.status,
       turns: session.turn,
       feedback,
+      fightCard,
+      scenarioId: session._scenarioId || null,
       mode: session._mode || 'telegram',
       eventPolicy: session.eventPolicy,
       eventsActive: session.eventPolicy !== 'none',
       worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
+      dailyMeta: session._dailyMeta || null,
+    });
+
+    await store.appendAnalytics({
+      type: 'session_complete',
+      timestamp: sessionDate,
+      scenarioId: session._scenarioId || null,
+      difficulty: session.brief?.difficulty,
+      turns: session.turn,
+      status: session.status,
+      globalScore: feedback.globalScore,
+      grade: fightCard.grade.grade,
+      triangle: fightCard.triangle,
+      biasesDetected: (feedback.biasesDetected || []).map((bias) => bias.biasType),
+      roundScores: (session._roundScores || []).map((round) => round.points),
+      objectiveSet: Boolean(session._objectiveContract),
+      strategy: session._objectiveContract?.strategy || null,
+      mode: session._mode || 'telegram',
     });
 
     const { refreshProgression } = await import('./progression.mjs');
@@ -82,6 +106,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     });
     session._mode = options.mode || 'telegram';
     session._dailyMeta = options.dailyMeta || null;
+    session._scenarioId = options.scenarioId || null;
     sessions.set(getSessionKey(chatId), session);
     const intro = [
       options.label ? `${options.label}` : `Session créée avec ${adversary.identity}.`,
@@ -113,7 +138,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
     try {
       const { brief, adversary } = await loadScenario(scenarioId, normalizedTier);
-      await startSession(chatId, buildBrief(brief), adversary);
+      await startSession(chatId, buildBrief(brief), adversary, { scenarioId });
       return { ok: true, command: 'scenario', scenarioId, tier: normalizedTier };
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Scenario not found:')) {
