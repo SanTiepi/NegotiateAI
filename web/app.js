@@ -50,6 +50,34 @@ function post(path, data) {
   });
 }
 
+function getPlayerId() {
+  const storageKey = 'negotiateai.playerId';
+  try {
+    let playerId = window.localStorage.getItem(storageKey);
+    if (!playerId) {
+      playerId = `web-${Math.random().toString(36).slice(2, 10)}`;
+      window.localStorage.setItem(storageKey, playerId);
+    }
+    return playerId;
+  } catch {
+    return 'local-player';
+  }
+}
+
+function withPlayerQuery(path) {
+  const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+  const url = new URL(path, base);
+  url.searchParams.set('playerId', getPlayerId());
+  return `${url.pathname}${url.search}`;
+}
+
+function withPlayerPayload(data = {}) {
+  return {
+    ...data,
+    playerId: getPlayerId(),
+  };
+}
+
 // ============================================================
 // DASHBOARD
 // ============================================================
@@ -135,7 +163,7 @@ async function loadAcademy(force = false) {
 
   try {
     const [profile, drills, weekly, hall] = await Promise.all([
-      api('/api/profile'),
+      api(withPlayerQuery('/api/profile')),
       api('/api/drills'),
       api('/api/scenario-of-week'),
       api('/api/hall-of-fame?limit=3'),
@@ -276,8 +304,16 @@ async function loadDailyCard() {
 
 async function loadDashboard() {
   try {
-    const stats = await api('/api/dashboard');
-    const empty = stats.totalSessions === 0;
+    const snapshot = await api(withPlayerQuery('/api/dashboard/player'));
+    const stats = {
+      ...(snapshot.stats || {}),
+      autonomy: snapshot.autonomy,
+      belts: snapshot.card?.belts || {},
+      beltDefinitions: snapshot.beltDefinitions || [],
+      weakDimensions: snapshot.card?.weaknesses || [],
+      realWorldStats: snapshot.realWorldStats,
+    };
+    const empty = (stats.totalSessions || 0) === 0;
     const realStats = stats.realWorldStats || { totalReal: 0, avgSelfScore: 0, transferRate: 0, topLearning: null };
 
     document.getElementById('d-empty').classList.toggle('hidden', !empty);
@@ -487,7 +523,7 @@ document.getElementById('setup-form').addEventListener('submit', async (e) => {
   btn.textContent = 'Chargement...';
 
   try {
-    const session = await post('/api/session', { brief });
+    const session = await post('/api/session', withPlayerPayload({ brief }));
     startNegotiation(session);
   } catch (err) {
     alert('Erreur : ' + err.message);
@@ -960,7 +996,7 @@ document.getElementById('briefing-form').addEventListener('submit', async (e) =>
     if (pendingScenarioFile) payload.scenarioFile = pendingScenarioFile;
     else if (pendingBrief) payload.brief = pendingBrief;
 
-    const session = await post('/api/session', payload);
+    const session = await post('/api/session', withPlayerPayload(payload));
     startNegotiation(session);
   } catch (err) {
     alert('Erreur : ' + err.message);
@@ -1349,7 +1385,7 @@ document.getElementById('real-prep-form')?.addEventListener('submit', async (e) 
   btn.disabled = true;
   btn.classList.add('loading');
   try {
-    const session = await post('/api/real-prep/start', data);
+    const session = await post('/api/real-prep/start', withPlayerPayload(data));
     lastRealPrepSessionId = session.sessionId;
     startNegotiation(session);
   } catch (err) {
@@ -1379,7 +1415,7 @@ document.getElementById('journal-form')?.addEventListener('submit', async (e) =>
   btn.disabled = true;
   btn.classList.add('loading');
   try {
-    const result = await post('/api/journal', data);
+    const result = await post('/api/journal', withPlayerPayload(data));
     const container = document.getElementById('journal-result');
     container.classList.remove('hidden');
     document.getElementById('journal-summary').textContent = result.comparison?.summary || 'Débrief enregistré.';
@@ -1474,7 +1510,7 @@ document.getElementById('briefing-slider-form')?.addEventListener('submit', asyn
     const payload = { sliders, uiProgressive: true };
     if (pendingScenarioFile) payload.scenarioFile = pendingScenarioFile;
     else if (pendingBrief) payload.brief = pendingBrief;
-    const session = await post('/api/session', payload);
+    const session = await post('/api/session', withPlayerPayload(payload));
     startNegotiation(session);
   } catch (err) {
     alert('Erreur : ' + err.message);

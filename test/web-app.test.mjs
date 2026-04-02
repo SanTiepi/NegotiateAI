@@ -167,6 +167,78 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('persists web player ids across completed sessions and journal entries', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-player', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const createSessionResponse = await request('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        playerId: 'web-robin',
+        brief: {
+          situation: 'Renegociation de bail',
+          userRole: 'Locataire',
+          adversaryRole: 'Regie',
+          objective: 'Baisser le loyer',
+          minimalThreshold: 'Pas de hausse',
+          batna: 'Deménager',
+          difficulty: 'neutral',
+        },
+      }),
+    });
+
+    assert.equal(createSessionResponse.response.status, 201);
+    assert.equal(createSessionResponse.body.sessionId, 'sess-player');
+
+    const turnResponse = await request('/api/session/sess-player/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Je peux signer vite si on ajuste le loyer.' }),
+    });
+
+    assert.equal(turnResponse.response.status, 200);
+    assert.equal(turnResponse.body.sessionOver, true);
+
+    const savedSessions = await store.loadSessions();
+    assert.equal(savedSessions.length, 1);
+    assert.equal(savedSessions[0].playerId, 'web-robin');
+    assert.equal(savedSessions[0].mode, 'web');
+
+    const journalResponse = await request('/api/journal', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        playerId: 'web-robin',
+        outcome: 'Accord trouvé',
+        obtained: 'Baisse de loyer',
+        surprise: 'La régie a accepté vite',
+        usedFromPrep: 'BATNA claire',
+        regret: '',
+        emotion: 'soulagé',
+        score: 8,
+      }),
+    });
+
+    assert.equal(journalResponse.response.status, 201);
+    assert.equal(journalResponse.body.playerId, 'web-robin');
+
+    const journal = await request('/api/journal?playerId=web-robin');
+    assert.equal(journal.response.status, 200);
+    assert.equal(journal.body.entries.length, 1);
+    assert.equal(journal.body.entries[0].playerId, 'web-robin');
+    assert.deepEqual(journal.body.filters, { playerId: 'web-robin', type: 'journal' });
+
+    const playerSnapshot = await request('/api/dashboard/player?playerId=web-robin');
+    assert.equal(playerSnapshot.response.status, 200);
+    assert.equal(playerSnapshot.body.stats.totalSessions, 1);
+    assert.equal(playerSnapshot.body.realWorldStats.totalReal, 1);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('rejects invalid briefs', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);

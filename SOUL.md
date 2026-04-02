@@ -28,7 +28,9 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Tests : TOUJOURS le fournisseur mock, jamais la vraie API
 - Le brief DOIT avoir objective + minimalThreshold + batna
 - `npm test` avec `--test-isolation=none` sur Windows
+- Le script `npm test` embarque déjà `--test-concurrency=1 --test-isolation=none` ; garder la même commande entre exécution manuelle, cron et validation finale
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe à la priorité suivante.
+- Si les 5 priorités SOUL sont déjà présentes et `npm test` est vert, ne pas forcer une fausse feature : auditer d’abord le prochain vrai gap produit
 - Rapports Telegram : maximum 1500 caractères, y compris les résumés Simulate Before Send v2
 - Les sessions Telegram persistées doivent conserver assez de métadonnées (`scenarioId`, `fightCard`, analytics, mode) pour alimenter dashboard, leaderboard et exports sans traitement spécial aval
 - Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
@@ -39,6 +41,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Les snapshots joueur web (`/api/dashboard/player`) doivent rester dérivés d’agrégats purs et accepter les mêmes filtres query string que `/api/dashboard` pour éviter les divergences web/Telegram
 - Les stats de négos réelles (journal) doivent être injectées via agrégats purs (`computeRealWorldStats`) dans les payloads dashboard web, sans logique métier recalculée côté front
 - Les vues joueur (`/api/dashboard/player`, analytics filtrées, Telegram/web) doivent vraiment filtrer par `playerId` persisté dans les sessions/events ; ne jamais se contenter de renvoyer l’identifiant demandé sans scoper les données
+- Le front web doit propager un `playerId` stable (localStorage ou équivalent) sur `/api/session`, `/api/real-prep/start`, `/api/journal` et sur les vues profil/dashboard, sinon les snapshots joueur et stats réelles dérivent vers `local-player`
 
 ## Patterns
 
@@ -55,8 +58,11 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Snapshot joueur : construire la fiche complète dans `src/dashboard.mjs`, puis l’exposer côté web et la consommer côté Telegram au lieu de recalculer des vues métier parallèles
 - Journal → dashboard web : agréger côté serveur (`computeRealWorldStats`) puis afficher côté front ; ne pas recalculer les stats réelles dans `web/app.js`
 - Player dashboard : persister `playerId` au moment de la sauvegarde (web, Telegram, analytics, journal) puis appliquer les mêmes filtres côté route pour éviter les faux snapshots multi-joueurs
+- Front web ↔ API joueur : toujours transporter le même `playerId` côté query string ET côté payload POST pour garder alignés dashboard, profil, journal et sessions persistées
 - Télégramme/persistance : enrichir la sauvegarde au moment de la fin de session (pas via migration a posteriori) pour garder les vues web et bot alignées
 - Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
+- Validation de livraison : conclure une priorité SOUL uniquement après passage complet du script `npm test`, pas sur un sous-ensemble ad hoc
+- Audit avant nouvelle implémentation : quand une priorité semble déjà faite, vérifier sa présence côté code + tests + interface exposée (CLI/web/Telegram) avant d’ouvrir un nouveau chantier
 
 ## Règle critique
 

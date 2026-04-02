@@ -463,10 +463,13 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
         const scopedAnalytics = hasFilters ? filterAnalyticsEvents(analytics, { ...filters, type: 'journal' }) : analytics.filter((event) => event.type === 'journal');
         const realWorldStats = computeRealWorldStats(scopedAnalytics);
+        const playerDashboard = buildPlayerDashboard(scopedSessions, progression, {
+          playerId: requestedPlayerId,
+        });
         json(res, 200, {
-          ...buildPlayerDashboard(scopedSessions, progression, {
-            playerId: requestedPlayerId,
-          }),
+          ...playerDashboard,
+          ...playerDashboard.stats,
+          belts: progression.belts || {},
           filters,
           realWorldStats,
           uiLayer: computeUILayer(scopedSessions.length || progression.totalSessions || 0),
@@ -735,6 +738,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const session = createSession(brief, adversary, llmProvider, { eventPolicy: 'none' });
         session._isRealPrep = true;
         session._realPrepMeta = metadata;
+        session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
         session._roundScores = [];
         session._createdAt = Date.now();
         session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
@@ -773,6 +777,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       if (req.method === 'POST' && url.pathname === '/api/journal') {
         const body = await readBody(req);
         const entry = buildJournalEntry(body, body.simulationSessionId);
+        const playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
 
         // Compare with simulation if linked
         let comparison = null;
@@ -783,17 +788,21 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         }
 
         // Store journal entry
-        await store.appendAnalytics({ type: 'journal', ...entry, comparison, playerId: 'local-player' });
+        await store.appendAnalytics({ type: 'journal', ...entry, comparison, playerId });
 
-        json(res, 201, { entry, comparison });
+        json(res, 201, { entry, comparison, playerId });
         return;
       }
 
       if (req.method === 'GET' && url.pathname === '/api/journal') {
+        const filters = {
+          playerId: url.searchParams.get('playerId') || null,
+          type: 'journal',
+        };
         const analytics = await store.loadAnalytics(500);
-        const journalEntries = analytics.filter((e) => e.type === 'journal');
+        const journalEntries = filterAnalyticsEvents(analytics, filters);
         const stats = computeRealWorldStats(journalEntries);
-        json(res, 200, { entries: journalEntries.slice(0, 20), stats });
+        json(res, 200, { entries: journalEntries.slice(0, 20), stats, filters });
         return;
       }
 
@@ -863,6 +872,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
         session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
         session._scenarioId = scenario?.metadata?.id || body.scenarioFile || null;
+        session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
         session._uiProgressive = body.uiProgressive === true;
         session._uiLayer = computeUILayer(completedSessions.length, body.uiLayerOverride);
 
