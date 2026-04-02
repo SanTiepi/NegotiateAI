@@ -9,6 +9,7 @@ import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs'
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { formatHallOfFameStories } from './hall-of-fame.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
+import { simulateBeforeSendBatch } from './simulate.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -265,6 +266,45 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     ].join('\n\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
+  async function runBatchSimulation(chatId, text) {
+    const session = sessions.get(getSessionKey(chatId));
+    if (!session) {
+      await sendMessage(chatId, 'Aucune session active. Lance d’abord /new ou /scenario avant /sim.');
+      return { ok: true, command: 'simulate-missing-session' };
+    }
+
+    const variants = String(text)
+      .split('|')
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .slice(0, 5);
+
+    if (variants.length === 0) {
+      await sendMessage(chatId, 'Commande: /sim variante 1 | variante 2 | variante 3');
+      return { ok: true, command: 'simulate-help' };
+    }
+
+    const batch = await simulateBeforeSendBatch({
+      brief: session.brief,
+      adversary: session.adversary,
+      offerMessages: variants,
+      provider,
+      transcript: session.transcript,
+    });
+
+    const lines = [
+      `Simulate Before Send v2 — ${variants.length} variantes`,
+      `Meilleure option: #${batch.bestIndex + 1} (${batch.bestReport.approvalScore}/100, ${batch.bestReport.sendVerdict})`,
+      '',
+      ...batch.reports.map((report, index) => `#${index + 1} · ${report.approvalScore}/100 · ${report.sendVerdict} · ${report.predictedOutcome}`),
+      '',
+      `Rewrite conseillé: ${batch.bestReport.recommendedRewrite}`,
+    ];
+
+    await sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
+    return { ok: true, command: 'simulate-batch', bestIndex: batch.bestIndex };
+  }
+
   async function handleMessage(update) {
     const message = update?.message;
     const chatId = message?.chat?.id;
@@ -272,7 +312,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /sim variante 1 | variante 2 pour tester plusieurs formulations, /profile pour voir tes stats, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
       return { ok: true, command: 'start' };
     }
 
@@ -309,6 +349,15 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/daily') {
       await startDaily(chatId);
       return { ok: true, command: 'daily' };
+    }
+
+    if (text === '/sim') {
+      await sendMessage(chatId, 'Commande: /sim variante 1 | variante 2 | variante 3');
+      return { ok: true, command: 'simulate-help' };
+    }
+
+    if (text.startsWith('/sim ')) {
+      return runBatchSimulation(chatId, text.slice(5));
     }
 
     if (text.startsWith('/new ')) {

@@ -29,8 +29,9 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Le brief DOIT avoir objective + minimalThreshold + batna
 - `npm test` avec `--test-isolation=none` sur Windows
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe à la priorité suivante.
-- Rapports Telegram : maximum 1500 caractères
+- Rapports Telegram : maximum 1500 caractères, y compris les résumés Simulate Before Send v2
 - Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
+- Les filtres d'analytics web (`mode`, `difficulty`, `scenarioId`) doivent dégrader proprement vers des stats vides sans casser l'autonomie ni l'UI layer
 
 ## Patterns
 
@@ -39,6 +40,8 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Scénario : `buildBrief(rawInput)` → Brief valide
 - Serveur HTTP : `node:http` natif, pas Express
 - Dashboard scoring : exposer des agrégats purs dans `src/dashboard.mjs`, puis les brancher dans l'API web
+- Dashboard API : préférer des filtres query string côté route (`/api/dashboard?mode=...&difficulty=...&scenarioId=...`) plutôt que dupliquer la logique d'agrégation
+- Telegram : toute feature d'analyse doit produire un résumé compact orienté décision (meilleure option + score + rewrite)
 
 ## Règle critique
 

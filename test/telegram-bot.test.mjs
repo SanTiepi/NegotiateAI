@@ -46,6 +46,16 @@ const provider = createMockProvider({
     missedOpportunities: [],
     recommendations: ['Continue.'],
   },
+  offerSimulation: ({ prompt }) => ({
+    sendVerdict: prompt.includes('vite') ? 'send' : 'revise',
+    approvalScore: prompt.includes('vite') ? 84 : 67,
+    predictedOutcome: prompt.includes('vite') ? 'Bonne ouverture.' : 'Trop timide.',
+    riskLevel: prompt.includes('vite') ? 'low' : 'medium',
+    likelyObjections: ['Prix'],
+    strengths: ['Clarté'],
+    vulnerabilities: ['Ancrage faible'],
+    recommendedRewrite: 'Version revue plus ferme.',
+  }),
 });
 
 const tempDirs = [];
@@ -209,6 +219,28 @@ describe('telegram-bot', () => {
     assert.match(sent.at(-1).text, /Hall of Fame NegotiateAI/);
     assert.match(sent.at(-1).text, /#1 · /);
     assert.doesNotMatch(sent.at(-1).text, /950000 CHF/);
+  });
+
+  it('runs simulate-before-send batch over an active telegram session', async () => {
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 55 }, text: '/new Obtenir 10% | 5% mini | autre offre' } });
+    const result = await bot.handleMessage({ message: { chat: { id: 55 }, text: '/sim Je peux signer vite aujourd\'hui. | Pouvez-vous faire un geste ?' } });
+
+    assert.equal(result.command, 'simulate-batch');
+    assert.equal(result.bestIndex, 0);
+    assert.match(sent.at(-1).text, /Simulate Before Send v2/);
+    assert.match(sent.at(-1).text, /Meilleure option: #1/);
+    assert.match(sent.at(-1).text, /Rewrite conseillé:/);
+    assert.equal(bot.sessions.size, 1);
   });
 
   it('starts a daily challenge and persists it in daily mode', async () => {
