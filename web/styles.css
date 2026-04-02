@@ -10,8 +10,11 @@ button { background: #6c7cff; color: white; border: none; cursor: pointer; }
 .chat { margin-top: 20px; }
 .hidden { display: none; }
 .status { margin-bottom: 12px; color: #8fd3ff; }
+.meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 12px; }
+.panel { background: #0f1627; border: 1px solid #2b3856; border-radius: 12px; padding: 12px 14px; color: #c9d6f2; white-space: pre-wrap; }
 .messages { display: grid; gap: 10px; max-height: 360px; overflow: auto; margin-bottom: 12px; }
-.msg { padding: 12px 14px; border-radius: 12px; }
+.msg { padding: 12px 14px; border-radius: 12px; white-space: pre-wrap; }
 .msg.user { background: #23314f; }
 .msg.adversary { background: #1f3b2e; }
 .turn-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+@media (max-width: 720px) { .meta { grid-template-columns: 1fr; } }

@@ -26,6 +26,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Brief DOIT avoir objective + minimalThreshold + batna
 - npm test avec --test-isolation=none sur Windows
 - Web app: isoler la logique HTTP dans un createWebApp testable, et injecter provider + sessionIdFactory pour eviter tout appel reel en test
+- Web app temps reel: exposer coaching/ticker/actTransition via JSON mince pour que le frontend reste statique et facilement testable
 - Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
@@ -40,6 +41,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Scenario: buildBrief(rawInput) -> Brief valide
 - HTTP server: native node:http, pas Express
 - Web app MVP: GET / + assets statiques, POST /api/session pour creer la session, POST /api/session/:id/turn pour discuter; garder la reponse JSON mince et branchee directement sur engine.mjs
+- Frontend web: afficher le coaching/ticker sans framework ni logique metier dupliquee; parser seulement les champs JSON exposes par l'API
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram

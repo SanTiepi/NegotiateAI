@@ -163,6 +163,9 @@ describe('web-app', () => {
     assert.equal(body.adversaryResponse, 'Je peux bouger un peu, mais pas trop.');
     assert.equal(body.sessionOver, true);
     assert.equal(app.activeSessions.size, 0);
+    assert.equal(body.coaching.tip, 'Reste centré sur ta BATNA.');
+    assert.equal(body.ticker.turn, 1);
+    assert.ok('actTransition' in body);
 
     const stats = await store.getDashboardStats();
     assert.equal(stats.totalSessions, 1);

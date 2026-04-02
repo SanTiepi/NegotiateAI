@@ -140,6 +140,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             egoThreat: result.state.egoThreat,
           },
           coaching: result.coaching,
+          ticker: result.ticker,
+          actTransition: result.actTransition,
           detectedSignals: result.detectedSignals,
         });
         return;

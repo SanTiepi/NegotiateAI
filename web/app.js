@@ -4,6 +4,9 @@ const chat = document.querySelector('#chat');
 const statusEl = document.querySelector('#status');
 const messagesEl = document.querySelector('#messages');
 const messageInput = document.querySelector('#message-input');
+const metaEl = document.querySelector('#meta');
+const tickerEl = document.querySelector('#ticker');
+const coachEl = document.querySelector('#coach');
 
 let sessionId = null;
 
@@ -13,6 +16,33 @@ function addMessage(role, text) {
   el.textContent = text;
   messagesEl.appendChild(el);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function renderTicker(ticker) {
+  if (!ticker) {
+    tickerEl.textContent = 'Ticker indisponible.';
+    return;
+  }
+
+  tickerEl.textContent = [
+    `Deal ${ticker.dealQuality}%`,
+    `Leverage ${ticker.leverage > 0 ? '+' : ''}${ticker.leverage}`,
+    `Bias risk ${ticker.biasRisk}%`,
+    `Deal prob ${ticker.dealProbability}%`,
+    `Tension ${ticker.tension}%`,
+    `Momentum ${ticker.momentumTrend} (${ticker.momentum > 0 ? '+' : ''}${ticker.momentum})`,
+  ].join('\n');
+}
+
+function renderCoaching(payload) {
+  const parts = [];
+  if (payload.actTransition) parts.push(`Acte: ${payload.actTransition}`);
+  if (payload.coaching?.levels?.observer) parts.push(`Observer: ${payload.coaching.levels.observer}`);
+  if (payload.coaching?.levels?.suggest) parts.push(`Suggest: ${payload.coaching.levels.suggest}`);
+  else if (payload.coaching?.tip) parts.push(`Tip: ${payload.coaching.tip}`);
+  if (payload.sessionOver) parts.push(`Fin: ${payload.endReason || 'session terminée'}`);
+
+  coachEl.textContent = parts.join('\n\n') || 'Coaching en attente.';
 }
 
 setupForm.addEventListener('submit', async (event) => {
@@ -33,7 +63,10 @@ setupForm.addEventListener('submit', async (event) => {
 
   sessionId = payload.sessionId;
   chat.classList.remove('hidden');
+  metaEl.classList.remove('hidden');
   statusEl.textContent = `Session ${sessionId} · adversaire: ${payload.adversary.identity}`;
+  tickerEl.textContent = 'Le ticker apparaîtra après le premier tour.';
+  coachEl.textContent = 'Le coaching temps réel apparaîtra ici.';
   addMessage('adversary', `Bonjour, je suis ${payload.adversary.identity}. Ouvrons la discussion.`);
 });
 
@@ -60,5 +93,9 @@ turnForm.addEventListener('submit', async (event) => {
   statusEl.textContent = `Tour ${payload.state.turn} · statut: ${payload.state.status}`;
   if (payload.sessionOver) {
     statusEl.textContent += ` · fin: ${payload.endReason || 'session terminée'}`;
+    sessionId = null;
   }
+
+  renderTicker(payload.ticker);
+  renderCoaching(payload);
 });
