@@ -1,43 +1,43 @@
 {
   "id": "tutorial-02-raise",
   "name": "Tutoriel 2 — Demander une augmentation",
-  "description": "Le classique : negocier votre salaire. Decouvrez le coaching temps reel et les premieres jauges.",
+  "description": "Le classique : négocier votre salaire. Découvrez le coaching temps réel et les premières jauges.",
   "tutorial": true,
   "tutorialLevel": 2,
-  "teaches": "Coaching temps reel, empathie tactique, interets vs positions",
+  "teaches": "Coaching temps réel, empathie tactique, intérêts vs positions",
   "guidedTurns": 2,
   "maxTurns": 8,
   "brief": {
-    "situation": "Vous travaillez chez WebCraft depuis 18 mois. Vous etes dev front senior, vous avez livre le redesign du site client qui a augmente les conversions de 25%. Votre salaire est de 85k CHF. Le marche est a 95-105k pour votre profil. Entretien annuel avec votre manager Sophie.",
-    "userRole": "Dev front senior, 18 mois d'anciennete, auteur du redesign client (+25% conversions)",
+    "situation": "Vous travaillez chez WebCraft depuis 18 mois. Vous êtes dev front senior, vous avez livré le redesign du site client qui a augmenté les conversions de 25%. Votre salaire est de 85k CHF. Le marché est à 95-105k pour votre profil. Entretien annuel avec votre manager Sophie.",
+    "userRole": "Dev front senior, 18 mois d'ancienneté, auteur du redesign client (+25% conversions)",
     "adversaryRole": "Sophie Moreau, Engineering Manager, votre manager directe",
-    "objective": "Augmentation a 98k CHF avec titre de Tech Lead",
-    "minimalThreshold": "92k CHF minimum avec perspective claire a 6 mois",
-    "batna": "Offre chez un concurrent a 102k CHF (vous preferez rester mais c'est une option reelle)",
-    "constraints": ["Budget d'equipe valide trimestriellement", "Vous ne voulez pas menacer de partir explicitement", "Sophie decide mais le VP Engineering doit valider au-dessus de 10%"],
+    "objective": "Augmentation à 98k CHF avec titre de Tech Lead",
+    "minimalThreshold": "92k CHF minimum avec perspective claire à 6 mois",
+    "batna": "Offre chez un concurrent à 102k CHF (vous préférez rester mais c'est une option réelle)",
+    "constraints": ["Budget d'équipe validé trimestriellement", "Vous ne voulez pas menacer de partir explicitement", "Sophie décide mais le VP Engineering doit valider au-dessus de 10%"],
     "difficulty": "neutral",
-    "relationalStakes": "Sophie est votre manager au quotidien. Un conflit ouvert rendrait le travail penible. Mais ne rien dire vous frustre depuis 6 mois."
+    "relationalStakes": "Sophie est votre manager au quotidien. Un conflit ouvert rendrait le travail pénible. Mais ne rien dire vous frustre depuis 6 mois."
   },
   "adversary": {
-    "identity": "Sophie Moreau, 36 ans, Engineering Manager depuis 2 ans. Ancienne dev, comprend votre valeur technique. Coincee entre votre demande et son budget serre.",
-    "style": "Empathique et a l'ecoute mais prudente. Dit souvent 'je comprends' et 'laisse-moi voir ce que je peux faire'. Evite les engagements fermes. Utilise les processus RH comme bouclier.",
-    "publicObjective": "Retenir un talent cle dans le cadre du budget d'equipe",
-    "hiddenObjective": "Sophie a une enveloppe de 15k CHF pour toute l'equipe. Elle sait que vous valez plus mais doit aussi augmenter un junior qui menace de partir. Elle cherche un compromis creatif.",
-    "batna": "Proposer 89k + bonus variable de 5k + 2 jours de teletravail supplementaires",
-    "nonNegotiables": ["Ne peut pas depasser 95k sans approbation VP (processus de 3 semaines)", "Le titre Tech Lead necessite une promotion formelle"],
-    "timePressure": "Les budgets se bouclent fin du mois. Apres, tout est reporte au trimestre suivant.",
+    "identity": "Sophie Moreau, 36 ans, Engineering Manager depuis 2 ans. Ancienne dev, comprend votre valeur technique. Coincée entre votre demande et son budget serré.",
+    "style": "Empathique et à l'écoute mais prudente. Dit souvent 'je comprends' et 'laisse-moi voir ce que je peux faire'. Évite les engagements fermes. Utilise les processus RH comme bouclier.",
+    "publicObjective": "Retenir un talent clé dans le cadre du budget d'équipe",
+    "hiddenObjective": "Sophie a une enveloppe de 15k CHF pour toute l'équipe. Elle sait que vous valez plus mais doit aussi augmenter un junior qui menace de partir. Elle cherche un compromis créatif.",
+    "batna": "Proposer 89k + bonus variable de 5k + 2 jours de télétravail supplémentaires",
+    "nonNegotiables": ["Ne peut pas dépasser 95k sans approbation VP (processus de 3 semaines)", "Le titre Tech Lead nécessite une promotion formelle"],
+    "timePressure": "Les budgets se bouclent fin du mois. Après, tout est reporté au trimestre suivant.",
     "emotionalProfile": { "confidence": 50, "frustration": 30, "egoThreat": 20 },
     "likelyTactics": [
-      "Reconnaitre votre valeur tout en invoquant les contraintes budgetaires",
-      "Proposer des avantages non-salariaux (teletravail, formation, titre)",
-      "Reporter la decision ('laisse-moi en parler au VP')",
-      "Flatter vos contributions passees tout en minimisant l'urgence"
+      "Reconnaître votre valeur tout en invoquant les contraintes budgétaires",
+      "Proposer des avantages non-salariaux (télétravail, formation, titre)",
+      "Reporter la décision ('laisse-moi en parler au VP')",
+      "Flatter vos contributions passées tout en minimisant l'urgence"
     ],
     "vulnerabilities": [
-      "Elle sait que le marche est a 95-105k — votre demande est raisonnable",
+      "Elle sait que le marché est à 95-105k — votre demande est raisonnable",
       "Elle a peur que vous partiez — le recrutement prendrait 4 mois",
-      "Le VP lui a dit que la retention est prioritaire cette annee",
-      "Un compromis creatif (titre + augmentation etalee) la sauverait"
+      "Le VP lui a dit que la rétention est prioritaire cette année",
+      "Un compromis créatif (titre + augmentation étalée) la sauverait"
     ]
   },
   "tiers": {

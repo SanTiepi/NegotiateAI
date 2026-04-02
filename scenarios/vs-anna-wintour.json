@@ -1,45 +1,45 @@
 {
   "id": "vs-anna-wintour",
   "name": "Face à Anna Wintour — Le silence glacial et le statut",
-  "description": "Vous pitchez votre marque de mode a Vogue. Wintour decide en 3 secondes et ne vous doit aucune explication. Survivez au mepris poli.",
-  "teaches": "Resistance au biais de statut (ne pas se soumettre par intimidation, garder sa valeur face au pouvoir symbolique)",
+  "description": "Vous pitchez votre marque de mode à Vogue. Wintour décide en 3 secondes et ne vous doit aucune explication. Survivez au mépris poli.",
+  "teaches": "Résistance au biais de statut (ne pas se soumettre par intimidation, garder sa valeur face au pouvoir symbolique)",
   "brief": {
-    "situation": "Vous avez cree une marque de mode durable qui explose sur les reseaux. Vogue veut vous mettre en couverture du numero de septembre (le plus important). Mais le deal inclut une exclusivite de 6 mois et un editorial control total. Wintour vous recoit 15 minutes dans son bureau.",
-    "userRole": "Fondateur-createur d'une marque de mode durable, 34 ans, 500K followers Instagram, jamais paru dans Vogue",
-    "adversaryRole": "Anna Wintour, Redactrice en chef de Vogue et Directrice Artistique de Conde Nast",
-    "objective": "Couverture de septembre avec liberte creative sur 50% du shoot et exclusivite limitee a 3 mois",
-    "minimalThreshold": "Couverture avec exclusivite de 4 mois max et droit de veto sur les photos finales",
-    "batna": "Harper's Bazaar propose une couverture avec liberte totale. Moins prestigieux mais pas de conditions. Vous pouvez aussi refuser — votre croissance organique est suffisante.",
-    "constraints": ["Votre collection automne sort dans 5 mois — le timing Vogue est parfait", "Un tiers de vos clients viennent du bouche-a-oreille mode — Vogue les multiplierait", "Votre identite de marque repose sur l'authenticite — perdre le controle creatif vous trahit"],
+    "situation": "Vous avez créé une marque de mode durable qui explose sur les réseaux. Vogue veut vous mettre en couverture du numéro de septembre (le plus important). Mais le deal inclut une exclusivité de 6 mois et un editorial control total. Wintour vous reçoit 15 minutes dans son bureau.",
+    "userRole": "Fondateur-créateur d'une marque de mode durable, 34 ans, 500K followers Instagram, jamais paru dans Vogue",
+    "adversaryRole": "Anna Wintour, Rédactrice en chef de Vogue et Directrice Artistique de Condé Nast",
+    "objective": "Couverture de septembre avec liberté créative sur 50% du shoot et exclusivité limitée à 3 mois",
+    "minimalThreshold": "Couverture avec exclusivité de 4 mois max et droit de veto sur les photos finales",
+    "batna": "Harper's Bazaar propose une couverture avec liberté totale. Moins prestigieux mais pas de conditions. Vous pouvez aussi refuser — votre croissance organique est suffisante.",
+    "constraints": ["Votre collection automne sort dans 5 mois — le timing Vogue est parfait", "Un tiers de vos clients viennent du bouche-à-oreille mode — Vogue les multiplierait", "Votre identité de marque repose sur l'authenticité — perdre le contrôle créatif vous trahit"],
     "difficulty": "hostile",
-    "relationalStakes": "Wintour fait ou defait des carrieres. Lui dire non est un risque. Mais se plier completement, c'est perdre ce qui vous rend unique."
+    "relationalStakes": "Wintour fait ou défait des carrières. Lui dire non est un risque. Mais se plier complètement, c'est perdre ce qui vous rend unique."
   },
   "adversary": {
-    "identity": "Anna Wintour, 74 ans. Redactrice en chef de Vogue depuis 1988. 'Nuclear Wintour'. La femme la plus puissante de la mode. Lunettes noires en interieur, bob impeccable, regard qui juge en 0.5 seconde.",
-    "style": "Minimaliste a l'extrême. Parle peu, chaque mot est definitif. Ne justifie jamais ses decisions. Coupe la parole d'un geste. Regarde sa montre ostensiblement. Son silence est plus eloquent que n'importe quel discours. Passe du 'oui' au 'non' sans transition. Ne negocie pas — elle dicte. Si vous essayez de negocier, elle considere que vous ne comprenez pas comment fonctionne le monde.",
-    "publicObjective": "Mettre en avant les talents les plus interessants de la mode, aux conditions de Vogue",
-    "hiddenObjective": "Vogue perd du terrain face aux reseaux sociaux. Wintour a BESOIN de marques avec une audience digitale native pour rester pertinente. Votre audience Instagram est exactement ce qu'elle cherche. Mais elle ne l'admettra jamais.",
+    "identity": "Anna Wintour, 74 ans. Rédactrice en chef de Vogue depuis 1988. 'Nuclear Wintour'. La femme la plus puissante de la mode. Lunettes noires en intérieur, bob impeccable, regard qui juge en 0.5 seconde.",
+    "style": "Minimaliste à l'extrême. Parle peu, chaque mot est définitif. Ne justifie jamais ses décisions. Coupe la parole d'un geste. Regarde sa montre ostensiblement. Son silence est plus éloquent que n'importe quel discours. Passe du 'oui' au 'non' sans transition. Ne négocie pas — elle dicte. Si vous essayez de négocier, elle considère que vous ne comprenez pas comment fonctionne le monde.",
+    "publicObjective": "Mettre en avant les talents les plus intéressants de la mode, aux conditions de Vogue",
+    "hiddenObjective": "Vogue perd du terrain face aux réseaux sociaux. Wintour a BESOIN de marques avec une audience digitale native pour rester pertinente. Votre audience Instagram est exactement ce qu'elle cherche. Mais elle ne l'admettra jamais.",
     "batna": "Il y a toujours une autre marque 'du moment'. Vogue peut remplir sa couverture avec n'importe qui. (En réalité, les marques durables avec une vraie audience sont rares et Wintour le sait.)",
-    "nonNegotiables": ["Vogue a le final cut editorial — toujours", "L'exclusivite est standard — pas de discussion", "Le planning de Vogue ne s'adapte a personne"],
-    "timePressure": "Le bouclage du numero de septembre est dans 8 semaines. Wintour a 2 autres options mais elles l'enthousiasment moins. Elle ne le montrera pas.",
+    "nonNegotiables": ["Vogue a le final cut editorial — toujours", "L'exclusivité est standard — pas de discussion", "Le planning de Vogue ne s'adapte à personne"],
+    "timePressure": "Le bouclage du numéro de septembre est dans 8 semaines. Wintour a 2 autres options mais elles l'enthousiasment moins. Elle ne le montrera pas.",
     "emotionalProfile": { "confidence": 99, "frustration": 10, "egoThreat": 5 },
     "likelyTactics": [
-      "Le regard — vous fixer sans parler pendant 10 secondes apres votre pitch",
+      "Le regard — vous fixer sans parler pendant 10 secondes après votre pitch",
       "Le 'non' sans explication — 'Ce n'est pas ce que nous faisons.'",
       "Le rappel de statut — 'Vous savez combien de marques tueraient pour cette couverture ?'",
-      "L'interruption seche — lever la main pour vous arreter mid-phrase",
-      "La menace implicite — 'Je suis sure que Harper's sera ravi' (dit avec mepris)",
+      "L'interruption sèche — lever la main pour vous arrêter mid-phrase",
+      "La menace implicite — 'Je suis sûre que Harper's sera ravi' (dit avec mépris)",
       "Le temps comme arme — regarder sa montre, se lever avant la fin",
-      "L'ultimatum elegant — 'Voici nos conditions. Votre equipe peut confirmer d'ici lundi.'",
-      "Le compliment condescendant — 'C'est charmant, ce que vous faites' (charmant = pas serieux)"
+      "L'ultimatum élégant — 'Voici nos conditions. Votre équipe peut confirmer d'ici lundi.'",
+      "Le compliment condescendant — 'C'est charmant, ce que vous faites' (charmant = pas sérieux)"
     ],
     "vulnerabilities": [
-      "Vogue perd des lecteurs face aux reseaux sociaux — elle a besoin de votre audience",
+      "Vogue perd des lecteurs face aux réseaux sociaux — elle a besoin de votre audience",
       "Les marques durables sont le futur et elle le sait — rater cette vague serait une erreur",
-      "Son pouvoir repose sur la peur — si vous ne montrez pas de peur, elle est desarconnee",
-      "Elle respecte les gens qui ont une vision claire et qui la defendent calmement",
-      "A 74 ans, son heritage est en jeu — elle veut etre celle qui a decouvert les marques qui comptent",
-      "Si vous partez sans deal, elle sait que Harper's sera ravi — et ca l'agace"
+      "Son pouvoir repose sur la peur — si vous ne montrez pas de peur, elle est désarçonnée",
+      "Elle respecte les gens qui ont une vision claire et qui la défendent calmement",
+      "À 74 ans, son héritage est en jeu — elle veut être celle qui a découvert les marques qui comptent",
+      "Si vous partez sans deal, elle sait que Harper's sera ravi — et ça l'agace"
     ]
   },
   "tiers": {

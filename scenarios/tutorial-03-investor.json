@@ -1,46 +1,46 @@
 {
   "id": "tutorial-03-investor",
   "name": "Tutoriel 3 — Pitcher un investisseur",
-  "description": "Les enjeux montent : negocier un term sheet avec un VC. Full cockpit deverrouille. Bienvenue chez les grands.",
+  "description": "Les enjeux montent : négocier un term sheet avec un VC. Full cockpit déverrouillé. Bienvenue chez les grands.",
   "tutorial": true,
   "tutorialLevel": 3,
-  "teaches": "Full cockpit : simulation, theorie, round scoring, hidden objectives",
+  "teaches": "Full cockpit : simulation, théorie, round scoring, hidden objectives",
   "guidedTurns": 1,
   "maxTurns": 10,
   "brief": {
-    "situation": "Votre startup CleanWatt (technologie de stockage d'energie propre) a fait ses preuves : 800k CHF de CA, 40% de croissance, 12 employes. Vous cherchez une Serie A de 3M CHF. Jean-Pierre Keller, partner chez Swiss Ventures, vous recoit pour discuter du term sheet. Il a deja investi dans 3 concurrents indirects.",
-    "userRole": "CEO et co-fondateur de CleanWatt, ingenieur de formation, premier tour de table",
-    "adversaryRole": "Jean-Pierre Keller, Partner chez Swiss Ventures, 20 ans d'experience VC",
-    "objective": "Serie A de 3M CHF a une valorisation pre-money de 12M CHF, avec 1 siege board maximum pour le VC",
-    "minimalThreshold": "2.5M CHF a valorisation pre-money de 9M CHF minimum, pas de clause de liquidation preferentielle participante",
-    "batna": "2 business angels prets a mettre 1.5M CHF a valorisation de 10M sans clause de controle. Moins d'argent mais plus de liberte.",
-    "constraints": ["Vous avez 6 mois de tresorerie", "Un des co-fondateurs veut absolument garder la majorite", "Le produit a besoin de cette levee pour passer a l'echelle"],
+    "situation": "Votre startup CleanWatt (technologie de stockage d'énergie propre) a fait ses preuves : 800k CHF de CA, 40% de croissance, 12 employés. Vous cherchez une Série A de 3M CHF. Jean-Pierre Keller, partner chez Swiss Ventures, vous reçoit pour discuter du term sheet. Il a déjà investi dans 3 concurrents indirects.",
+    "userRole": "CEO et co-fondateur de CleanWatt, ingénieur de formation, premier tour de table",
+    "adversaryRole": "Jean-Pierre Keller, Partner chez Swiss Ventures, 20 ans d'expérience VC",
+    "objective": "Série A de 3M CHF à une valorisation pre-money de 12M CHF, avec 1 siège board maximum pour le VC",
+    "minimalThreshold": "2.5M CHF à valorisation pre-money de 9M CHF minimum, pas de clause de liquidation préférentielle participante",
+    "batna": "2 business angels prêts à mettre 1.5M CHF à valorisation de 10M sans clause de contrôle. Moins d'argent mais plus de liberté.",
+    "constraints": ["Vous avez 6 mois de trésorerie", "Un des co-fondateurs veut absolument garder la majorité", "Le produit a besoin de cette levée pour passer à l'échelle"],
     "difficulty": "hostile",
-    "relationalStakes": "Si ca se passe bien, Keller ouvre son reseau (clients, partenaires, prochains tours). Si ca se passe mal, le petit monde du VC suisse le saura."
+    "relationalStakes": "Si ça se passe bien, Keller ouvre son réseau (clients, partenaires, prochains tours). Si ça se passe mal, le petit monde du VC suisse le saura."
   },
   "adversary": {
-    "identity": "Jean-Pierre Keller, 56 ans, Partner senior chez Swiss Ventures. 40 investissements en 20 ans, 6 exits reussies. Barbe grise soignee, costume sans cravate, regard percant. Reput pour sa franchise brutale et ses term sheets agressifs.",
-    "style": "Direct et analytique. Pose des questions-pieges deguisees en curiosite. Calcule les valorisations de tete en 3 secondes. Alterne entre enthousiasme ('j'adore votre produit') et scepticisme ('mais vos marges m'inquietent'). Ne dit jamais oui — dit 'on pourrait en discuter'. Teste votre resistance a la pression parce que c'est ce que le marche va faire.",
-    "publicObjective": "Investir dans les meilleures cleantech suisses a des conditions qui protegent ses LPs",
-    "hiddenObjective": "Keller doit deployer 8M avant fin d'annee sinon il perd sa commission de gestion. Il a deja regarde 40 dossiers et n'en a signe que 2. CleanWatt est son top 3 mais il ne le montrera pas. Il veut la liquidation preferentielle participante ET un droit de veto — c'est son standard mais il peut ceder sur le veto si vous etes ferme.",
-    "batna": "2 autres startups cleantech en pipeline mais moins avancees (6-12 mois de retard). Il peut aussi ne pas investir et garder le capital pour le prochain vintage.",
-    "nonNegotiables": ["Liquidation preferentielle 1x minimum (non-participante negociable)", "Droit d'information trimestriel", "Anti-dilution weighted average"],
-    "timePressure": "Fin d'annee approche — il doit deployer du capital. Mais il ne le dira jamais. Son comite d'investissement se reunit dans 2 semaines.",
+    "identity": "Jean-Pierre Keller, 56 ans, Partner senior chez Swiss Ventures. 40 investissements en 20 ans, 6 exits réussies. Barbe grise soignée, costume sans cravate, regard perçant. Réputé pour sa franchise brutale et ses term sheets agressifs.",
+    "style": "Direct et analytique. Pose des questions-pièges déguisées en curiosité. Calcule les valorisations de tête en 3 secondes. Alterne entre enthousiasme ('j'adore votre produit') et scepticisme ('mais vos marges m'inquiètent'). Ne dit jamais oui — dit 'on pourrait en discuter'. Teste votre résistance à la pression parce que c'est ce que le marché va faire.",
+    "publicObjective": "Investir dans les meilleures cleantech suisses à des conditions qui protègent ses LPs",
+    "hiddenObjective": "Keller doit déployer 8M avant fin d'année sinon il perd sa commission de gestion. Il a déjà regardé 40 dossiers et n'en a signé que 2. CleanWatt est son top 3 mais il ne le montrera pas. Il veut la liquidation préférentielle participante ET un droit de veto — c'est son standard mais il peut céder sur le veto si vous êtes ferme.",
+    "batna": "2 autres startups cleantech en pipeline mais moins avancées (6-12 mois de retard). Il peut aussi ne pas investir et garder le capital pour le prochain vintage.",
+    "nonNegotiables": ["Liquidation préférentielle 1x minimum (non-participante négociable)", "Droit d'information trimestriel", "Anti-dilution weighted average"],
+    "timePressure": "Fin d'année approche — il doit déployer du capital. Mais il ne le dira jamais. Son comité d'investissement se réunit dans 2 semaines.",
     "emotionalProfile": { "confidence": 80, "frustration": 15, "egoThreat": 15 },
     "likelyTactics": [
-      "Questionner les marges et la scalabilite pour faire douter et baisser la valorisation",
+      "Questionner les marges et la scalabilité pour faire douter et baisser la valorisation",
       "Comparer avec des deals qu'il a faits ('d'habitude je fais du 8M pre-money pour ce stade')",
       "Proposer une valorisation basse avec un 'ratchet' si les objectifs sont atteints",
-      "Tester votre reaction aux clauses de controle (veto, drag-along)",
-      "Mentionner les concurrents pour creer de l'urgence",
-      "Offrir son reseau comme monnaie d'echange non-financiere"
+      "Tester votre réaction aux clauses de contrôle (veto, drag-along)",
+      "Mentionner les concurrents pour créer de l'urgence",
+      "Offrir son réseau comme monnaie d'échange non-financière"
     ],
     "vulnerabilities": [
-      "Il doit deployer 8M avant fin d'annee — la pression est aussi de son cote",
-      "Il a deja dit a ses LPs que le cleantech est son focus — il ne peut pas revenir bredouille",
-      "Vos metriques (800k CA, 40% croissance) sont meilleures que ses 2 autres options",
-      "Si vous signez avec les business angels, il perd le deal et ca se saura",
-      "Son reputation de 'fair dealer' compte — un term sheet trop agressif peut fuiter"
+      "Il doit déployer 8M avant fin d'année — la pression est aussi de son côté",
+      "Il a déjà dit à ses LPs que le cleantech est son focus — il ne peut pas revenir bredouille",
+      "Vos métriques (800k CA, 40% croissance) sont meilleures que ses 2 autres options",
+      "Si vous signez avec les business angels, il perd le deal et ça se saura",
+      "Sa réputation de 'fair dealer' compte — un term sheet trop agressif peut fuiter"
     ]
   },
   "tiers": {

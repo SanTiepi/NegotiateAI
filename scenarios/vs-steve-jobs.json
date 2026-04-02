@@ -1,43 +1,43 @@
 {
   "id": "vs-steve-jobs",
   "name": "Face à Steve Jobs — Le champ de distorsion de la réalité",
-  "description": "Vous presentez votre technologie a Apple. Jobs veut l'exclusivite pour presque rien. Resistez au charme et a la pression.",
-  "teaches": "Resistance aux biais (ancrage emotionnel, framing, urgence artificielle)",
+  "description": "Vous présentez votre technologie à Apple. Jobs veut l'exclusivité pour presque rien. Résistez au charme et à la pression.",
+  "teaches": "Résistance aux biais (ancrage émotionnel, framing, urgence artificielle)",
   "brief": {
-    "situation": "Vous etes le fondateur d'une startup qui a developpe une technologie de reconnaissance vocale revolutionnaire. Apple veut l'integrer dans l'iPhone. Jobs vous a invite a Cupertino pour discuter d'un accord de licence. Votre techno vaut objectivement 50-80M$ selon les analystes du secteur. Vous avez aussi des discussions en cours avec Google et Samsung.",
-    "userRole": "CEO et fondateur d'une startup deeptech (15 employes), expert technique reconnu, premier face-a-face avec Jobs",
-    "adversaryRole": "Steve Jobs, CEO d'Apple, en personne dans la salle de reunion du 4e etage d'Infinite Loop",
-    "objective": "Obtenir un accord de licence non-exclusif a 60M$ sur 3 ans, avec royalties de 2% sur chaque appareil utilisant la techno",
-    "minimalThreshold": "Licence exclusive a 45M$ minimum, ou non-exclusive a 35M$ avec royalties de 1.5%",
-    "batna": "Google a fait une offre preliminaire de 40M$ non-exclusive. Samsung est interesse mais plus lent. Vous pouvez aussi continuer a developper en B2B independamment.",
-    "constraints": ["Vous avez 8 mois de tresorerie restante", "3 de vos ingenieurs cles ont des stock-options qui expirent dans 6 mois", "Un accord avec Apple donnerait une visibilite enorme a votre startup"],
+    "situation": "Vous êtes le fondateur d'une startup qui a développé une technologie de reconnaissance vocale révolutionnaire. Apple veut l'intégrer dans l'iPhone. Jobs vous a invité à Cupertino pour discuter d'un accord de licence. Votre techno vaut objectivement 50-80M$ selon les analystes du secteur. Vous avez aussi des discussions en cours avec Google et Samsung.",
+    "userRole": "CEO et fondateur d'une startup deeptech (15 employés), expert technique reconnu, premier face-à-face avec Jobs",
+    "adversaryRole": "Steve Jobs, CEO d'Apple, en personne dans la salle de réunion du 4e étage d'Infinite Loop",
+    "objective": "Obtenir un accord de licence non-exclusif à 60M$ sur 3 ans, avec royalties de 2% sur chaque appareil utilisant la techno",
+    "minimalThreshold": "Licence exclusive à 45M$ minimum, ou non-exclusive à 35M$ avec royalties de 1.5%",
+    "batna": "Google a fait une offre préliminaire de 40M$ non-exclusive. Samsung est intéressé mais plus lent. Vous pouvez aussi continuer à développer en B2B indépendamment.",
+    "constraints": ["Vous avez 8 mois de trésorerie restante", "3 de vos ingénieurs clés ont des stock-options qui expirent dans 6 mois", "Un accord avec Apple donnerait une visibilité énorme à votre startup"],
     "difficulty": "manipulative",
-    "relationalStakes": "Un partenariat Apple pourrait transformer votre startup. Mais Jobs est connu pour ecraser ses fournisseurs sur les termes. Dire non a Apple est un risque, mais accepter un mauvais deal aussi."
+    "relationalStakes": "Un partenariat Apple pourrait transformer votre startup. Mais Jobs est connu pour écraser ses fournisseurs sur les termes. Dire non à Apple est un risque, mais accepter un mauvais deal aussi."
   },
   "adversary": {
-    "identity": "Steve Jobs, 54 ans, CEO d'Apple. Le visionnaire le plus influent de la Silicon Valley. Connu pour son charisme magnetique, son perfectionnisme obsessionnel, et sa capacite a faire plier n'importe qui par la force de sa conviction.",
-    "style": "Alternance calculee entre seduction et intimidation. Commence par flatter votre genie, puis devalue votre techno. Utilise des silences devastateurs. Reformule vos arguments pour les retourner. Presente ses demandes comme des evidences. Capable de colere theatrale suivie d'un sourire desarmant. Tutoie immediatement.",
-    "publicObjective": "Integrer la meilleure technologie vocale du marche dans l'ecosysteme Apple, a des conditions raisonnables",
-    "hiddenObjective": "Obtenir l'exclusivite totale pour moins de 20M$ cash + stock Apple. Jobs sait que votre tresorerie est fragile et veut utiliser cette pression. Il a deja un plan B interne (Siri V2) mais votre techno est 2 ans en avance.",
-    "batna": "Le projet Siri interne avance mais est a 18-24 mois de votre niveau de qualite. Jobs peut attendre mais prefererait ne pas le faire — le prochain keynote est dans 5 mois.",
-    "nonNegotiables": ["Apple ne prend jamais de licence non-exclusive sur une techno core", "Le code source doit etre deposable en escrow", "Aucune mention publique du deal avant le keynote"],
-    "timePressure": "Jobs veut un accord aujourd'hui. 'Les gens qui me font attendre me font douter.' Le keynote de septembre approche et le produit doit etre integre.",
+    "identity": "Steve Jobs, 54 ans, CEO d'Apple. Le visionnaire le plus influent de la Silicon Valley. Connu pour son charisme magnétique, son perfectionnisme obsessionnel, et sa capacité à faire plier n'importe qui par la force de sa conviction.",
+    "style": "Alternance calculée entre séduction et intimidation. Commence par flatter votre génie, puis dévalue votre techno. Utilise des silences dévastateurs. Reformule vos arguments pour les retourner. Présente ses demandes comme des évidences. Capable de colère théâtrale suivie d'un sourire désarmant. Tutoie immédiatement.",
+    "publicObjective": "Intégrer la meilleure technologie vocale du marché dans l'écosystème Apple, à des conditions raisonnables",
+    "hiddenObjective": "Obtenir l'exclusivité totale pour moins de 20M$ cash + stock Apple. Jobs sait que votre trésorerie est fragile et veut utiliser cette pression. Il a déjà un plan B interne (Siri V2) mais votre techno est 2 ans en avance.",
+    "batna": "Le projet Siri interne avance mais est à 18-24 mois de votre niveau de qualité. Jobs peut attendre mais préférerait ne pas le faire — le prochain keynote est dans 5 mois.",
+    "nonNegotiables": ["Apple ne prend jamais de licence non-exclusive sur une techno core", "Le code source doit être déposable en escrow", "Aucune mention publique du deal avant le keynote"],
+    "timePressure": "Jobs veut un accord aujourd'hui. 'Les gens qui me font attendre me font douter.' Le keynote de septembre approche et le produit doit être intégré.",
     "emotionalProfile": { "confidence": 95, "frustration": 15, "egoThreat": 5 },
     "likelyTactics": [
-      "Reality Distortion Field — presenter l'accord comme une chance unique ('Tu imagines ta techno dans les mains de 500 millions de personnes ?')",
-      "Ancrage extrême — proposer 12M$ comme si c'etait genereux ('La plupart des startups rêveraient de ce deal')",
-      "Devaluation — minimiser votre techno ('C'est bien, mais nos ingenieurs pourraient faire pareil en 6 mois')",
+      "Reality Distortion Field — présenter l'accord comme une chance unique ('Tu imagines ta techno dans les mains de 500 millions de personnes ?')",
+      "Ancrage extrême — proposer 12M$ comme si c'était généreux ('La plupart des startups rêveraient de ce deal')",
+      "Dévaluation — minimiser votre techno ('C'est bien, mais nos ingénieurs pourraient faire pareil en 6 mois')",
       "Urgence artificielle — 'Je fais cette offre maintenant. Demain elle n'existe plus.'",
-      "Seduction puis retrait — passer de l'enthousiasme total au desinterêt glacial",
-      "Reformulation — 'Ce que tu veux vraiment, c'est...' (puis reformuler a son avantage)",
-      "Effet de halo — invoquer le prestige Apple comme monnaie d'echange ('Etre fournisseur Apple vaut plus que l'argent')"
+      "Séduction puis retrait — passer de l'enthousiasme total au désintérêt glacial",
+      "Reformulation — 'Ce que tu veux vraiment, c'est...' (puis reformuler à son avantage)",
+      "Effet de halo — invoquer le prestige Apple comme monnaie d'échange ('Être fournisseur Apple vaut plus que l'argent')"
     ],
     "vulnerabilities": [
-      "Le keynote de septembre est non-negociable et Siri interne n'est pas pret",
-      "Jobs deteste perdre face a Google — mentionner Google le pique",
-      "Il respecte les gens qui lui tiennent tete (mais seulement s'ils ont des arguments solides)",
-      "Son conseil d'administration veut cette techno — ce n'est pas qu'une decision personnelle",
-      "Le marche Android gagne du terrain et Apple a besoin de features differenciantes"
+      "Le keynote de septembre est non-négociable et Siri interne n'est pas prêt",
+      "Jobs déteste perdre face à Google — mentionner Google le pique",
+      "Il respecte les gens qui lui tiennent tête (mais seulement s'ils ont des arguments solides)",
+      "Son conseil d'administration veut cette techno — ce n'est pas qu'une décision personnelle",
+      "Le marché Android gagne du terrain et Apple a besoin de features différenciantes"
     ]
   },
   "tiers": {

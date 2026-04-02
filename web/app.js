@@ -55,10 +55,10 @@ function post(path, data) {
 // ============================================================
 
 const DIMENSION_LABELS = {
-  outcomeLeverage: { label: 'Leverage & Outcome', max: 25 },
+  outcomeLeverage: { label: 'Levier & résultat', max: 25 },
   batnaDiscipline: { label: 'Discipline BATNA', max: 20 },
-  emotionalRegulation: { label: 'Regulation emotionnelle', max: 25 },
-  biasResistance: { label: 'Resistance aux biais', max: 15 },
+  emotionalRegulation: { label: 'Régulation émotionnelle', max: 25 },
+  biasResistance: { label: 'Résistance aux biais', max: 15 },
   conversationalFlow: { label: 'Flow conversationnel', max: 15 },
 };
 
@@ -71,7 +71,7 @@ const BELT_COLORS = {
 };
 
 const DIFFICULTY_LABELS = {
-  cooperative: 'Cooperatif',
+  cooperative: 'Coopératif',
   neutral: 'Neutre',
   hostile: 'Hostile',
   manipulative: 'Manipulateur',
@@ -98,7 +98,7 @@ function renderMetricList(elementId, entries, labelKey, valueFormatter) {
   const root = document.getElementById(elementId);
   root.innerHTML = '';
   if (!entries || entries.length === 0) {
-    root.innerHTML = '<p class="text-muted">Pas encore de donnees</p>';
+    root.innerHTML = '<p class="text-muted">Pas encore de données</p>';
     return;
   }
 
@@ -157,7 +157,7 @@ async function loadAcademy(force = false) {
         </div>
       </div>
       <div class="metric-row"><span class="metric-label">Ceinture actuelle</span><span class="metric-value">${escapeHtml(card.currentBelt?.name || 'Blanche')}</span></div>
-      <div class="metric-row"><span class="metric-label">Drill recommande</span><span class="metric-value">${escapeHtml(profile.recommendedDrillId || 'mirror')}</span></div>
+      <div class="metric-row"><span class="metric-label">Exercice recommandé</span><span class="metric-value">${escapeHtml(profile.recommendedDrillId || 'mirror')}</span></div>
       <div class="metric-row"><span class="metric-label">Biais prioritaire</span><span class="metric-value">${escapeHtml(profile.biasRecommendation?.biasType || 'Aucun')}</span></div>
       <details class="academy-details">
         <summary>Version partageable</summary>
@@ -173,7 +173,7 @@ async function loadAcademy(force = false) {
       item.innerHTML = `
         <div class="academy-item-head">
           <strong>${escapeHtml(drill.name)}</strong>
-          ${drill.recommended ? '<span class="badge badge-success">Recommande</span>' : ''}
+          ${drill.recommended ? '<span class="badge badge-success">Recommandé</span>' : ''}
         </div>
         <p class="text-muted">${escapeHtml(drill.description)}</p>
         <div class="academy-meta">
@@ -189,23 +189,23 @@ async function loadAcademy(force = false) {
       ? `
         <div class="academy-item recommended">
           <div class="academy-item-head">
-            <strong>${escapeHtml(weekly.name || weekly.id || 'Scenario')}</strong>
+            <strong>${escapeHtml(weekly.name || weekly.id || 'Scénario')}</strong>
             <span class="badge">${escapeHtml(weekly.brief?.difficulty || 'neutral')}</span>
           </div>
           <p class="text-muted">${escapeHtml(weekly.description || weekly.brief?.situation || '—')}</p>
           <div class="academy-meta">
-            <span class="chip">${escapeHtml(weekly.id || 'scenario')}</span>
+            <span class="chip">${escapeHtml(weekly.id || 'scénario')}</span>
           </div>
         </div>
       `
-      : '<p class="text-muted">Aucun scenario de la semaine.</p>';
+      : '<p class="text-muted">Aucun scénario de la semaine.</p>';
 
     const leaderboardEl = document.getElementById('academy-leaderboard');
     if (weekly?.id) {
       const leaderboard = await api(`/api/leaderboard?scenarioId=${encodeURIComponent(weekly.id)}&limit=5`);
       leaderboardEl.innerHTML = '';
       if (!leaderboard.entries?.length) {
-        leaderboardEl.innerHTML = '<p class="text-muted">Pas encore de runs sur ce scenario.</p>';
+        leaderboardEl.innerHTML = '<p class="text-muted">Pas encore de sessions sur ce scénario.</p>';
       } else {
         leaderboard.entries.forEach((entry, index) => {
           const row = document.createElement('div');
@@ -215,13 +215,13 @@ async function loadAcademy(force = false) {
         });
       }
     } else {
-      renderAcademyPlaceholder('academy-leaderboard', 'Leaderboard indisponible.');
+      renderAcademyPlaceholder('academy-leaderboard', 'Classement indisponible.');
     }
 
     const hallEl = document.getElementById('academy-hall');
     hallEl.innerHTML = '';
     if (!hall?.stories?.length) {
-      hallEl.innerHTML = '<p class="text-muted">Pas encore de runs legendaires.</p>';
+      hallEl.innerHTML = '<p class="text-muted">Pas encore de sessions légendaires.</p>';
     } else {
       for (const story of hall.stories) {
         const item = document.createElement('div');
@@ -241,10 +241,10 @@ async function loadAcademy(force = false) {
   } catch (err) {
     console.error('Academy load error:', err);
     renderAcademyPlaceholder('academy-profile', 'Impossible de charger le profil.');
-    renderAcademyPlaceholder('academy-drills', 'Impossible de charger les drills.');
-    renderAcademyPlaceholder('academy-weekly', 'Impossible de charger le scenario de la semaine.');
-    renderAcademyPlaceholder('academy-leaderboard', 'Impossible de charger le leaderboard.');
-    renderAcademyPlaceholder('academy-hall', 'Impossible de charger le hall of fame.');
+    renderAcademyPlaceholder('academy-drills', 'Impossible de charger les exercices.');
+    renderAcademyPlaceholder('academy-weekly', 'Impossible de charger le scénario de la semaine.');
+    renderAcademyPlaceholder('academy-leaderboard', 'Impossible de charger le classement.');
+    renderAcademyPlaceholder('academy-hall', 'Impossible de charger le panthéon.');
   }
 }
 
@@ -270,7 +270,7 @@ async function loadDailyCard() {
   } catch (err) {
     academyDaily = null;
     console.error('Daily load error:', err);
-    root.innerHTML = '<p class="text-muted">Impossible de generer le daily.</p>';
+    root.innerHTML = '<p class="text-muted">Impossible de générer le daily.</p>';
   }
 }
 
@@ -312,7 +312,7 @@ async function loadDashboard() {
     weakEl.innerHTML = '';
     const weakDims = stats.weakDimensions || [];
     if (weakDims.length === 0) {
-      weakEl.innerHTML = '<p class="text-muted">Pas encore de donnees</p>';
+      weakEl.innerHTML = '<p class="text-muted">Pas encore de données</p>';
     } else {
       for (const dim of weakDims) {
         const info = DIMENSION_LABELS[dim] || { label: dim };
@@ -334,7 +334,7 @@ async function loadDashboard() {
     const historyEl = document.getElementById('d-history');
     historyEl.innerHTML = '';
     if (!stats.scoreHistory?.length) {
-      historyEl.innerHTML = '<p class="text-muted">Pas encore de donnees</p>';
+      historyEl.innerHTML = '<p class="text-muted">Pas encore de données</p>';
     } else {
       for (const entry of stats.scoreHistory) {
         const chip = document.createElement('div');
@@ -414,8 +414,8 @@ async function loadPresets() {
     renderGroup('Commencer ici', tutorials);
     renderGroup('Situations classiques', basics);
     renderGroup('Immobilier suisse', swiss);
-    renderGroup('Personnalites celebres', celebrities);
-    renderGroup('Scenarios extremes', extremes);
+    renderGroup('Personnalités célèbres', celebrities);
+    renderGroup('Scénarios extrêmes', extremes);
 
     presetsLoaded = true;
   } catch (err) {
@@ -433,7 +433,7 @@ async function launchScenario(scenarioFile) {
     pendingBrief = null;
     showBriefing(briefing);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   }
 }
 
@@ -481,7 +481,7 @@ document.getElementById('setup-form').addEventListener('submit', async (e) => {
     const session = await post('/api/session', { brief });
     startNegotiation(session);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   } finally {
     btn.disabled = false;
     btn.textContent = 'Lancer la session';
@@ -515,14 +515,14 @@ document.getElementById('versus-run').addEventListener('click', async () => {
     const verdict = await post('/api/versus', payload);
     const winner = verdict.winner === 'playerA' ? 'Message A' : verdict.winner === 'playerB' ? 'Message B' : 'Match nul';
     resultEl.innerHTML = [
-      `Vainqueur: ${winner}`,
-      `Score A: ${verdict.scoreA?.total ?? '—'} | Score B: ${verdict.scoreB?.total ?? '—'}`,
+      `Vainqueur : ${winner}`,
+      `Score A : ${verdict.scoreA?.total ?? '—'} | Score B : ${verdict.scoreB?.total ?? '—'}`,
       verdict.rationale || '',
-      verdict.coachingA?.length ? `Coach A: ${verdict.coachingA.join(' · ')}` : '',
-      verdict.coachingB?.length ? `Coach B: ${verdict.coachingB.join(' · ')}` : '',
+      verdict.coachingA?.length ? `Coach A : ${verdict.coachingA.join(' · ')}` : '',
+      verdict.coachingB?.length ? `Coach B : ${verdict.coachingB.join(' · ')}` : '',
     ].filter(Boolean).join('\n\n');
   } catch (err) {
-    resultEl.textContent = `Erreur: ${err.message}`;
+    resultEl.textContent = `Erreur : ${err.message}`;
   }
 });
 
@@ -541,7 +541,7 @@ function startNegotiation(session) {
   document.getElementById('n-act').textContent = 'Ouverture';
   document.getElementById('n-turn').textContent = `Tour 0/${session.state?.maxTurns || 12}`;
   document.getElementById('n-status').textContent = 'active';
-  document.getElementById('n-coaching').textContent = 'Le coaching apparaitra apres votre premier message.';
+  document.getElementById('n-coaching').textContent = 'Le coaching apparaîtra après votre premier message.';
   document.getElementById('n-signals').innerHTML = '<span class="text-muted">—</span>';
 
   // Reset messages
@@ -579,7 +579,7 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
 
   // Handle /quit
   if (text === '/quit') {
-    addMessage('system', 'Session terminee par l\'utilisateur.');
+    addMessage('system', 'Session terminée par l\'utilisateur.');
     endSession(null);
     return;
   }
@@ -594,7 +594,7 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
   // Show typing indicator
   const spinner = document.createElement('div');
   spinner.className = 'spinner';
-  spinner.textContent = 'Reflexion en cours...';
+  spinner.textContent = 'Réflexion en cours...';
   spinner.id = 'typing-spinner';
   document.getElementById('n-messages').appendChild(spinner);
   spinner.scrollIntoView({ behavior: 'smooth' });
@@ -637,13 +637,13 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
 
     // Session over?
     if (result.sessionOver) {
-      addMessage('system', `Session terminee: ${result.endReason || 'fin'}`);
+      addMessage('system', `Session terminée : ${result.endReason || 'fin'}`);
       hideGuidedChoices();
       endSession(result.feedback, result.fightCard);
     } else {
       // Show guided choices if provided
       if (result.guidedChoiceFeedback?.lesson) {
-        addMessage('system', `Coach guide: ${result.guidedChoiceFeedback.lesson}`);
+        addMessage('system', `Coach guidé : ${result.guidedChoiceFeedback.lesson}`);
       }
 
       if (result.guidedChoices && result.guidedChoices.length > 0) {
@@ -658,7 +658,7 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
   } catch (err) {
     document.getElementById('typing-spinner')?.remove();
     sendBtn.classList.remove('loading');
-    addMessage('system', `Erreur: ${err.message}`);
+    addMessage('system', `Erreur : ${err.message}`);
     input.disabled = false;
     sendBtn.disabled = false;
   }
@@ -743,10 +743,10 @@ function updateCoaching(result) {
     parts.push(`<span class="coaching-tip">${result.coaching.tip}</span>`);
   }
   if (result.coaching?.biasDetected) {
-    parts.push(`<span class="coaching-bias">Biais: ${result.coaching.biasDetected}</span>`);
+    parts.push(`<span class="coaching-bias">Biais : ${result.coaching.biasDetected}</span>`);
   }
 
-  el.innerHTML = parts.length > 0 ? parts.join('<br><br>') : 'Rien a signaler.';
+  el.innerHTML = parts.length > 0 ? parts.join('<br><br>') : 'Rien à signaler.';
 }
 
 function updateSignals(signals) {
@@ -788,7 +788,7 @@ document.getElementById('sim-run-single').addEventListener('click', async () => 
     const report = await post(`/api/session/${encodeURIComponent(currentSessionId)}/simulate`, { message: text });
     renderSimulation(report);
   } catch (err) {
-    results.innerHTML = `<p style="color:var(--red)">Erreur: ${err.message}</p>`;
+    results.innerHTML = `<p style="color:var(--red)">Erreur : ${err.message}</p>`;
   }
 });
 
@@ -808,7 +808,7 @@ document.getElementById('sim-run-batch').addEventListener('click', async () => {
     const batch = await post(`/api/session/${encodeURIComponent(currentSessionId)}/simulate-batch`, { messages });
     renderSimulationBatch(messages, batch);
   } catch (err) {
-    results.innerHTML = `<p style="color:var(--red)">Erreur: ${err.message}</p>`;
+    results.innerHTML = `<p style="color:var(--red)">Erreur : ${err.message}</p>`;
   }
 });
 
@@ -818,7 +818,7 @@ document.getElementById('sim-close').addEventListener('click', () => {
 
 function renderSimulation(report) {
   const results = document.getElementById('sim-results');
-  const verdictLabel = { send: 'Envoyer', revise: 'A reviser', do_not_send: 'Ne pas envoyer' };
+  const verdictLabel = { send: 'Envoyer', revise: 'À réviser', do_not_send: 'Ne pas envoyer' };
 
   results.innerHTML = `
     <div class="sim-card best">
@@ -827,24 +827,24 @@ function renderSimulation(report) {
       <p style="text-align:center;color:var(--text-muted);margin-bottom:16px">${report.predictedOutcome}</p>
 
       <div class="sim-section">
-        <h4>Reaction simulee de l'adversaire</h4>
+        <h4>Réaction simulée de l'adversaire</h4>
         <p style="font-style:italic;color:var(--text-2);padding:8px 12px;background:var(--bg);border-radius:8px">"${report.simulatedResponse}"</p>
       </div>
 
       ${report.strengths?.length ? `<div class="sim-section"><h4>Points forts</h4><ul class="sim-list">${report.strengths.map((s) => `<li>${s}</li>`).join('')}</ul></div>` : ''}
-      ${report.vulnerabilities?.length ? `<div class="sim-section"><h4>Vulnerabilites</h4><ul class="sim-list">${report.vulnerabilities.map((v) => `<li>${v}</li>`).join('')}</ul></div>` : ''}
+      ${report.vulnerabilities?.length ? `<div class="sim-section"><h4>Vulnérabilités</h4><ul class="sim-list">${report.vulnerabilities.map((v) => `<li>${v}</li>`).join('')}</ul></div>` : ''}
       ${report.likelyObjections?.length ? `<div class="sim-section"><h4>Objections probables</h4><ul class="sim-list">${report.likelyObjections.map((o) => `<li>${o}</li>`).join('')}</ul></div>` : ''}
-      ${report.recommendedRewrite ? `<div class="sim-section"><h4>Reformulation suggeree</h4><div class="sim-rewrite">${report.recommendedRewrite}</div></div>` : ''}
+      ${report.recommendedRewrite ? `<div class="sim-section"><h4>Reformulation suggérée</h4><div class="sim-rewrite">${report.recommendedRewrite}</div></div>` : ''}
     </div>
   `;
 }
 
 function renderSimulationBatch(messages, batch) {
   const results = document.getElementById('sim-results');
-  const verdictLabel = { send: 'Envoyer', revise: 'A reviser', do_not_send: 'Ne pas envoyer' };
+  const verdictLabel = { send: 'Envoyer', revise: 'À réviser', do_not_send: 'Ne pas envoyer' };
   const cards = (batch.reports || []).map((report, index) => {
     const isBest = index === batch.bestIndex;
-    const riskLabel = report.riskLevel === 'low' ? 'Risque faible' : report.riskLevel === 'medium' ? 'Risque moyen' : 'Risque eleve';
+    const riskLabel = report.riskLevel === 'low' ? 'Risque faible' : report.riskLevel === 'medium' ? 'Risque moyen' : 'Risque élevé';
     return `
       <div class="sim-card ${isBest ? 'best' : ''}">
         <div class="sim-card-head">
@@ -857,12 +857,12 @@ function renderSimulationBatch(messages, batch) {
           <span class="chip">${riskLabel}</span>
         </div>
         <p class="text-muted">${escapeHtml(report.predictedOutcome || '')}</p>
-        ${report.recommendedRewrite ? `<div class="sim-section"><h4>Rewrite suggeree</h4><div class="sim-rewrite">${escapeHtml(report.recommendedRewrite)}</div></div>` : ''}
+        ${report.recommendedRewrite ? `<div class="sim-section"><h4>Reformulation suggérée</h4><div class="sim-rewrite">${escapeHtml(report.recommendedRewrite)}</div></div>` : ''}
       </div>
     `;
   }).join('');
 
-  results.innerHTML = cards || '<p class="text-muted">Aucun resultat.</p>';
+  results.innerHTML = cards || '<p class="text-muted">Aucun résultat.</p>';
 }
 
 // ============================================================
@@ -877,8 +877,8 @@ function showBriefing(briefing) {
   ctx.innerHTML = `
     ${briefing.situation ? `<p>${briefing.situation}</p>` : ''}
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
-      ${briefing.playerRole ? `<span class="role-tag">Vous: ${briefing.playerRole}</span>` : ''}
-      ${briefing.adversaryRole ? `<span class="role-tag">Face a: ${briefing.adversaryRole}</span>` : ''}
+      ${briefing.playerRole ? `<span class="role-tag">Vous : ${briefing.playerRole}</span>` : ''}
+      ${briefing.adversaryRole ? `<span class="role-tag">Face à : ${briefing.adversaryRole}</span>` : ''}
       ${briefing.difficulty ? `<span class="role-tag" style="background:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}22;color:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}">${briefing.difficulty}</span>` : ''}
     </div>
     ${briefing.adversaryPublic ? `<h3 style="margin-top:14px">Votre adversaire</h3><p>${briefing.adversaryPublic.identity || ''}</p><p class="text-muted">${briefing.adversaryPublic.style || ''}</p>` : ''}
@@ -928,10 +928,10 @@ document.getElementById('briefing-form').addEventListener('submit', async (e) =>
     const session = await post('/api/session', payload);
     startNegotiation(session);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Accepter le defi';
+    btn.textContent = 'Accepter le défi';
   }
 });
 
@@ -949,7 +949,7 @@ function updateRoundScore(roundScore) {
   ptsEl.className = `round-points ${roundScore.points > 0 ? 'positive' : roundScore.points < 0 ? 'negative' : 'neutral'}`;
   labelEl.textContent = roundScore.label;
   if (roundScore.signals?.length) labelEl.textContent += ` (${roundScore.signals.join(', ')})`;
-  cumulEl.textContent = `Cumulatif: ${roundScore.cumulativeScore > 0 ? '+' : ''}${roundScore.cumulativeScore}`;
+  cumulEl.textContent = `Cumulatif : ${roundScore.cumulativeScore > 0 ? '+' : ''}${roundScore.cumulativeScore}`;
 }
 
 // ============================================================
@@ -986,7 +986,7 @@ function showResults(feedback, fightCard) {
     document.getElementById('r-tri-intel').style.width = `${t.intelligence}%`;
     document.getElementById('r-tri-intel-v').textContent = t.intelligence;
     if (t.totalHints > 0) {
-      document.getElementById('r-discovery').textContent = `Objectif cache: ${t.hintsDiscovered}/${t.totalHints} indices decouverts`;
+      document.getElementById('r-discovery').textContent = `Objectif caché : ${t.hintsDiscovered}/${t.totalHints} indices découverts`;
     }
   }
 
@@ -1032,7 +1032,7 @@ function showResults(feedback, fightCard) {
   biasEl.innerHTML = '';
   const biases = feedback.biasesDetected || [];
   if (biases.length === 0) {
-    biasEl.innerHTML = '<p class="text-muted">Aucun biais detecte. Bravo !</p>';
+    biasEl.innerHTML = '<p class="text-muted">Aucun biais détecté. Bravo !</p>';
   } else {
     for (const b of biases) {
       const card = document.createElement('div');
@@ -1047,7 +1047,7 @@ function showResults(feedback, fightCard) {
   tacEl.innerHTML = '';
   const tactics = feedback.tacticsUsed || [];
   if (tactics.length === 0) {
-    tacEl.innerHTML = '<p class="text-muted">Aucune tactique identifiee</p>';
+    tacEl.innerHTML = '<p class="text-muted">Aucune tactique identifiée</p>';
   } else {
     for (const t of tactics) {
       const tag = document.createElement('span');
@@ -1131,8 +1131,8 @@ async function loadReplay(sessionId) {
           <span class="badge">${escapeHtml(turn.momentumLabel || 'stable')}</span>
         </div>
         <p>${escapeHtml(turn.annotation || '—')}</p>
-        ${turn.biasDetected ? `<p class="text-muted">Biais: ${escapeHtml(turn.biasDetected)}</p>` : ''}
-        ${turn.alternativeSuggestion ? `<p class="text-muted">Alternative: ${escapeHtml(turn.alternativeSuggestion)}</p>` : ''}
+        ${turn.biasDetected ? `<p class="text-muted">Biais : ${escapeHtml(turn.biasDetected)}</p>` : ''}
+        ${turn.alternativeSuggestion ? `<p class="text-muted">Alternative : ${escapeHtml(turn.alternativeSuggestion)}</p>` : ''}
       `;
       turns.appendChild(item);
     }
@@ -1150,7 +1150,7 @@ async function loadReplay(sessionId) {
 
 document.getElementById('btn-quit').addEventListener('click', () => {
   if (currentSessionId && confirm('Quitter la session en cours ?')) {
-    addMessage('system', 'Session abandonnee.');
+    addMessage('system', 'Session abandonnée.');
     endSession(null);
     setTimeout(() => navigate('dashboard'), 1000);
   }
@@ -1176,13 +1176,13 @@ document.getElementById('academy-play-daily')?.addEventListener('click', async (
     const briefing = await post('/api/briefing', { brief: daily.brief });
     showBriefing(briefing);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   }
 });
 
 document.getElementById('academy-play-weekly')?.addEventListener('click', () => {
   if (!academyWeekly?.id) {
-    alert('Scenario of the week indisponible pour le moment.');
+    alert('Scénario de la semaine indisponible pour le moment.');
     return;
   }
   launchScenario(academyWeekly.id);
@@ -1202,7 +1202,7 @@ document.getElementById('academy-export-hall')?.addEventListener('click', async 
     link.remove();
     setTimeout(() => URL.revokeObjectURL(link.href), 1000);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   }
 });
 
@@ -1255,7 +1255,7 @@ if (SpeechRecognition) {
     } else {
       isRecording = true;
       voiceBtn.classList.add('recording');
-      voiceBtn.innerHTML = '&#128308; Ecoute...';
+      voiceBtn.innerHTML = '&#128308; Écoute...';
       recognition.start();
     }
   });
@@ -1299,7 +1299,7 @@ if (window.speechSynthesis) {
   const label = document.getElementById(`sl-${name}-label`);
   if (slider && label) {
     slider.addEventListener('input', () => {
-      label.textContent = `${name.charAt(0).toUpperCase() + name.slice(1)}: ${slider.value}`;
+      label.textContent = `${name.charAt(0).toUpperCase() + name.slice(1)} : ${slider.value}`;
     });
   }
 });
@@ -1338,7 +1338,7 @@ document.getElementById('briefing-slider-form')?.addEventListener('submit', asyn
     const session = await post('/api/session', payload);
     startNegotiation(session);
   } catch (err) {
-    alert('Erreur: ' + err.message);
+    alert('Erreur : ' + err.message);
   } finally {
     btn.disabled = false;
     btn.classList.remove('loading');
@@ -1397,7 +1397,7 @@ async function selectGuidedChoice(index) {
 
   const spinner = document.createElement('div');
   spinner.className = 'spinner';
-  spinner.textContent = 'Reflexion en cours...';
+  spinner.textContent = 'Réflexion en cours...';
   spinner.id = 'typing-spinner';
   document.getElementById('n-messages').appendChild(spinner);
   spinner.scrollIntoView({ behavior: 'smooth' });
@@ -1434,7 +1434,7 @@ async function selectGuidedChoice(index) {
     }
 
     if (result.sessionOver) {
-      addMessage('system', `Session terminee: ${result.endReason || 'fin'}`);
+      addMessage('system', `Session terminée : ${result.endReason || 'fin'}`);
       hideGuidedChoices();
       endSession(result.feedback, result.fightCard);
       return;
@@ -1452,7 +1452,7 @@ async function selectGuidedChoice(index) {
   } catch (err) {
     document.getElementById('typing-spinner')?.remove();
     sendBtn.classList.remove('loading');
-    addMessage('system', `Erreur: ${err.message}`);
+    addMessage('system', `Erreur : ${err.message}`);
     input.disabled = false;
     sendBtn.disabled = false;
     currentGuidedChoices = choices;
@@ -1466,10 +1466,10 @@ async function selectGuidedChoice(index) {
 
 const FRAMEWORK_NAMES = {
   harvard: 'Harvard (Fisher & Ury)',
-  voss: 'Tactical Empathy (Voss)',
+  voss: 'Empathie tactique (Voss)',
   cialdini: 'Influence (Cialdini)',
   kahneman: 'Biais cognitifs (Kahneman)',
-  schelling: 'Theorie des jeux (Schelling)',
+  schelling: 'Théorie des jeux (Schelling)',
 };
 
 function renderTheory(theoryAnalysis) {
