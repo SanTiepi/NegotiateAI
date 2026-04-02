@@ -133,11 +133,11 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('exposes scenario-of-week, hall-of-fame, and leaderboard endpoints', async () => {
+  it('exposes scenario-of-week, hall-of-fame, leaderboard, and profile endpoints', async () => {
     await store.saveSession({
       id: 'hof-1',
       date: new Date().toISOString(),
-      brief: { objective: 'x', batna: 'y', minimalThreshold: 'z', userRole: 'Acheteur' },
+      brief: { objective: 'x', batna: 'y', minimalThreshold: 'z', userRole: 'Acheteur', situation: 'Achat appartement a 850000 CHF' },
       adversary: { identity: 'Mme Dubois' },
       transcript: [],
       status: 'accepted',
@@ -159,10 +159,36 @@ describe('web-app', () => {
     const hallOfFame = await request('/api/hall-of-fame');
     assert.equal(hallOfFame.response.status, 200);
     assert.equal(hallOfFame.body.entries[0].sessionId, 'hof-1');
+    assert.match(hallOfFame.body.entries[0].title, /Operateur|Strategiste|Negociateur|Partenaire|Analyste|Joueur/);
+    assert.doesNotMatch(hallOfFame.body.entries[0].title, /850000|Mme Dubois|Acheteur/);
 
     const leaderboard = await request('/api/leaderboard?scenarioId=salary-negotiation');
     assert.equal(leaderboard.response.status, 200);
     assert.equal(leaderboard.body.entries[0].sessionId, 'hof-1');
+
+    await store.saveProgression({
+      belts: { white: { earned: true } },
+      biasProfile: {
+        anchoring: {
+          totalCount: 4,
+          frequency: 0.5,
+          lastSeen: '2026-04-01',
+          nextDrillDate: '2026-04-02',
+          _recentCounts: [1, 1, 1, 0],
+        },
+      },
+      totalSessions: 1,
+      currentStreak: 1,
+      lastSessionDate: new Date().toISOString().slice(0, 10),
+      weakDimensions: ['biasResistance'],
+    });
+
+    const profile = await request('/api/profile');
+    assert.equal(profile.response.status, 200);
+    assert.equal(profile.body.card.totalSessions, 1);
+    assert.equal(profile.body.recommendedDrillId, 'reframe');
+    assert.equal(profile.body.biasRecommendation.biasType, 'anchoring');
+    assert.match(profile.body.shareable, /Vaccination|Ancrage|Autonomie/i);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

@@ -6,6 +6,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { computeHallOfFame, computeScenarioLeaderboard } from './leaderboard.mjs';
+import { buildHallOfFameStories } from './hall-of-fame.mjs';
 
 const DEFAULT_DIR = process.env.NEGOTIATE_AI_DATA_DIR || join(homedir(), '.negotiate-ai');
 const SESSIONS_FILE = 'sessions.jsonl';
@@ -108,6 +109,15 @@ export function createStore(options = {}) {
     async getHallOfFame(options = {}) {
       const sessions = await this.loadSessions();
       return computeHallOfFame(sessions, options);
+    },
+
+    async getHallOfFameStories(options = {}) {
+      const sessions = await this.loadSessions();
+      const entries = buildHallOfFameStories(sessions, options);
+      return {
+        totalEntries: entries.length,
+        entries,
+      };
     },
 
     async getScenarioLeaderboard(scenarioId, options = {}) {

@@ -17,6 +17,8 @@ import { generateDaily } from './daily.mjs';
 import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
 import { generateReplay } from './replay.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
+import { recommendBiasTraining } from './biasTracker.mjs';
+import { generateVaccinationCard, formatShareableCard } from './vaccination.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { generateBriefing, buildObjectiveContract } from './briefing.mjs';
 import { scoreRound, buildFightCard } from './fight-card.mjs';
@@ -306,6 +308,21 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      if (req.method === 'GET' && url.pathname === '/api/profile') {
+        const [sessions, progression] = await Promise.all([
+          store.loadSessions(),
+          store.loadProgression(),
+        ]);
+        const card = generateVaccinationCard(progression, sessions);
+        json(res, 200, {
+          card,
+          shareable: formatShareableCard(card),
+          biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
+          recommendedDrillId: recommendDrill(progression),
+        });
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/scenarios') {
         json(res, 200, SCENARIO_PRESETS);
         return;
@@ -339,7 +356,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/hall-of-fame') {
-        json(res, 200, await store.getHallOfFame({ limit: Number(url.searchParams.get('limit')) || 5 }));
+        json(res, 200, await store.getHallOfFameStories({ limit: Number(url.searchParams.get('limit')) || 5 }));
         return;
       }
 
