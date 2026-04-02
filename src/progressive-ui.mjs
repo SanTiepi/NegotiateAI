@@ -71,6 +71,7 @@ export function filterTurnResponse(response, layer) {
   };
 
   if (response.guidedChoices) filtered.guidedChoices = response.guidedChoices;
+  if (response.guidedChoiceFeedback) filtered.guidedChoiceFeedback = response.guidedChoiceFeedback;
 
   // Layer 2+: coaching
   if (layer.coaching) filtered.coaching = response.coaching;

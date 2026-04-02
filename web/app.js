@@ -642,6 +642,10 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
       endSession(result.feedback, result.fightCard);
     } else {
       // Show guided choices if provided
+      if (result.guidedChoiceFeedback?.lesson) {
+        addMessage('system', `Coach guide: ${result.guidedChoiceFeedback.lesson}`);
+      }
+
       if (result.guidedChoices && result.guidedChoices.length > 0) {
         showGuidedChoices(result.guidedChoices);
       } else {
@@ -1379,12 +1383,81 @@ function hideGuidedChoices() {
 async function selectGuidedChoice(index) {
   const choice = currentGuidedChoices[index];
   if (!choice || !currentSessionId) return;
-  hideGuidedChoices();
 
-  // Send as a normal turn
+  const choices = currentGuidedChoices;
+  hideGuidedChoices();
+  addMessage('user', choice.text);
+
   const input = document.getElementById('msg-input');
-  input.value = choice.text;
-  document.getElementById('turn-form').dispatchEvent(new Event('submit'));
+  const sendBtn = document.getElementById('btn-send');
+  input.value = '';
+  input.disabled = true;
+  sendBtn.disabled = true;
+  sendBtn.classList.add('loading');
+
+  const spinner = document.createElement('div');
+  spinner.className = 'spinner';
+  spinner.textContent = 'Reflexion en cours...';
+  spinner.id = 'typing-spinner';
+  document.getElementById('n-messages').appendChild(spinner);
+  spinner.scrollIntoView({ behavior: 'smooth' });
+
+  try {
+    const result = await post(`/api/session/${encodeURIComponent(currentSessionId)}/turn`, {
+      message: choice.text,
+      guidedChoiceIndex: index,
+    });
+
+    document.getElementById('typing-spinner')?.remove();
+    sendBtn.classList.remove('loading');
+
+    const adversaryText = result.adversaryResponse || '[silence]';
+    addMessage('adversary', adversaryText);
+    speakText(adversaryText);
+
+    document.getElementById('n-turn').textContent = `Tour ${result.state.turn}/${12}`;
+    document.getElementById('n-status').textContent = result.state.status;
+
+    if (result.actTransition) {
+      document.getElementById('n-act').textContent = result.actTransition.replace(/^[^\s]+\s/, '');
+      addMessage('system', result.actTransition);
+    }
+
+    if (result.ticker) updateGauges(result.ticker);
+    updateCoaching(result);
+    updateSignals(result.detectedSignals);
+    if (result.roundScore) updateRoundScore(result.roundScore);
+    updateMobileGauges(result.ticker, result.roundScore);
+
+    if (result.guidedChoiceFeedback?.lesson) {
+      addMessage('system', `Coach guide: ${result.guidedChoiceFeedback.lesson}`);
+    }
+
+    if (result.sessionOver) {
+      addMessage('system', `Session terminee: ${result.endReason || 'fin'}`);
+      hideGuidedChoices();
+      endSession(result.feedback, result.fightCard);
+      return;
+    }
+
+    currentGuidedChoices = choices;
+    if (result.guidedChoices && result.guidedChoices.length > 0) {
+      showGuidedChoices(result.guidedChoices);
+    } else {
+      hideGuidedChoices();
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  } catch (err) {
+    document.getElementById('typing-spinner')?.remove();
+    sendBtn.classList.remove('loading');
+    addMessage('system', `Erreur: ${err.message}`);
+    input.disabled = false;
+    sendBtn.disabled = false;
+    currentGuidedChoices = choices;
+    showGuidedChoices(choices);
+  }
 }
 
 // ============================================================

@@ -453,7 +453,10 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('returns progressive ui metadata and guided choices when explicitly enabled', async () => {
+  it('returns progressive ui metadata, guided choices, and post-choice coaching when explicitly enabled', async () => {
+    let turnCall = 0;
+    let coachingCall = 0;
+    let guidedCall = 0;
     const progressiveProvider = createMockProvider({
       adversary: {
         identity: 'Mme Dubois',
@@ -467,20 +470,40 @@ describe('web-app', () => {
         likelyTactics: ['scarcity'],
         vulnerabilities: ['Fin de mois'],
       },
-      turn: {
-        adversaryResponse: 'Je peux bouger un peu, mais pas trop.',
-        sessionOver: false,
-        endReason: null,
-        sessionStatus: 'active',
-      },
-      coaching: { biasDetected: null, alternative: 'Clarifie les criteres.', momentum: 'stable', tip: 'Reste centre sur ta BATNA.' },
-      guidedChoices: {
-        choices: [
-          { text: 'Option 1', technique: 'mirroring', concept: 'Reflete la preoccupation.', quality: 'strong' },
-          { text: 'Option 2', technique: 'labeling', concept: 'Nomme l emotion.', quality: 'moderate' },
-          { text: 'Option 3', technique: 'split', concept: 'Coupe la poire en deux.', quality: 'trap' },
-        ],
-      },
+      turn: () => ([
+        {
+          adversaryResponse: 'Je peux bouger un peu, mais pas trop.',
+          sessionOver: false,
+          endReason: null,
+          sessionStatus: 'active',
+        },
+        {
+          adversaryResponse: 'Votre approche me semble plus constructive.',
+          sessionOver: false,
+          endReason: null,
+          sessionStatus: 'active',
+        },
+      ][turnCall++]),
+      coaching: () => ([
+        { biasDetected: null, alternative: 'Clarifie les criteres.', momentum: 'stable', tip: 'Reste centre sur ta BATNA.' },
+        { biasDetected: null, alternative: 'Continue.', momentum: 'gaining', tip: 'Bon cadrage.' },
+      ][coachingCall++]),
+      guidedChoices: () => ([
+        {
+          choices: [
+            { text: 'Option 1', technique: 'mirroring', concept: 'Reflete la preoccupation.', quality: 'strong' },
+            { text: 'Option 2', technique: 'labeling', concept: 'Nomme l emotion.', quality: 'moderate' },
+            { text: 'Option 3', technique: 'split', concept: 'Coupe la poire en deux.', quality: 'trap' },
+          ],
+        },
+        {
+          choices: [
+            { text: 'Option suivante 1', technique: 'labeling', concept: 'Creuse le besoin.', quality: 'strong' },
+            { text: 'Option suivante 2', technique: 'anchor', concept: 'Teste un ancrage.', quality: 'moderate' },
+            { text: 'Option suivante 3', technique: 'concede', concept: 'Concession trop rapide.', quality: 'trap' },
+          ],
+        },
+      ][guidedCall++]),
     });
 
     app = createWebApp({ provider: progressiveProvider, sessionIdFactory: () => 'sess-test', store });
@@ -509,18 +532,32 @@ describe('web-app', () => {
 
     app.activeSessions.get('sess-test').maxTurns = 12;
 
-    const { response, body } = await request('/api/session/sess-test/turn', {
+    const firstTurn = await request('/api/session/sess-test/turn', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ message: 'Je peux signer vite si le prix bouge.' }),
     });
 
-    assert.equal(response.status, 200);
-    assert.equal(body.uiLayer.key, 'discover');
-    assert.equal('coaching' in body, false);
-    assert.ok(Array.isArray(body.guidedChoices));
-    assert.equal(body.guidedChoices.length, 3);
-    assert.equal(body.guidedChoices[0].text, 'Option 1');
+    assert.equal(firstTurn.response.status, 200);
+    assert.equal(firstTurn.body.uiLayer.key, 'discover');
+    assert.equal('coaching' in firstTurn.body, false);
+    assert.ok(Array.isArray(firstTurn.body.guidedChoices));
+    assert.equal(firstTurn.body.guidedChoices.length, 3);
+    assert.equal(firstTurn.body.guidedChoices[0].text, 'Option 1');
+    assert.equal(firstTurn.body.guidedChoiceFeedback, undefined);
+
+    const secondTurn = await request('/api/session/sess-test/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Option 3', guidedChoiceIndex: 2 }),
+    });
+
+    assert.equal(secondTurn.response.status, 200);
+    assert.equal(secondTurn.body.guidedChoiceFeedback.wasTrap, true);
+    assert.equal(secondTurn.body.guidedChoiceFeedback.wasStrong, false);
+    assert.match(secondTurn.body.guidedChoiceFeedback.lesson, /piege|meilleure option/i);
+    assert.ok(Array.isArray(secondTurn.body.guidedChoices));
+    assert.equal(secondTurn.body.guidedChoices[0].text, 'Option suivante 1');
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

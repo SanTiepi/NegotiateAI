@@ -628,6 +628,12 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           return;
         }
 
+        const guidedChoiceFeedback = Number.isInteger(body.guidedChoiceIndex)
+          && Array.isArray(session._lastGuidedChoices)
+          && session._lastGuidedChoices[body.guidedChoiceIndex]
+          ? buildChoiceFeedback(session._lastGuidedChoices[body.guidedChoiceIndex], session._lastGuidedChoices)
+          : null;
+
         const result = await processTurn(session, body.message);
 
         // Round scoring
@@ -695,6 +701,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         let guidedChoices = null;
         if (!result.sessionOver && session._uiProgressive && shouldGuideRound(session._uiLayer, result.state.turn + 1)) {
           guidedChoices = await generateGuidedChoices(session, result.adversaryResponse, llmProvider);
+          session._lastGuidedChoices = guidedChoices;
+        } else {
+          session._lastGuidedChoices = null;
         }
 
         const payload = {
@@ -716,6 +725,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           fightCard,
           feedback: result.feedback,
           guidedChoices,
+          guidedChoiceFeedback,
           uiLayer: session._uiLayer,
         };
 
