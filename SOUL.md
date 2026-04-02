@@ -26,6 +26,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - En environnement Windows sandboxe, `npm test` doit embarquer `--test-isolation=none` pour eviter `spawn EPERM`
 - Les 5 priorites SOUL sont codees et couvertes par des tests dedies (simulate-before-send, war-room, coach L1-L3, autonomy ladder, MCP hardening)
 - Avant tout nouveau batch prioritaire, verifier le script `npm test` + `git log -10 --oneline` : si les 5 priorites sont deja la et que les 277 tests passent, c'est un batch zero-delta legitime
+- `git status --short` peut montrer des fichiers workspace non suivis (.claude/, .openclaw/, docs locaux) : ne pas les melanger aux commits de features tant qu'ils ne font pas partie du produit
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -39,6 +40,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch dev-runner: verifier `git log -10 --oneline` + grep src/test avant d'ouvrir une nouvelle feature, pour eviter de reimplementer une priorite deja livree
 - Batch validation: si les priorites SOUL apparaissent deja dans git log et que `npm test` est vert, preferer un batch zero-delta documente plutot qu'un faux commit cosmetique
 - Validation Windows: conserver `node --test --test-concurrency=1 --test-isolation=none test/*.test.mjs` dans le script package pour garder les batches fiables en sandbox
+- Batch zero-delta: si git log couvre deja les 5 priorites et que `npm test` est a 277 verts, clore le batch par une mise a jour ciblée de SOUL plutot que de forcer une implementation artificielle
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
