@@ -347,7 +347,64 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
-  it('enriched dashboard includes autonomy and belt definitions', async () => {
+  it('enriched dashboard includes autonomy, belt definitions, and scoring breakdowns', async () => {
+    await store.saveSession({
+      id: 'dash-web-1',
+      date: new Date('2026-04-01T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Achat appartement',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeuse',
+        objective: 'Acheter à 500k',
+        minimalThreshold: '520k max',
+        batna: 'Continuer les visites',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'Mme Dubois' },
+      transcript: [],
+      status: 'accepted',
+      turns: 2,
+      feedback: {
+        globalScore: 78,
+        scores: {
+          outcomeLeverage: 19,
+          batnaDiscipline: 14,
+          emotionalRegulation: 20,
+          biasResistance: 10,
+          conversationalFlow: 12,
+        },
+      },
+      mode: 'web',
+    });
+    await store.saveSession({
+      id: 'dash-telegram-1',
+      date: new Date('2026-04-02T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Renegociation bail',
+        userRole: 'Locataire',
+        adversaryRole: 'Regie',
+        objective: 'Baisser le loyer',
+        minimalThreshold: 'Zero hausse',
+        batna: 'Demenager',
+        difficulty: 'neutral',
+      },
+      adversary: { identity: 'Regie SA' },
+      transcript: [],
+      status: 'ended',
+      turns: 3,
+      feedback: {
+        globalScore: 84,
+        scores: {
+          outcomeLeverage: 21,
+          batnaDiscipline: 17,
+          emotionalRegulation: 22,
+          biasResistance: 13,
+          conversationalFlow: 14,
+        },
+      },
+      mode: 'telegram',
+    });
+
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);
     baseUrl = `http://127.0.0.1:${address.port}`;
@@ -358,6 +415,19 @@ describe('web-app', () => {
     assert.equal(body.autonomy.level, 1);
     assert.ok(Array.isArray(body.beltDefinitions));
     assert.ok(body.beltDefinitions.length >= 5);
+    assert.deepEqual(body.modeBreakdown, [
+      { mode: 'telegram', count: 1 },
+      { mode: 'web', count: 1 },
+    ]);
+    assert.deepEqual(body.difficultyBreakdown, [
+      { difficulty: 'hostile', count: 1 },
+      { difficulty: 'neutral', count: 1 },
+    ]);
+    assert.equal(body.bestDimension.dimension, 'emotionalRegulation');
+    assert.equal(body.weakestDimension.dimension, 'biasResistance');
+    assert.equal(body.scoreHistory.length, 2);
+    assert.equal(body.scoreHistory[0].id, 'dash-web-1');
+    assert.equal(body.scoreHistory[1].id, 'dash-telegram-1');
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

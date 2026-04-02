@@ -32,6 +32,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Telegram bot: supporter des commandes courtes et deterministes (/help, /daily, /scenarios, /scenario <id> [tier], /profile) sans dupliquer la logique scenario/profil hors des modules purs
 - Telegram /daily: reutiliser daily.mjs + store pour generer le challenge du jour, persister la session en mode `daily`, et garder les replies < 1500 chars
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
+- Dashboard scoring enrichi: exposer les breakdowns (modes, difficultes, scoreHistory, dimensionAverages) depuis le store pur pour alimenter web/CLI sans logique dupliquee
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
 - Profil/vaccination card web: exposer depuis les modules purs (vaccination.mjs + biasTracker.mjs + drill.mjs), jamais via un calcul du frontend
@@ -56,6 +57,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
+- Dashboard web: renderer des listes/chips purement presentationnelles a partir des payloads API (pas de recalcul de stats cote frontend)
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram

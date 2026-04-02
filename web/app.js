@@ -69,6 +69,40 @@ const BELT_COLORS = {
   black: '#a78bfa',
 };
 
+const DIFFICULTY_LABELS = {
+  cooperative: 'Cooperatif',
+  neutral: 'Neutre',
+  hostile: 'Hostile',
+  manipulative: 'Manipulateur',
+};
+
+const MODE_LABELS = {
+  web: 'Web',
+  telegram: 'Telegram',
+  cli: 'CLI',
+  daily: 'Daily',
+  drill: 'Drill',
+};
+
+function renderMetricList(elementId, entries, labelKey, valueFormatter) {
+  const root = document.getElementById(elementId);
+  root.innerHTML = '';
+  if (!entries || entries.length === 0) {
+    root.innerHTML = '<p class="text-muted">Pas encore de donnees</p>';
+    return;
+  }
+
+  for (const entry of entries) {
+    const row = document.createElement('div');
+    row.className = 'metric-row';
+    row.innerHTML = `
+      <span class="metric-label">${entry[labelKey]}</span>
+      <span class="metric-value">${valueFormatter(entry)}</span>
+    `;
+    root.appendChild(row);
+  }
+}
+
 async function loadDashboard() {
   try {
     const stats = await api('/api/dashboard');
@@ -120,6 +154,41 @@ async function loadDashboard() {
 
     // Autonomy gap
     document.getElementById('d-gap').textContent = stats.autonomy?.gap || '—';
+
+    const bestDimension = stats.bestDimension?.dimension
+      ? `${DIMENSION_LABELS[stats.bestDimension.dimension]?.label || stats.bestDimension.dimension} — ${stats.bestDimension.average}/${DIMENSION_LABELS[stats.bestDimension.dimension]?.max || 100}`
+      : '—';
+    document.getElementById('d-best-dimension').textContent = bestDimension;
+
+    const historyEl = document.getElementById('d-history');
+    historyEl.innerHTML = '';
+    if (!stats.scoreHistory?.length) {
+      historyEl.innerHTML = '<p class="text-muted">Pas encore de donnees</p>';
+    } else {
+      for (const entry of stats.scoreHistory) {
+        const chip = document.createElement('div');
+        chip.className = 'chip';
+        const modeLabel = MODE_LABELS[entry.mode] || entry.mode;
+        chip.innerHTML = `<strong>${entry.score}</strong> · ${modeLabel}`;
+        historyEl.appendChild(chip);
+      }
+    }
+
+    renderMetricList('d-dimensions', stats.dimensionAverages?.map((entry) => ({
+      ...entry,
+      dimension: DIMENSION_LABELS[entry.dimension]?.label || entry.dimension,
+      max: DIMENSION_LABELS[entry.dimension]?.max || 100,
+    })), 'dimension', (entry) => `${entry.average}/${entry.max}`);
+
+    renderMetricList('d-modes', stats.modeBreakdown?.map((entry) => ({
+      ...entry,
+      mode: MODE_LABELS[entry.mode] || entry.mode,
+    })), 'mode', (entry) => `${entry.count} sessions`);
+
+    renderMetricList('d-difficulties', stats.difficultyBreakdown?.map((entry) => ({
+      ...entry,
+      difficulty: DIFFICULTY_LABELS[entry.difficulty] || entry.difficulty,
+    })), 'difficulty', (entry) => `${entry.count} sessions`);
   } catch (err) {
     console.error('Dashboard load error:', err);
   }
