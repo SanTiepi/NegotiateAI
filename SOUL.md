@@ -37,6 +37,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Dashboard scoring enrichi: exposer les breakdowns (modes, difficultes, scoreHistory, dimensionAverages) depuis le store pur pour alimenter web/CLI sans logique dupliquee
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
+- Hall of fame web: exposer aussi un export texte partageable (`/api/hall-of-fame/export`) en reutilisant le meme formatter pur que l'API JSON
 - Profil/vaccination card web: exposer depuis les modules purs (vaccination.mjs + biasTracker.mjs + drill.mjs), jamais via un calcul du frontend
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
@@ -80,6 +81,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Replay web: declencher le chargement du replay a la demande depuis l'historique, via endpoint read-only, et afficher les annotations sans dupliquer la logique replay.mjs
 - Session detail API: garder /api/sessions/:id comme simple projection du store persiste (fightCard, objectiveContract, roundScores, worldState, transcript) sans recalculer les scores cote HTTP
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)
+- Export hall of fame web: servir le texte partageable directement depuis le formatter pur, avec option JSON pour les integrateurs
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram
 - Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI
 - Mode versus: module pur src/versus.mjs avec adjudicateVersusRound({ brief, playerA, playerB, transcript? }, provider) -> verdict structure

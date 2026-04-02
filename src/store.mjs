@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { randomUUID } from 'node:crypto';
 import { computeHallOfFame, computeScenarioLeaderboard } from './leaderboard.mjs';
-import { buildHallOfFameStories } from './hall-of-fame.mjs';
+import { buildHallOfFameStories, formatHallOfFameStories } from './hall-of-fame.mjs';
 
 const DEFAULT_DIR = process.env.NEGOTIATE_AI_DATA_DIR || join(homedir(), '.negotiate-ai');
 const SESSIONS_FILE = 'sessions.jsonl';
@@ -117,6 +117,7 @@ export function createStore(options = {}) {
       return {
         totalEntries: entries.length,
         entries,
+        text: formatHallOfFameStories(entries),
       };
     },
 

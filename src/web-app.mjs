@@ -410,6 +410,18 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      if (req.method === 'GET' && url.pathname === '/api/hall-of-fame/export') {
+        const hall = await store.getHallOfFameStories({ limit: Number(url.searchParams.get('limit')) || 5 });
+        const format = (url.searchParams.get('format') || 'text').toLowerCase();
+        if (format === 'json') {
+          json(res, 200, hall);
+          return;
+        }
+        res.writeHead(200, { 'content-type': 'text/plain; charset=utf-8' });
+        res.end(hall.text);
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/hall-of-fame') {
         json(res, 200, await store.getHallOfFameStories({ limit: Number(url.searchParams.get('limit')) || 5 }));
         return;

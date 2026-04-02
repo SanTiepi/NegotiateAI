@@ -213,6 +213,19 @@ describe('web-app', () => {
     assert.equal(hallOfFame.body.entries[0].sessionId, 'hof-1');
     assert.match(hallOfFame.body.entries[0].title, /Operateur|Strategiste|Negociateur|Partenaire|Analyste|Joueur/);
     assert.doesNotMatch(hallOfFame.body.entries[0].title, /850000|Mme Dubois|Acheteur/);
+    assert.match(hallOfFame.body.text, /Score 91\/100/);
+    assert.doesNotMatch(hallOfFame.body.text, /850000|Mme Dubois|Acheteur/);
+
+    const hallOfFameExport = await fetch(`${baseUrl}/api/hall-of-fame/export?limit=1`);
+    const hallOfFameText = await hallOfFameExport.text();
+    assert.equal(hallOfFameExport.status, 200);
+    assert.match(hallOfFameText, /Score 91\/100/);
+    assert.doesNotMatch(hallOfFameText, /850000|Mme Dubois|Acheteur/);
+
+    const hallOfFameJsonExport = await request('/api/hall-of-fame/export?limit=1&format=json');
+    assert.equal(hallOfFameJsonExport.response.status, 200);
+    assert.equal(hallOfFameJsonExport.body.entries[0].sessionId, 'hof-1');
+    assert.match(hallOfFameJsonExport.body.text, /Score 91\/100/);
 
     const leaderboard = await request('/api/leaderboard?scenarioId=salary-negotiation');
     assert.equal(leaderboard.response.status, 200);
