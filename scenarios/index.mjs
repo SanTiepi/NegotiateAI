@@ -5,13 +5,46 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+const CATEGORY_PREFIXES = [
+  { prefix: 'swiss-', category: 'swiss' },
+  { prefix: 'tutorial-', category: 'tutorial' },
+  { prefix: 'vs-', category: 'celebrity' },
+];
+
+function inferScenarioCategory(id) {
+  if (typeof id !== 'string') return 'core';
+  return CATEGORY_PREFIXES.find(({ prefix }) => id.startsWith(prefix))?.category || 'core';
+}
+
+function buildScenarioMetadata(raw, scenarioFile) {
+  return {
+    id: raw.id,
+    name: raw.name,
+    version: raw.version,
+    category: raw.category || inferScenarioCategory(raw.id),
+    scenarioFile,
+  };
+}
+
+function buildScenarioSummary(raw, scenarioFile) {
+  const metadata = buildScenarioMetadata(raw, scenarioFile);
+  return {
+    id: raw.id,
+    name: raw.name,
+    description: raw.description,
+    category: metadata.category,
+    scenarioFile: metadata.scenarioFile,
+    metadata,
+  };
+}
+
 export async function listScenarios() {
   const files = await readdir(__dirname);
-  const jsonFiles = files.filter((f) => f.endsWith('.json'));
+  const jsonFiles = files.filter((f) => f.endsWith('.json')).sort();
   const scenarios = [];
-  for (const f of jsonFiles) {
-    const raw = JSON.parse(await readFile(join(__dirname, f), 'utf-8'));
-    scenarios.push({ id: raw.id, name: raw.name, description: raw.description });
+  for (const fileName of jsonFiles) {
+    const raw = JSON.parse(await readFile(join(__dirname, fileName), 'utf-8'));
+    scenarios.push(buildScenarioSummary(raw, fileName.replace(/\.json$/i, '')));
   }
   return scenarios;
 }
@@ -24,5 +57,10 @@ export async function loadScenario(id, tier = 'neutral') {
   const raw = JSON.parse(await readFile(join(__dirname, match), 'utf-8'));
   const tierOverrides = raw.tiers?.[tier] || {};
   const brief = { ...raw.brief, ...tierOverrides };
-  return { brief, adversary: raw.adversary, metadata: { id: raw.id, name: raw.name, version: raw.version } };
+  const metadata = {
+    ...buildScenarioMetadata(raw, match.replace(/\.json$/i, '')),
+    tier,
+  };
+
+  return { brief, adversary: raw.adversary, metadata };
 }
