@@ -137,6 +137,34 @@ describe('telegram-bot', () => {
     assert.match(sent.at(-1).text, /Sessions: 1/);
   });
 
+  it('starts a daily challenge and persists it in daily mode', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-daily-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 99 }, text: '/daily' } });
+    assert.equal(bot.sessions.size, 1);
+    assert.match(sent.at(-1).text, /Daily challenge prêt|Daily rejoué/);
+    assert.match(sent.at(-1).text, /Cible:/);
+    assert.match(sent.at(-1).text, /Tours max:/);
+
+    await bot.handleMessage({ message: { chat: { id: 99 }, text: 'Voici ma proposition.' } });
+
+    const sessions = await store.loadSessions();
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].mode, 'daily');
+  });
+
   it('formatTurnReply includes coaching and ending when present', () => {
     const text = formatTurnReply({
       adversaryResponse: 'Réponse.',

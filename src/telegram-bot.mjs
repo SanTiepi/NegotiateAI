@@ -2,6 +2,7 @@ import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { createSession, processTurn } from './engine.mjs';
 import { analyzeFeedback } from './analyzer.mjs';
+import { generateDaily, dailyAlreadyPlayed } from './daily.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs';
 
@@ -55,7 +56,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       status: session.status,
       turns: session.turn,
       feedback,
-      mode: 'telegram',
+      mode: session._mode || 'telegram',
       eventPolicy: session.eventPolicy,
       eventsActive: session.eventPolicy !== 'none',
       worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
@@ -65,13 +66,22 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     await refreshProgression(store, session);
   }
 
-  async function startSession(chatId, brief, adversary) {
-    const session = createSession(brief, adversary, provider, { eventPolicy: 'none' });
+  async function startSession(chatId, brief, adversary, options = {}) {
+    const session = createSession(brief, adversary, provider, {
+      eventPolicy: options.eventPolicy || 'none',
+      maxTurns: options.maxTurns,
+    });
+    session._mode = options.mode || 'telegram';
+    session._dailyMeta = options.dailyMeta || null;
     sessions.set(getSessionKey(chatId), session);
-    return sendMessage(
-      chatId,
-      `Session créée avec ${adversary.identity}. Objectif: ${brief.objective}\nBATNA: ${brief.batna}\nEnvoie ton premier message.`,
-    );
+    const intro = [
+      options.label ? `${options.label}` : `Session créée avec ${adversary.identity}.`,
+      `Objectif: ${brief.objective}`,
+      `BATNA: ${brief.batna}`,
+      options.maxTurns ? `Tours max: ${options.maxTurns}` : null,
+      'Envoie ton premier message.',
+    ].filter(Boolean).join('\n');
+    return sendMessage(chatId, intro);
   }
 
   async function startScenario(chatId, text) {
@@ -84,6 +94,26 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
   async function startPresetScenario(chatId, scenarioId, tier = 'neutral') {
     const { brief, adversary } = await loadScenario(scenarioId, tier);
     return startSession(chatId, buildBrief(brief), adversary);
+  }
+
+  async function startDaily(chatId) {
+    if (!store) {
+      return sendMessage(chatId, 'Daily indisponible: aucun store persistant n’est configuré.');
+    }
+
+    const alreadyPlayed = await dailyAlreadyPlayed(store);
+    const daily = await generateDaily(store, provider);
+    return startSession(chatId, daily.brief, daily.adversary, {
+      mode: 'daily',
+      eventPolicy: daily.eventPolicy,
+      maxTurns: daily.maxTurns,
+      dailyMeta: { date: daily.date, targetSkill: daily.targetSkill, difficulty: daily.difficulty },
+      label: [
+        alreadyPlayed ? 'Daily rejoué.' : 'Daily challenge prêt.',
+        `Cible: ${daily.targetSkill}`,
+        `Difficulté: ${daily.difficulty}`,
+      ].join('\n'),
+    });
   }
 
   async function sendScenarioCatalog(chatId) {
@@ -133,7 +163,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats.');
       return { ok: true, command: 'start' };
     }
 
@@ -145,6 +175,11 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/profile') {
       await sendProfile(chatId);
       return { ok: true, command: 'profile' };
+    }
+
+    if (text === '/daily') {
+      await startDaily(chatId);
+      return { ok: true, command: 'daily' };
     }
 
     if (text.startsWith('/new ')) {

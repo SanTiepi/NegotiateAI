@@ -29,7 +29,8 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app temps reel: exposer coaching/ticker/actTransition via JSON mince pour que le frontend reste statique et facilement testable
 - Web app API avancee: daily/drills/replay doivent reposer sur les modules purs existants (daily.mjs, drill.mjs, replay.mjs) et sur les sessions persistées, jamais sur un etat frontend implicite
 - Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
-- Telegram bot: supporter des commandes courtes et deterministes (/help, /scenarios, /scenario <id> [tier], /profile) sans dupliquer la logique scenario/profil hors des modules purs
+- Telegram bot: supporter des commandes courtes et deterministes (/help, /daily, /scenarios, /scenario <id> [tier], /profile) sans dupliquer la logique scenario/profil hors des modules purs
+- Telegram /daily: reutiliser daily.mjs + store pour generer le challenge du jour, persister la session en mode `daily`, et garder les replies < 1500 chars
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
@@ -53,6 +54,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars
+- Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)
