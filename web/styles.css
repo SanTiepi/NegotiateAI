@@ -280,12 +280,15 @@ h3 { font-size: .9rem; font-weight: 600; color: var(--text-2); margin-bottom: 8p
 @media (min-width: 600px) { .form-grid { grid-template-columns: 1fr 1fr; } }
 .form-group.full { grid-column: 1/-1; }
 .form-group label { display: block; font-size: .8rem; font-weight: 600; color: var(--text-2); margin-bottom: 4px; }
-.form-group input, .form-group select {
+.form-group input, .form-group select, .form-group textarea {
   width: 100%; padding: 12px; border-radius: var(--radius-sm);
   border: 1px solid var(--border); background: var(--bg); color: var(--text);
   font: inherit; font-size: 16px; /* prevent iOS zoom */ transition: var(--transition);
 }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.form-group textarea { resize: vertical; min-height: 96px; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+.versus-lab-card { margin-top: 8px; }
+.versus-result { margin-top: 14px; padding: 12px; border-radius: var(--radius); background: var(--bg); border: 1px solid var(--border); white-space: pre-wrap; }
 
 .difficulty-selector { display: flex; gap: 6px; flex-wrap: wrap; }
 .diff-option { cursor: pointer; }

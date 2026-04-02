@@ -478,6 +478,44 @@ document.getElementById('setup-form').addEventListener('submit', async (e) => {
   }
 });
 
+document.getElementById('versus-run').addEventListener('click', async () => {
+  const form = document.getElementById('versus-form');
+  const resultEl = document.getElementById('versus-result');
+  const payload = {
+    brief: {
+      situation: form.querySelector('[name="situation"]').value.trim(),
+      userRole: form.querySelector('[name="userRole"]').value.trim(),
+      adversaryRole: form.querySelector('[name="adversaryRole"]').value.trim(),
+      objective: form.querySelector('[name="objective"]').value.trim(),
+      minimalThreshold: form.querySelector('[name="minimalThreshold"]').value.trim(),
+      batna: form.querySelector('[name="batna"]').value.trim(),
+    },
+    playerA: { name: 'Message A', message: form.querySelector('[name="messageA"]').value.trim() },
+    playerB: { name: 'Message B', message: form.querySelector('[name="messageB"]').value.trim() },
+  };
+
+  if (Object.values(payload.brief).some((value) => !value) || !payload.playerA.message || !payload.playerB.message) {
+    resultEl.textContent = 'Remplis tous les champs du Versus Lab.';
+    return;
+  }
+
+  resultEl.innerHTML = '<div class="spinner">Arbitrage en cours...</div>';
+
+  try {
+    const verdict = await post('/api/versus', payload);
+    const winner = verdict.winner === 'playerA' ? 'Message A' : verdict.winner === 'playerB' ? 'Message B' : 'Match nul';
+    resultEl.innerHTML = [
+      `Vainqueur: ${winner}`,
+      `Score A: ${verdict.scoreA?.total ?? '—'} | Score B: ${verdict.scoreB?.total ?? '—'}`,
+      verdict.rationale || '',
+      verdict.coachingA?.length ? `Coach A: ${verdict.coachingA.join(' · ')}` : '',
+      verdict.coachingB?.length ? `Coach B: ${verdict.coachingB.join(' · ')}` : '',
+    ].filter(Boolean).join('\n\n');
+  } catch (err) {
+    resultEl.textContent = `Erreur: ${err.message}`;
+  }
+});
+
 // ============================================================
 // NEGOTIATION
 // ============================================================

@@ -223,6 +223,55 @@
           </div>
           <button type="submit" class="btn btn-primary btn-lg">Lancer la session</button>
         </form>
+
+        <div class="divider"><span>ou versus lab</span></div>
+
+        <section class="card versus-lab-card">
+          <div class="section-head">
+            <div>
+              <h2>Versus Lab</h2>
+              <p class="text-muted">Compare 2 formulations humaines sur le meme brief.</p>
+            </div>
+            <button type="button" class="btn btn-outline btn-sm" id="versus-run">Arbitrer</button>
+          </div>
+          <form id="versus-form" class="setup-form">
+            <div class="form-grid">
+              <div class="form-group full">
+                <label>Situation <span class="required">*</span></label>
+                <input name="situation" placeholder="Ex: Nego salariale finale" required>
+              </div>
+              <div class="form-group">
+                <label>Votre role <span class="required">*</span></label>
+                <input name="userRole" placeholder="Candidate" required>
+              </div>
+              <div class="form-group">
+                <label>Role adverse <span class="required">*</span></label>
+                <input name="adversaryRole" placeholder="Hiring manager" required>
+              </div>
+              <div class="form-group full">
+                <label>Objectif <span class="required">*</span></label>
+                <input name="objective" placeholder="Signer a 140k CHF" required>
+              </div>
+              <div class="form-group">
+                <label>Seuil minimal <span class="required">*</span></label>
+                <input name="minimalThreshold" placeholder="130k CHF minimum" required>
+              </div>
+              <div class="form-group">
+                <label>BATNA <span class="required">*</span></label>
+                <input name="batna" placeholder="Autre offre a 135k CHF" required>
+              </div>
+              <div class="form-group full">
+                <label>Message A <span class="required">*</span></label>
+                <textarea name="messageA" rows="3" placeholder="Version plus assertive" required></textarea>
+              </div>
+              <div class="form-group full">
+                <label>Message B <span class="required">*</span></label>
+                <textarea name="messageB" rows="3" placeholder="Version plus diplomatique" required></textarea>
+              </div>
+            </div>
+          </form>
+          <div id="versus-result" class="versus-result text-muted">Aucun verdict pour l'instant.</div>
+        </section>
       </div>
     </main>
 
