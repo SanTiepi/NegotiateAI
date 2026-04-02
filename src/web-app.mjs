@@ -31,7 +31,7 @@ const SCENARIO_PRESETS = [
     emoji: '💼',
     description: 'Vous demandez une augmentation à votre manager.',
     brief: {
-      situation: 'Entretien annuel — vous êtes performant depuis 2 ans, pas d\'augmentation',
+      situation: 'Entretien annuel - vous êtes performant depuis 2 ans, pas d\'augmentation',
       userRole: 'Employé senior',
       adversaryRole: 'Manager direct',
       objective: 'Obtenir +15% de salaire',
@@ -379,7 +379,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const summaries = sessions.slice(0, 20).map((s) => ({
           id: s.id,
           date: s.date,
-          situation: s.brief?.situation || '—',
+          situation: s.brief?.situation || '-',
           difficulty: s.brief?.difficulty || 'neutral',
           status: s.status,
           turns: s.turns || s.transcript?.length || 0,
@@ -387,8 +387,45 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           scores: s.feedback?.scores || {},
           biases: (s.feedback?.biasesDetected || []).map((b) => b.biasType),
           mode: s.mode || 'cli',
+          grade: s.fightCard?.grade?.grade || null,
+          scenarioId: s.scenarioId || s.scenario?.id || null,
         }));
         json(res, 200, summaries);
+        return;
+      }
+
+      const sessionDetailMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)$/);
+      if (sessionDetailMatch) {
+        const sessionId = decodeURIComponent(sessionDetailMatch[1]);
+        const sessions = await store.loadSessions();
+        const session = sessions.find((entry) => entry.id === sessionId);
+        if (!session) {
+          json(res, 404, { error: 'Session not found' });
+          return;
+        }
+
+        json(res, 200, {
+          id: session.id,
+          date: session.date,
+          status: session.status,
+          mode: session.mode || 'cli',
+          scenarioId: session.scenarioId || session.scenario?.id || null,
+          brief: session.brief,
+          adversary: session.adversary,
+          turns: session.turns || session.transcript?.length || 0,
+          transcript: session.transcript,
+          feedback: session.feedback,
+          fightCard: session.fightCard || null,
+          objectiveContract: session.objectiveContract || null,
+          roundScores: session.roundScores || session.fightCard?.rounds?.detail || [],
+          worldState: session.worldState || null,
+          analytics: {
+            score: session.feedback?.globalScore || 0,
+            grade: session.fightCard?.grade?.grade || null,
+            biases: (session.feedback?.biasesDetected || []).map((bias) => bias.biasType),
+            tactics: session.feedback?.tacticsUsed || [],
+          },
+        });
         return;
       }
 
@@ -526,7 +563,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           await store.saveSession(sessionEntry);
           await refreshProgression(store, session);
 
-          // Analytics log — every session logged for learning
+          // Analytics log - every session logged for learning
           await store.appendAnalytics({
             type: 'session_complete',
             timestamp: sessionEntry.date,

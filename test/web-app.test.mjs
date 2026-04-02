@@ -341,6 +341,77 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('serves session detail endpoint with fight card analytics', async () => {
+    await store.saveSession({
+      id: 'test-session-detail',
+      date: new Date().toISOString(),
+      brief: {
+        situation: 'Renegociation fournisseur',
+        objective: 'Obtenir 12% de remise',
+        batna: 'Signer avec un concurrent',
+        minimalThreshold: '6% minimum',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'M. Keller', style: 'Sec mais rationnel' },
+      transcript: [
+        { role: 'user', content: 'Je peux m engager vite si le prix baisse.' },
+        { role: 'assistant', content: 'Je peux etudier une concession limitee.' },
+      ],
+      status: 'accepted',
+      turns: 2,
+      feedback: {
+        globalScore: 88,
+        scores: {
+          outcomeLeverage: 22,
+          batnaDiscipline: 18,
+          emotionalRegulation: 21,
+          biasResistance: 13,
+          conversationalFlow: 14,
+        },
+        biasesDetected: [{ biasType: 'anchoring', turn: 1, excerpt: '...', explanation: 'Ancrage initial trop rapide.' }],
+        tacticsUsed: ['labeling'],
+        missedOpportunities: [],
+        recommendations: ['Creuser la marge de manoeuvre avant la prochaine concession.'],
+      },
+      fightCard: {
+        grade: { grade: 'A', label: 'Excellent', description: 'Negociation maitrisee.', color: '#22c55e' },
+        triangle: { transaction: 90, relation: 74, intelligence: 82, weightedScore: 84, weights: { transaction: 50, relation: 25, intelligence: 25 }, hintsDiscovered: 1, totalHints: 2 },
+        rounds: { total: 2, won: 1, lost: 0, neutral: 1, detail: [{ turn: 1, points: 2, label: 'Round gagne', signals: ['momentum positif'], cumulativeScore: 2 }] },
+        globalScore: 88,
+        objectiveContract: { objective: 'Obtenir 12% de remise', threshold: '6% minimum', batna: 'Signer avec un concurrent', strategy: 'ancrage haut', relationalGoal: 'rester partenaire' },
+      },
+      objectiveContract: {
+        objective: 'Obtenir 12% de remise',
+        minimalThreshold: '6% minimum',
+        batna: 'Signer avec un concurrent',
+        strategy: 'ancrage haut',
+        relationalGoal: 'rester partenaire',
+      },
+      roundScores: [{ turn: 1, points: 2, label: 'Round gagne', signals: ['momentum positif'], cumulativeScore: 2 }],
+      worldState: { emotions: { egoThreat: 15 }, pad: { pleasure: 0.2, arousal: 0.1, dominance: 0.4 } },
+      mode: 'web',
+      scenarioId: 'vendor-negotiation',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const { response, body } = await request('/api/sessions/test-session-detail');
+    assert.equal(response.status, 200);
+    assert.equal(body.id, 'test-session-detail');
+    assert.equal(body.analytics.grade, 'A');
+    assert.equal(body.analytics.score, 88);
+    assert.deepEqual(body.analytics.biases, ['anchoring']);
+    assert.equal(body.fightCard.triangle.transaction, 90);
+    assert.equal(body.objectiveContract.strategy, 'ancrage haut');
+    assert.equal(body.roundScores.length, 1);
+    assert.equal(body.worldState.emotions.egoThreat, 15);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('simulates a batch of offer variants for an active session', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);

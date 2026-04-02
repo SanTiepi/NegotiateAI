@@ -40,7 +40,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Profil/vaccination card web: exposer depuis les modules purs (vaccination.mjs + biasTracker.mjs + drill.mjs), jamais via un calcul du frontend
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
-- Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id/replay), sans recalcul produit cote navigateur
+- Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id, /api/sessions/:id/replay), sans recalcul produit cote navigateur
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
 - Frontend web simulate-batch: permettre jusqu'a 5 variantes cote UI, une formulation par ligne, et se contenter d'afficher bestIndex/reports sans reclasser cote navigateur
@@ -71,6 +71,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Academy web: agreger profil/daily/drills/hall-of-fame/leaderboard en presentation only; la logique de recommandation reste dans les modules purs exposes par l'API
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
 - Replay web: declencher le chargement du replay a la demande depuis l'historique, via endpoint read-only, et afficher les annotations sans dupliquer la logique replay.mjs
+- Session detail API: garder /api/sessions/:id comme simple projection du store persiste (fightCard, objectiveContract, roundScores, worldState, transcript) sans recalculer les scores cote HTTP
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram
 - Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI
