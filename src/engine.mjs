@@ -9,6 +9,7 @@ import { detectAdversaryTactics, detectUserTechniques } from './tactics.mjs';
 import { analyzeTurnForBias } from './biasTracker.mjs';
 import { computeTicker } from './ticker.mjs';
 import { selectNarrativeEvent, getEventProbability, getNarrativePrompt, formatActTransition } from './narrativeArc.mjs';
+import { buildCoachingLevels } from './coach.mjs';
 
 const MAX_TURNS_DEFAULT = 12;
 
@@ -223,6 +224,16 @@ Do NOT include stateUpdates — the WorldEngine handles state computation.`,
     });
   } catch {
     // Non-fatal
+  }
+
+  if (coaching) {
+    coaching.levels = buildCoachingLevels({
+      userMessage,
+      adversaryResponse,
+      coaching,
+      biasIndicators,
+      userTechniques,
+    });
   }
 
   // Combine all detected signals

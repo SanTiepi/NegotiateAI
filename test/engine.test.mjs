@@ -190,6 +190,10 @@ describe('engine', () => {
       const result = await processTurn(session, 'Test coaching.');
       assert.ok('coaching' in result);
       assert.equal(result.coaching.momentum, 'stable');
+      assert.equal(result.coaching.levels.modeLabels.level1, 'observer');
+      assert.equal(typeof result.coaching.levels.observer, 'string');
+      assert.equal(typeof result.coaching.levels.suggest, 'string');
+      assert.equal(typeof result.coaching.levels.draft, 'string');
     });
 
     it('coaching is null when coaching LLM call fails', async () => {
