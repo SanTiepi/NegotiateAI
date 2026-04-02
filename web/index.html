@@ -192,6 +192,16 @@
           </div>
         </div>
 
+        <!-- Mobile mini-gauges -->
+        <div class="mobile-gauges" id="mobile-gauges">
+          <div class="mini-gauge"><span class="mini-gauge-label">Deal</span><span class="mini-gauge-value" id="mg-deal">50</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Lev</span><span class="mini-gauge-value" id="mg-lev">0</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Biais</span><span class="mini-gauge-value" id="mg-bias">50</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Accord</span><span class="mini-gauge-value" id="mg-prob">50</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Mom</span><span class="mini-gauge-value" id="mg-mom">0</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Rnd</span><span class="mini-gauge-value" id="mg-rnd">0</span></div>
+        </div>
+
         <div class="nego-body">
           <!-- Chat -->
           <div class="chat-panel">
@@ -365,6 +375,19 @@
         </div>
       </div>
     </main>
+
+    <!-- Theme Switcher -->
+    <div class="theme-switcher">
+      <div class="theme-panel" id="theme-panel">
+        <button class="theme-btn active" data-theme="obsidian" title="Obsidian"></button>
+        <button class="theme-btn" data-theme="terminal" title="Terminal"></button>
+        <button class="theme-btn" data-theme="poker" title="Poker"></button>
+        <button class="theme-btn" data-theme="dojo" title="Dojo"></button>
+        <button class="theme-btn" data-theme="neon" title="Neon"></button>
+        <div class="theme-rating" id="theme-rating"></div>
+      </div>
+      <button class="theme-toggle-btn" id="theme-toggle" title="Changer de theme">&#127912;</button>
+    </div>
 
     <script type="module" src="/app.js"></script>
   </body>

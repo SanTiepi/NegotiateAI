@@ -350,6 +350,9 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
     // Round scoring
     if (result.roundScore) updateRoundScore(result.roundScore);
 
+    // Mobile gauges
+    updateMobileGauges(result.ticker, result.roundScore);
+
     // Session over?
     if (result.sessionOver) {
       addMessage('system', `Session terminee: ${result.endReason || 'fin'}`);
@@ -846,6 +849,76 @@ function speakText(text) {
 // Ensure voices are loaded (Chrome loads them async)
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = () => {};
+}
+
+// ============================================================
+// THEME SWITCHER + RATING
+// ============================================================
+
+const THEMES = ['obsidian', 'terminal', 'poker', 'dojo', 'neon'];
+const THEME_NAMES = { obsidian: 'Obsidian', terminal: 'Terminal', poker: 'Poker', dojo: 'Dojo', neon: 'Neon' };
+let currentTheme = localStorage.getItem('negotiate-theme') || 'obsidian';
+const themeRatings = JSON.parse(localStorage.getItem('negotiate-theme-ratings') || '{}');
+
+function applyTheme(theme) {
+  document.body.className = `theme-${theme}`;
+  currentTheme = theme;
+  localStorage.setItem('negotiate-theme', theme);
+  document.querySelectorAll('.theme-btn').forEach((b) => b.classList.toggle('active', b.dataset.theme === theme));
+  renderThemeRating(theme);
+}
+
+function renderThemeRating(theme) {
+  const container = document.getElementById('theme-rating');
+  const rating = themeRatings[theme] || 0;
+  container.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const star = document.createElement('button');
+    star.className = `theme-star ${i <= rating ? 'filled' : ''}`;
+    star.textContent = i <= rating ? '\u2605' : '\u2606';
+    star.addEventListener('click', () => rateTheme(theme, i));
+    container.appendChild(star);
+  }
+}
+
+function rateTheme(theme, rating) {
+  themeRatings[theme] = rating;
+  localStorage.setItem('negotiate-theme-ratings', JSON.stringify(themeRatings));
+  renderThemeRating(theme);
+}
+
+// Wire theme buttons
+document.getElementById('theme-toggle').addEventListener('click', () => {
+  document.getElementById('theme-panel').classList.toggle('open');
+});
+
+document.querySelectorAll('.theme-btn').forEach((btn) => {
+  btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+});
+
+applyTheme(currentTheme);
+
+// ============================================================
+// MOBILE MINI-GAUGES
+// ============================================================
+
+function updateMobileGauges(ticker, roundScore) {
+  const mg = (id, val, color) => {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = val; el.style.color = color || 'var(--text)'; }
+  };
+  if (ticker) {
+    mg('mg-deal', ticker.dealQuality + '%', ticker.dealQuality > 60 ? 'var(--green)' : ticker.dealQuality < 35 ? 'var(--red)' : 'var(--amber)');
+    mg('mg-lev', (ticker.leverage > 0 ? '+' : '') + ticker.leverage, ticker.leverage > 10 ? 'var(--green)' : ticker.leverage < -10 ? 'var(--red)' : 'var(--text-2)');
+    mg('mg-bias', ticker.biasRisk + '%', ticker.biasRisk > 60 ? 'var(--red)' : 'var(--green)');
+    mg('mg-prob', ticker.dealProbability + '%', ticker.dealProbability > 50 ? 'var(--green)' : 'var(--amber)');
+    const arrow = ticker.momentumTrend === 'gaining' ? '\u2191' : ticker.momentumTrend === 'losing' ? '\u2193' : '\u2192';
+    mg('mg-mom', arrow, ticker.momentumTrend === 'gaining' ? 'var(--green)' : ticker.momentumTrend === 'losing' ? 'var(--red)' : 'var(--amber)');
+  }
+  if (roundScore) {
+    const sign = roundScore.points > 0 ? '+' : '';
+    mg('mg-rnd', sign + roundScore.points, roundScore.points > 0 ? 'var(--green)' : roundScore.points < 0 ? 'var(--red)' : 'var(--text-muted)');
+  }
 }
 
 // ============================================================
