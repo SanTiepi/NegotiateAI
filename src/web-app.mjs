@@ -10,6 +10,89 @@ import { analyzeFeedback } from './analyzer.mjs';
 import { createAnthropicProvider } from './provider.mjs';
 import { createStore, randomUUID } from './store.mjs';
 import { refreshProgression } from './progression.mjs';
+import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
+import { BELT_DEFINITIONS } from './belt.mjs';
+import { simulateBeforeSend } from './simulate.mjs';
+import { selectScenarioOfWeek } from './leaderboard.mjs';
+import { listScenarios } from '../scenarios/index.mjs';
+
+const SCENARIO_PRESETS = [
+  {
+    id: 'salary',
+    name: 'Négociation salariale',
+    emoji: '💼',
+    description: 'Vous demandez une augmentation à votre manager.',
+    brief: {
+      situation: 'Entretien annuel — vous êtes performant depuis 2 ans, pas d\'augmentation',
+      userRole: 'Employé senior',
+      adversaryRole: 'Manager direct',
+      objective: 'Obtenir +15% de salaire',
+      minimalThreshold: '+8% minimum acceptable',
+      batna: 'Offre concurrente à +20% dans une autre entreprise',
+      difficulty: 'neutral',
+    },
+  },
+  {
+    id: 'realestate',
+    name: 'Achat immobilier',
+    emoji: '🏠',
+    description: 'Vous négociez le prix d\'un appartement.',
+    brief: {
+      situation: 'Achat d\'un 4 pièces à Lausanne, affiché à 850\'000 CHF',
+      userRole: 'Acheteur',
+      adversaryRole: 'Propriétaire vendeur',
+      objective: 'Acheter à 780\'000 CHF',
+      minimalThreshold: '820\'000 CHF maximum',
+      batna: 'Deux autres biens similaires en visite cette semaine',
+      difficulty: 'neutral',
+    },
+  },
+  {
+    id: 'freelance',
+    name: 'Contrat freelance',
+    emoji: '💻',
+    description: 'Vous négociez un tarif journalier avec un client.',
+    brief: {
+      situation: 'Mission de 6 mois, client veut un TJM bas, vous êtes expert',
+      userRole: 'Freelance développeur senior',
+      adversaryRole: 'Directeur technique client',
+      objective: 'TJM de 1\'200 CHF/jour',
+      minimalThreshold: '950 CHF/jour minimum',
+      batna: 'Pipeline de 3 autres missions potentielles',
+      difficulty: 'hostile',
+    },
+  },
+  {
+    id: 'partnership',
+    name: 'Partenariat startup',
+    emoji: '🚀',
+    description: 'Vous négociez un partenariat stratégique.',
+    brief: {
+      situation: 'Votre startup veut un partenariat de distribution avec un grand groupe',
+      userRole: 'CEO de la startup',
+      adversaryRole: 'VP Business Development du groupe',
+      objective: 'Partenariat exclusif avec 30% de commission',
+      minimalThreshold: 'Non-exclusif à 20% minimum',
+      batna: 'Lancement en direct-to-consumer avec levée de fonds',
+      difficulty: 'manipulative',
+    },
+  },
+  {
+    id: 'lease',
+    name: 'Renégociation de bail',
+    emoji: '🏢',
+    description: 'Vous renégociez le loyer de vos bureaux.',
+    brief: {
+      situation: 'Fin de bail dans 3 mois, marché baissier, vous voulez rester',
+      userRole: 'Directeur administratif',
+      adversaryRole: 'Gérant de la régie immobilière',
+      objective: 'Réduction de 15% du loyer + travaux offerts',
+      minimalThreshold: 'Réduction de 8% du loyer sans travaux',
+      batna: 'Trois offres de locaux équivalents à -20%',
+      difficulty: 'cooperative',
+    },
+  },
+];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_DIR = join(__dirname, '..', 'web');
@@ -60,7 +143,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
-      if (req.method === 'GET' && (url.pathname === '/app.js' || url.pathname === '/styles.css')) {
+      if (req.method === 'GET' && /^\/(app\.js|styles\.css|favicon\.svg)$/.test(url.pathname)) {
         await serveStatic(res, join(WEB_DIR, url.pathname.slice(1)));
         return;
       }
@@ -71,7 +154,66 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/dashboard') {
-        json(res, 200, await store.getDashboardStats());
+        const stats = await store.getDashboardStats();
+        const progression = await store.loadProgression();
+        const belts = progression.belts || {};
+        const earnedCount = Object.values(belts).filter((b) => b.earned).length;
+        const autonomy = evaluateAutonomyLevel({
+          totalSessions: stats.totalSessions,
+          avgScore: stats.averageScore,
+          earnedBelts: earnedCount,
+        });
+        json(res, 200, {
+          ...stats,
+          autonomy: { level: autonomy.level, label: autonomy.label, key: autonomy.key, gap: describeAutonomyGap(autonomy), next: autonomy.next },
+          beltDefinitions: BELT_DEFINITIONS.map((d) => ({ color: d.color, name: d.name, dimension: d.dimension, description: d.description })),
+        });
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/progression') {
+        const progression = await store.loadProgression();
+        json(res, 200, progression);
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/scenarios') {
+        json(res, 200, SCENARIO_PRESETS);
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/scenario-of-week') {
+        json(res, 200, selectScenarioOfWeek(await listScenarios()));
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/hall-of-fame') {
+        json(res, 200, await store.getHallOfFame({ limit: Number(url.searchParams.get('limit')) || 5 }));
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/leaderboard') {
+        json(res, 200, await store.getScenarioLeaderboard(url.searchParams.get('scenarioId'), {
+          limit: Number(url.searchParams.get('limit')) || 10,
+        }));
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/sessions') {
+        const sessions = await store.loadSessions();
+        const summaries = sessions.slice(0, 20).map((s) => ({
+          id: s.id,
+          date: s.date,
+          situation: s.brief?.situation || '—',
+          difficulty: s.brief?.difficulty || 'neutral',
+          status: s.status,
+          turns: s.turns || s.transcript?.length || 0,
+          score: s.feedback?.globalScore || 0,
+          scores: s.feedback?.scores || {},
+          biases: (s.feedback?.biasesDetected || []).map((b) => b.biasType),
+          mode: s.mode || 'cli',
+        }));
+        json(res, 200, summaries);
         return;
       }
 
@@ -110,6 +252,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
 
         if (result.sessionOver) {
           const feedback = await analyzeFeedback(session, llmProvider);
+          result.feedback = feedback;
           await store.saveSession({
             id: randomUUID(),
             date: new Date().toISOString(),
@@ -144,6 +287,21 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           actTransition: result.actTransition,
           detectedSignals: result.detectedSignals,
         });
+        return;
+      }
+
+      const simMatch = req.method === 'POST' && url.pathname.match(/^\/api\/session\/([^/]+)\/simulate$/);
+      if (simMatch) {
+        const sessionId = decodeURIComponent(simMatch[1]);
+        const session = activeSessions.get(sessionId);
+        if (!session) { json(res, 404, { error: 'Session not found' }); return; }
+        const body = await readBody(req);
+        if (!body.message || !body.message.trim()) { json(res, 400, { error: 'message is required' }); return; }
+        const report = await simulateBeforeSend({
+          brief: session.brief, adversary: session.adversary,
+          offerMessage: body.message, provider: llmProvider, transcript: session.transcript,
+        });
+        json(res, 200, report);
         return;
       }
 

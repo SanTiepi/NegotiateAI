@@ -133,6 +133,41 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('exposes scenario-of-week, hall-of-fame, and leaderboard endpoints', async () => {
+    await store.saveSession({
+      id: 'hof-1',
+      date: new Date().toISOString(),
+      brief: { objective: 'x', batna: 'y', minimalThreshold: 'z', userRole: 'Acheteur' },
+      adversary: { identity: 'Mme Dubois' },
+      transcript: [],
+      status: 'accepted',
+      turns: 3,
+      feedback: { globalScore: 91, scores: {} },
+      scenario: { id: 'salary-negotiation' },
+      mode: 'web',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const scenarioOfWeek = await request('/api/scenario-of-week');
+    assert.equal(scenarioOfWeek.response.status, 200);
+    assert.ok(scenarioOfWeek.body.weekKey);
+    assert.ok(scenarioOfWeek.body.scenario.id);
+
+    const hallOfFame = await request('/api/hall-of-fame');
+    assert.equal(hallOfFame.response.status, 200);
+    assert.equal(hallOfFame.body.entries[0].sessionId, 'hof-1');
+
+    const leaderboard = await request('/api/leaderboard?scenarioId=salary-negotiation');
+    assert.equal(leaderboard.response.status, 200);
+    assert.equal(leaderboard.body.entries[0].sessionId, 'hof-1');
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('plays a turn, persists completed web sessions, and updates dashboard stats', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);
