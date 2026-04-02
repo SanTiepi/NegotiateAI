@@ -78,6 +78,35 @@ export function createStore(options = {}) {
       await ensureDir();
       await writeFile(join(dataDir, PROGRESSION_FILE), JSON.stringify(progression, null, 2), 'utf-8');
     },
+
+    async getDashboardStats() {
+      const sessions = await this.loadSessions();
+      const progression = await this.loadProgression();
+      return computeDashboardStats(sessions, progression);
+    },
+  };
+}
+
+export function computeDashboardStats(sessions = [], progression = {}) {
+  const recentSessions = sessions.slice(0, 10);
+  const averageScore = recentSessions.length > 0
+    ? Math.round(recentSessions.reduce((sum, session) => sum + (session.feedback?.globalScore || 0), 0) / recentSessions.length)
+    : 0;
+
+  const latest = sessions[0] || null;
+  const earliest = sessions[sessions.length - 1] || null;
+  const latestScore = latest?.feedback?.globalScore || 0;
+  const earliestScore = earliest?.feedback?.globalScore || latestScore || 0;
+
+  return {
+    totalSessions: sessions.length,
+    currentStreak: progression.currentStreak || 0,
+    averageScore,
+    latestScore,
+    progressionDelta: latest ? latestScore - earliestScore : 0,
+    belts: progression.belts || {},
+    weakDimensions: progression.weakDimensions || [],
+    recentSessionIds: recentSessions.map((session) => session.id),
   };
 }
 

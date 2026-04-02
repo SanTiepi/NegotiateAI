@@ -116,4 +116,11 @@ describe('web-app', () => {
     assert.equal(body.state.turn, 1);
     assert.equal(body.coaching.tip, 'Reste centré sur ta BATNA.');
   });
+
+  it('returns dashboard stats', async () => {
+    const { response, body } = await request('/api/dashboard');
+    assert.equal(response.status, 200);
+    assert.equal(typeof body.totalSessions, 'number');
+    assert.ok(Array.isArray(body.recentSessionIds));
+  });
 });

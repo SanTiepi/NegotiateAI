@@ -7,6 +7,7 @@ import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { createSession, processTurn } from './engine.mjs';
 import { createAnthropicProvider } from './provider.mjs';
+import { createStore } from './store.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_DIR = join(__dirname, '..', 'web');
@@ -46,6 +47,7 @@ export function createWebApp({ provider, sessionIdFactory } = {}) {
   const activeSessions = new Map();
   const llmProvider = provider || createAnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY });
   const nextSessionId = sessionIdFactory || (() => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
+  const store = createStore();
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -63,6 +65,11 @@ export function createWebApp({ provider, sessionIdFactory } = {}) {
 
       if (req.method === 'GET' && url.pathname === '/api/health') {
         json(res, 200, { ok: true, sessions: activeSessions.size });
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/dashboard') {
+        json(res, 200, await store.getDashboardStats());
         return;
       }
 
