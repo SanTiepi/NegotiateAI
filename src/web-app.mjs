@@ -26,6 +26,8 @@ import { computeUILayer, filterTurnResponse, getLayerDefinitions, shouldGuideRou
 import { generateGuidedChoices, buildChoiceFeedback } from './guided-rounds.mjs';
 import { analyzeWithTheory } from './negotiation-theory.mjs';
 import { adjudicateVersusRound } from './versus.mjs';
+import { getRealPrepQuestions, buildRealPrepBrief, generatePrepSheet } from './real-prep.mjs';
+import { getJournalQuestions, buildJournalEntry, compareWithSimulation, computeRealWorldStats } from './journal.mjs';
 
 const SCENARIO_PRESETS = [
   {
@@ -430,16 +432,19 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           scenarioId: url.searchParams.get('scenarioId') || null,
         };
         const hasFilters = Object.values(filters).some(Boolean);
-        const [sessions, progression] = await Promise.all([
+        const [sessions, progression, analytics] = await Promise.all([
           store.loadSessions(),
           store.loadProgression(),
+          store.loadAnalytics(500),
         ]);
         const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
+        const realWorldStats = computeRealWorldStats(analytics.filter((event) => event.type === 'journal'));
         json(res, 200, {
           ...buildPlayerDashboard(scopedSessions, progression, {
             playerId: url.searchParams.get('playerId') || 'local-player',
           }),
           filters: hasFilters ? filters : null,
+          realWorldStats,
           uiLayer: computeUILayer(scopedSessions.length || progression.totalSessions || 0),
           uiLayerDefinitions: getLayerDefinitions(),
           beltDefinitions: BELT_DEFINITIONS.map((d) => ({ color: d.color, name: d.name, dimension: d.dimension, description: d.description })),
@@ -454,12 +459,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           scenarioId: url.searchParams.get('scenarioId') || null,
         };
         const hasFilters = Object.values(filters).some(Boolean);
-        const [sessions, progression] = await Promise.all([
+        const [sessions, progression, analytics] = await Promise.all([
           store.loadSessions(),
           store.loadProgression(),
+          store.loadAnalytics(500),
         ]);
         const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
         const stats = computeDashboardStats(scopedSessions, progression);
+        const realWorldStats = computeRealWorldStats(analytics.filter((event) => event.type === 'journal'));
         const belts = progression.belts || {};
         const earnedCount = Object.values(belts).filter((b) => b.earned).length;
         const autonomy = evaluateAutonomyLevel({
@@ -471,6 +478,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         json(res, 200, {
           ...stats,
           filters: hasFilters ? filters : null,
+          realWorldStats,
           autonomy: { level: autonomy.level, label: autonomy.label, key: autonomy.key, gap: describeAutonomyGap(autonomy), next: autonomy.next },
           biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
           recommendedDrillId: recommendDrill(progression),
@@ -688,6 +696,81 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      // ── Real Prep Mode ─────────────────────────────────────────
+      if (req.method === 'GET' && url.pathname === '/api/real-prep/questions') {
+        json(res, 200, getRealPrepQuestions());
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/real-prep/start') {
+        const body = await readBody(req);
+        const { brief, metadata } = buildRealPrepBrief(body);
+        const adversary = await generatePersona(brief, llmProvider);
+        const session = createSession(brief, adversary, llmProvider, { eventPolicy: 'none' });
+        session._isRealPrep = true;
+        session._realPrepMeta = metadata;
+        session._roundScores = [];
+        session._createdAt = Date.now();
+        session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
+        session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
+
+        const sessionId = nextSessionId();
+        cleanupSessions(activeSessions);
+        activeSessions.set(sessionId, session);
+
+        json(res, 201, {
+          sessionId,
+          adversary: { identity: adversary.identity, style: adversary.style },
+          state: { turn: session.turn, status: session.status, maxTurns: session.maxTurns },
+          isRealPrep: true,
+        });
+        return;
+      }
+
+      const prepSheetMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)\/prep-sheet$/);
+      if (prepSheetMatch) {
+        const sessionId = decodeURIComponent(prepSheetMatch[1]);
+        const sessions = await store.loadSessions();
+        const session = sessions.find((s) => s.id === sessionId);
+        if (!session) { json(res, 404, { error: 'Session introuvable' }); return; }
+        const prepSheet = await generatePrepSheet(session, session.feedback, llmProvider);
+        json(res, 200, prepSheet);
+        return;
+      }
+
+      // ── Journal ─────────────────────────────────────────────────
+      if (req.method === 'GET' && url.pathname === '/api/journal/questions') {
+        json(res, 200, getJournalQuestions());
+        return;
+      }
+
+      if (req.method === 'POST' && url.pathname === '/api/journal') {
+        const body = await readBody(req);
+        const entry = buildJournalEntry(body, body.simulationSessionId);
+
+        // Compare with simulation if linked
+        let comparison = null;
+        if (entry.simulationSessionId) {
+          const sessions = await store.loadSessions();
+          const simSession = sessions.find((s) => s.id === entry.simulationSessionId);
+          if (simSession) comparison = compareWithSimulation(entry, simSession);
+        }
+
+        // Store journal entry
+        await store.appendAnalytics({ type: 'journal', ...entry, comparison });
+
+        json(res, 201, { entry, comparison });
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/journal') {
+        const analytics = await store.loadAnalytics(500);
+        const journalEntries = analytics.filter((e) => e.type === 'journal');
+        const stats = computeRealWorldStats(journalEntries);
+        json(res, 200, { entries: journalEntries.slice(0, 20), stats });
+        return;
+      }
+
       // UI layer
       if (req.method === 'GET' && url.pathname === '/api/ui-layer') {
         const progression = await store.loadProgression();
@@ -829,6 +912,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             roundScores: session._roundScores,
             theoryInsights: theoryAnalysis.insights?.length || 0,
             uiLayer: session._uiLayer?.level || 1,
+            isRealPrep: session._isRealPrep || false,
+            realPrepMeta: session._realPrepMeta || null,
             mode: 'web',
             eventPolicy: session.eventPolicy,
             eventsActive: session.eventPolicy !== 'none',

@@ -278,10 +278,17 @@ async function loadDashboard() {
   try {
     const stats = await api('/api/dashboard');
     const empty = stats.totalSessions === 0;
+    const realStats = stats.realWorldStats || { totalReal: 0, avgSelfScore: 0, transferRate: 0, topLearning: null };
 
     document.getElementById('d-empty').classList.toggle('hidden', !empty);
     document.querySelector('.stats-grid').classList.toggle('hidden', empty);
     document.querySelectorAll('#view-dashboard .grid-2').forEach((el) => el.classList.toggle('hidden', empty));
+
+    const realStatsRoot = document.getElementById('d-real-stats');
+    realStatsRoot.classList.toggle('hidden', !realStats.totalReal);
+    document.getElementById('d-real-count').textContent = realStats.totalReal || 0;
+    document.getElementById('d-real-score').textContent = realStats.totalReal ? `${realStats.avgSelfScore}/10` : '—';
+    document.getElementById('d-transfer').textContent = realStats.totalReal ? `${realStats.transferRate}%` : '—';
 
     if (empty) return;
 
@@ -329,7 +336,9 @@ async function loadDashboard() {
     const bestDimension = stats.bestDimension?.dimension
       ? `${DIMENSION_LABELS[stats.bestDimension.dimension]?.label || stats.bestDimension.dimension} — ${stats.bestDimension.average}/${DIMENSION_LABELS[stats.bestDimension.dimension]?.max || 100}`
       : '—';
-    document.getElementById('d-best-dimension').textContent = bestDimension;
+    document.getElementById('d-best-dimension').textContent = realStats.topLearning
+      ? `${bestDimension} · Apprentissage réel: ${realStats.topLearning}`
+      : bestDimension;
 
     const historyEl = document.getElementById('d-history');
     historyEl.innerHTML = '';
@@ -665,12 +674,27 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
 });
 
 function endSession(feedback, fightCard) {
+  const endedSessionId = currentSessionId;
   currentSessionId = null;
   document.getElementById('msg-input').disabled = true;
   document.getElementById('btn-send').disabled = true;
 
   if (feedback || fightCard) {
-    setTimeout(() => showResults(feedback, fightCard), 1500);
+    setTimeout(() => {
+      showResults(feedback, fightCard);
+      // For real-prep sessions, offer prep sheet
+      if (lastRealPrepSessionId) {
+        const actions = document.querySelector('.results-actions');
+        if (actions) {
+          const prepBtn = document.createElement('button');
+          prepBtn.className = 'btn btn-primary';
+          prepBtn.textContent = 'Voir ma fiche de préparation';
+          prepBtn.addEventListener('click', () => showPrepSheet(lastRealPrepSessionId));
+          actions.prepend(prepBtn);
+        }
+        lastRealPrepSessionId = null;
+      }
+    }, 1500);
   }
 }
 
@@ -1298,6 +1322,102 @@ function speakText(text) {
 // Ensure voices are loaded (Chrome loads them async)
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = () => {};
+}
+
+// ============================================================
+// REAL PREP MODE
+// ============================================================
+
+let lastRealPrepSessionId = null;
+
+document.getElementById('real-prep-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = {};
+  for (const el of form.querySelectorAll('input, textarea')) {
+    if (el.name && el.value) data[el.name] = el.value;
+  }
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  try {
+    const session = await post('/api/real-prep/start', data);
+    lastRealPrepSessionId = session.sessionId;
+    startNegotiation(session);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+
+// ============================================================
+// JOURNAL
+// ============================================================
+
+document.getElementById('journal-score')?.addEventListener('input', (e) => {
+  document.getElementById('journal-score-label').textContent = `${e.target.value}/10`;
+});
+
+document.getElementById('journal-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const data = {};
+  for (const el of form.querySelectorAll('input, textarea, input[type=range], input[type=hidden]')) {
+    if (el.name) data[el.name] = el.type === 'range' ? Number(el.value) : el.value;
+  }
+  const btn = form.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  try {
+    const result = await post('/api/journal', data);
+    const container = document.getElementById('journal-result');
+    container.classList.remove('hidden');
+    document.getElementById('journal-summary').textContent = result.comparison?.summary || 'Débrief enregistré.';
+    const insightsEl = document.getElementById('journal-insights');
+    insightsEl.innerHTML = '';
+    for (const insight of (result.comparison?.insights || [])) {
+      const cls = insight.type === 'positive' ? 'positive' : insight.type === 'warning' ? 'high' : 'medium';
+      const card = document.createElement('div');
+      card.className = `theory-card ${cls}`;
+      card.innerHTML = `<div class="theory-observation">${insight.text}</div>`;
+      insightsEl.appendChild(card);
+    }
+    container.scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+
+// ============================================================
+// PREP SHEET
+// ============================================================
+
+async function showPrepSheet(sessionId) {
+  navigate('prep-sheet');
+  const container = document.getElementById('prep-sheet-content');
+  container.innerHTML = '<div class="loading"><div class="spinner">Génération de la fiche...</div></div>';
+  try {
+    const sheet = await api(`/api/sessions/${encodeURIComponent(sessionId)}/prep-sheet`);
+    container.innerHTML = `
+      <div class="prep-opening">"${sheet.openingLine}"</div>
+      <div class="prep-section card"><h3>Arguments clés</h3><ol class="prep-list">${(sheet.keyArguments || []).map((a) => `<li>${a}</li>`).join('')}</ol></div>
+      <div class="prep-section card"><h3>Lignes rouges</h3><ul class="prep-list">${(sheet.redLines || []).map((r) => `<li style="color:var(--red)">${r}</li>`).join('')}</ul></div>
+      <div class="prep-section card"><h3>Pièges à éviter</h3><ul class="prep-list">${(sheet.trapsToAvoid || []).map((t) => `<li style="color:var(--amber)">${t}</li>`).join('')}</ul></div>
+      ${(sheet.ifTheyDo || []).length > 0 ? `<div class="prep-section card"><h3>Si l'adversaire...</h3>${sheet.ifTheyDo.map((s) => `<div class="prep-if-card"><div class="prep-if-trigger">${s.trigger}</div><div class="prep-if-response">${s.response}</div>${s.why ? `<div class="prep-if-why">${s.why}</div>` : ''}</div>`).join('')}</div>` : ''}
+      <div class="prep-section card"><h3>Rappel BATNA</h3><p style="font-weight:600">${sheet.batnaReminder || '—'}</p></div>
+      <div class="prep-confidence">${sheet.confidenceBooster || 'Tu es prêt.'}</div>
+      <div class="prep-one-thing">${sheet.oneThingToRemember || '—'}</div>
+    `;
+    const simInput = document.getElementById('journal-sim-id');
+    if (simInput) simInput.value = sessionId;
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--red)">Erreur : ${err.message}</p>`;
+  }
 }
 
 // ============================================================

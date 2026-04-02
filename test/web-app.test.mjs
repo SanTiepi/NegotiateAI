@@ -268,6 +268,12 @@ describe('web-app', () => {
     assert.ok(Array.isArray(dashboard.body.beltDefinitions));
     assert.equal(typeof dashboard.body.autonomy.label, 'string');
     assert.ok(dashboard.body.autonomy.label.length > 0);
+    assert.deepEqual(dashboard.body.realWorldStats, {
+      totalReal: 0,
+      avgSelfScore: 0,
+      transferRate: 0,
+      topLearning: null,
+    });
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
@@ -753,6 +759,60 @@ describe('web-app', () => {
     assert.equal(snapshot.body.biasRecommendation.biasType, 'anchoring');
     assert.ok(Array.isArray(snapshot.body.beltDefinitions));
     assert.ok(Array.isArray(snapshot.body.uiLayerDefinitions));
+    assert.deepEqual(snapshot.body.realWorldStats, {
+      totalReal: 0,
+      avgSelfScore: 0,
+      transferRate: 0,
+      topLearning: null,
+    });
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('dashboard includes journal-derived real-world stats', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await store.appendAnalytics({
+      type: 'journal',
+      date: '2026-04-04T12:00:00.000Z',
+      outcome: 'Accord trouvé',
+      obtained: 'Baisse de loyer et travaux pris en charge',
+      surprise: 'La régie a cédé plus vite que prévu',
+      usedFromPrep: 'Mon ancrage et ma BATNA',
+      regret: 'J’aurais pu demander plus tôt une contrepartie',
+      emotion: 'fier',
+      selfScore: 8,
+    });
+    await store.appendAnalytics({
+      type: 'journal',
+      date: '2026-04-05T12:00:00.000Z',
+      outcome: 'Accord partiel',
+      obtained: 'Report de hausse',
+      surprise: null,
+      usedFromPrep: '',
+      regret: null,
+      emotion: 'soulagé',
+      selfScore: 6,
+    });
+
+    const dashboard = await request('/api/dashboard');
+    assert.equal(dashboard.response.status, 200);
+    assert.deepEqual(dashboard.body.realWorldStats, {
+      totalReal: 2,
+      avgSelfScore: 7,
+      transferRate: 50,
+      topLearning: 'La régie a cédé plus vite que prévu',
+      withPrep: 1,
+      withRegrets: 1,
+    });
+
+    const snapshot = await request('/api/dashboard/player?playerId=robin');
+    assert.equal(snapshot.response.status, 200);
+    assert.equal(snapshot.body.realWorldStats.totalReal, 2);
+    assert.equal(snapshot.body.realWorldStats.transferRate, 50);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
