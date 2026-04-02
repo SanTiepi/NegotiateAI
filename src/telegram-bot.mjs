@@ -1,6 +1,7 @@
 import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { createSession, processTurn } from './engine.mjs';
+import { analyzeFeedback } from './analyzer.mjs';
 
 function jsonHeaders() {
   return {
@@ -8,7 +9,7 @@ function jsonHeaders() {
   };
 }
 
-export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_TOKEN, apiBaseUrl = 'https://api.telegram.org', fetchImpl = globalThis.fetch, sessionStore } = {}) {
+export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_TOKEN, apiBaseUrl = 'https://api.telegram.org', fetchImpl = globalThis.fetch, sessionStore, store } = {}) {
   if (!provider || typeof provider.generateJson !== 'function') {
     throw new Error('createTelegramBot requires a provider');
   }
@@ -35,6 +36,29 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   function getSessionKey(chatId) {
     return `telegram:${chatId}`;
+  }
+
+  async function persistCompletedSession(chatId, session) {
+    if (!store) return;
+
+    const feedback = await analyzeFeedback(session, provider);
+    await store.saveSession({
+      id: `telegram-${chatId}-${Date.now()}`,
+      date: new Date().toISOString(),
+      brief: session.brief,
+      adversary: session.adversary,
+      transcript: session.transcript,
+      status: session.status,
+      turns: session.turn,
+      feedback,
+      mode: 'telegram',
+      eventPolicy: session.eventPolicy,
+      eventsActive: session.eventPolicy !== 'none',
+      worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
+    });
+
+    const { refreshProgression } = await import('./progression.mjs');
+    await refreshProgression(store, session);
   }
 
   async function startScenario(chatId, text) {
@@ -78,7 +102,10 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     }
 
     const result = await processTurn(session, text);
-    if (result.sessionOver) sessions.delete(getSessionKey(chatId));
+    if (result.sessionOver) {
+      await persistCompletedSession(chatId, session);
+      sessions.delete(getSessionKey(chatId));
+    }
 
     await sendMessage(chatId, formatTurnReply(result));
     return { ok: true, command: 'turn', sessionOver: result.sessionOver };

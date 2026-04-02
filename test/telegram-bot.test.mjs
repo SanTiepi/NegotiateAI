@@ -1,7 +1,11 @@
-import { describe, it } from 'node:test';
+import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createMockProvider } from '../src/provider.mjs';
 import { createTelegramBot, parseScenarioSeed, formatTurnReply } from '../src/telegram-bot.mjs';
+import { createStore } from '../src/store.mjs';
 
 const provider = createMockProvider({
   adversary: {
@@ -18,9 +22,9 @@ const provider = createMockProvider({
   },
   turn: {
     adversaryResponse: 'Je peux discuter, mais pas trop.',
-    sessionOver: false,
-    endReason: null,
-    sessionStatus: null,
+    sessionOver: true,
+    endReason: 'Done',
+    sessionStatus: 'accepted',
   },
   coaching: {
     biasDetected: null,
@@ -28,6 +32,27 @@ const provider = createMockProvider({
     momentum: 'stable',
     tip: 'Reste concret.',
   },
+  feedback: {
+    globalScore: 76,
+    scores: {
+      outcomeLeverage: 18,
+      batnaDiscipline: 15,
+      emotionalRegulation: 18,
+      biasResistance: 11,
+      conversationalFlow: 14,
+    },
+    biasesDetected: [],
+    tacticsUsed: ['labeling'],
+    missedOpportunities: [],
+    recommendations: ['Continue.'],
+  },
+});
+
+const tempDirs = [];
+afterEach(async () => {
+  while (tempDirs.length) {
+    await rm(tempDirs.pop(), { recursive: true, force: true });
+  }
 });
 
 describe('telegram-bot', () => {
@@ -38,10 +63,14 @@ describe('telegram-bot', () => {
     assert.equal(brief.batna, 'autre offre');
   });
 
-  it('creates a session on /new and responds to turns', async () => {
+  it('creates a session, persists completed Telegram sessions, and updates progression', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
     const sent = [];
     const bot = createTelegramBot({
       provider,
+      store,
       token: 'token-123',
       fetchImpl: async (_url, options) => {
         sent.push(JSON.parse(options.body));
@@ -53,9 +82,15 @@ describe('telegram-bot', () => {
     assert.equal(bot.sessions.size, 1);
     await bot.handleMessage({ message: { chat: { id: 42 }, text: 'Je veux avancer vite.' } });
 
+    assert.equal(bot.sessions.size, 0);
     assert.equal(sent.length, 2);
     assert.match(sent[1].text, /Je peux discuter/);
     assert.match(sent[1].text, /Reste concret/);
+
+    const stats = await store.getDashboardStats();
+    assert.equal(stats.totalSessions, 1);
+    assert.equal(stats.averageScore, 76);
+    assert.equal(stats.currentStreak, 1);
   });
 
   it('formatTurnReply includes coaching and ending when present', () => {

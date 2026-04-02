@@ -18,6 +18,7 @@ import { getMomentumTrend, analyzeZOPA } from './worldEngine.mjs';
 import { analyzeSessionBiases, updateBiasProfile, recommendBiasTraining } from './biasTracker.mjs';
 import { computeDifficulty, assessZPD, profileToPromptInstructions } from './difficulty.mjs';
 import { formatTicker, computePreSessionOdds } from './ticker.mjs';
+import { refreshProgression } from './progression.mjs';
 
 // ANSI colors
 const c = {
@@ -239,55 +240,22 @@ function displayPlan(plan) {
 }
 
 async function updateProgression(store, session) {
-  const sessions = await store.loadSessions();
-  const belts = evaluateBelts(sessions);
-  const weak = identifyWeaknesses(sessions);
-
-  // V2: Update bias profile with spaced repetition
-  const prev = await store.loadProgression();
-  const biasReport = analyzeSessionBiases(
-    session.transcript,
-    { confidence: session.confidence, frustration: session.frustration, pressure: session.pressure || 0, concessions: session.concessions, activeAnchor: session.activeAnchor },
-    session.brief,
-  );
-  const biasProfile = updateBiasProfile(prev.biasProfile || {}, biasReport, new Date().toISOString());
-
-  // V2: Compute adaptive difficulty
-  const difficultyProfile = computeDifficulty(sessions);
-  const zpd = assessZPD(sessions);
-
-  const today = new Date().toISOString().slice(0, 10);
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const streak = prev.lastSessionDate === yesterday ? prev.currentStreak + 1 : (prev.lastSessionDate === today ? prev.currentStreak : 1);
-
-  const recentScores = sessions.slice(0, 3).map((s) => s.feedback?.globalScore || 0);
-  const recentAvg = recentScores.length > 0 ? recentScores.reduce((a, b) => a + b, 0) / recentScores.length : 0;
-
-  await store.saveProgression({
-    belts,
-    biasProfile,
-    difficultyProfile,
-    zpd: zpd.zone,
-    totalSessions: sessions.length,
-    currentStreak: streak,
-    lastSessionDate: today,
-    weakDimensions: weak,
-    recentAvgScore: Math.round(recentAvg),
-    currentDifficulty: sessions[0]?.brief?.difficulty || 'cooperative',
-  });
+  const progression = await refreshProgression(store, session);
+  const belts = progression.belts;
 
   // Show bias training recommendation
-  const biasRec = recommendBiasTraining(biasProfile);
+  const biasRec = recommendBiasTraining(progression.biasProfile);
   if (biasRec) {
-    print(`\n${c.yellow}  Prochain drill recommandé: ${biasRec.biasType} (urgence: ${biasRec.urgency.toFixed(1)})${c.reset}`);
+    print(`
+${c.yellow}  Prochain drill recommand�: ${biasRec.biasType} (urgence: ${biasRec.urgency.toFixed(1)})${c.reset}`);
     print(`${c.dim}  ${biasRec.reason}${c.reset}`);
   }
 
   // Show ZPD feedback
-  if (zpd.zone === 'too_easy') {
-    print(`${c.green}  ZPD: Trop facile — augmente la difficulté !${c.reset}`);
-  } else if (zpd.zone === 'too_hard') {
-    print(`${c.red}  ZPD: Trop difficile — baisse d'un cran pour mieux apprendre.${c.reset}`);
+  if (progression.zpd === 'too_easy') {
+    print(`${c.green}  ZPD: Trop facile - augmente la difficult� !${c.reset}`);
+  } else if (progression.zpd === 'too_hard') {
+    print(`${c.red}  ZPD: Trop difficile - baisse d'un cran pour mieux apprendre.${c.reset}`);
   } else {
     print(`${c.cyan}  ZPD: Zone optimale d'apprentissage.${c.reset}`);
   }

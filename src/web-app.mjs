@@ -6,8 +6,10 @@ import { dirname, join, extname } from 'node:path';
 import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { createSession, processTurn } from './engine.mjs';
+import { analyzeFeedback } from './analyzer.mjs';
 import { createAnthropicProvider } from './provider.mjs';
-import { createStore } from './store.mjs';
+import { createStore, randomUUID } from './store.mjs';
+import { refreshProgression } from './progression.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const WEB_DIR = join(__dirname, '..', 'web');
@@ -43,11 +45,11 @@ async function serveStatic(res, filePath) {
   res.end(content);
 }
 
-export function createWebApp({ provider, sessionIdFactory } = {}) {
+export function createWebApp({ provider, sessionIdFactory, store: injectedStore } = {}) {
   const activeSessions = new Map();
   const llmProvider = provider || createAnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY });
   const nextSessionId = sessionIdFactory || (() => `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`);
-  const store = createStore();
+  const store = injectedStore || createStore();
 
   const server = http.createServer(async (req, res) => {
     try {
@@ -105,6 +107,27 @@ export function createWebApp({ provider, sessionIdFactory } = {}) {
         }
 
         const result = await processTurn(session, body.message);
+
+        if (result.sessionOver) {
+          const feedback = await analyzeFeedback(session, llmProvider);
+          await store.saveSession({
+            id: randomUUID(),
+            date: new Date().toISOString(),
+            brief: session.brief,
+            adversary: session.adversary,
+            transcript: session.transcript,
+            status: session.status,
+            turns: session.turn,
+            feedback,
+            mode: 'web',
+            eventPolicy: session.eventPolicy,
+            eventsActive: session.eventPolicy !== 'none',
+            worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
+          });
+          await refreshProgression(store, session);
+          activeSessions.delete(sessionId);
+        }
+
         json(res, 200, {
           adversaryResponse: result.adversaryResponse,
           sessionOver: result.sessionOver,
