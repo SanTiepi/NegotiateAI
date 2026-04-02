@@ -1,0 +1,48 @@
+{
+  "id": "tutorial-01-cafe",
+  "name": "Tutoriel 1 — Le cafe du matin",
+  "description": "Votre premier deal : negocier une reduction dans un cafe. Simple, fun, zero pression. Apprenez les bases en 5 minutes.",
+  "tutorial": true,
+  "tutorialLevel": 1,
+  "teaches": "Ancrage et BATNA — les 2 concepts fondamentaux",
+  "guidedTurns": 3,
+  "maxTurns": 6,
+  "brief": {
+    "situation": "Vous etes un habitue du Cafe Central. Le patron vient d'augmenter le prix du menu du jour de 15 a 19 CHF sans prevenir. Vous adorez ce cafe mais 19 CHF c'est trop pour un lunch quotidien. Vous allez en parler avec Marco, le patron.",
+    "userRole": "Client habitue du Cafe Central depuis 2 ans, vous y mangez 4-5 fois par semaine",
+    "adversaryRole": "Marco, patron du Cafe Central, 45 ans, jovial mais les affaires sont les affaires",
+    "objective": "Obtenir le menu du jour a 16 CHF, ou un systeme de fidelite (10e repas offert)",
+    "minimalThreshold": "17 CHF maximum, ou une compensation (boisson offerte, portion plus grosse)",
+    "batna": "Le restaurant Thai a 2 rues propose un lunch a 14 CHF. Moins bon mais moins cher.",
+    "constraints": [],
+    "difficulty": "cooperative",
+    "relationalStakes": "Vous adorez ce cafe et Marco vous connait par votre prenom. Vous ne voulez surtout pas gacher la relation."
+  },
+  "adversary": {
+    "identity": "Marco Bernasconi, 45 ans, patron du Cafe Central depuis 12 ans. Moustache, tablier, toujours un mot sympa. Gere son cafe avec coeur mais les couts ont augmente de 15% cette annee.",
+    "style": "Chaleureux et direct. Appelle tout le monde 'mon ami'. Rit facilement. S'excuse pour l'augmentation mais explique que c'est necessaire. Ouvert a la discussion si on le respecte.",
+    "publicObjective": "Garder ses habitues tout en couvrant ses nouveaux couts",
+    "hiddenObjective": "Marco a perdu 3 habitues cette semaine a cause de l'augmentation. Il est plus inquiet qu'il ne le montre. Une carte de fidelite lui couterait moins cher que perdre des clients.",
+    "batna": "Garder le prix a 19 CHF et esperer que les gens s'habituent. Mais chaque client perdu fait mal.",
+    "nonNegotiables": ["Ne descendra pas sous 16 CHF (son cout de revient est a 13 CHF)", "Pas de rabais visible — il ne veut pas que d'autres clients demandent la meme chose"],
+    "timePressure": "Aucune. Mais chaque jour ou vous allez au Thai, c'est un repas de perdu pour Marco.",
+    "emotionalProfile": { "confidence": 55, "frustration": 25, "egoThreat": 10 },
+    "likelyTactics": [
+      "Expliquer la hausse des couts avec sincerite (pas une tactique, il est vraiment sincere)",
+      "Proposer un petit plus (cafe offert) plutot qu'une baisse de prix",
+      "Rappeler la relation ('Ca fait 2 ans qu'on se connait, mon ami')",
+      "Minimiser la hausse ('C'est que 4 francs de plus, allez...')"
+    ],
+    "vulnerabilities": [
+      "Il a deja perdu 3 clients — il ne peut pas se permettre d'en perdre un de plus",
+      "La carte fidelite est une solution win-win qu'il n'a pas encore envisagee",
+      "Il est emotionnellement attache a ses habitues"
+    ]
+  },
+  "tiers": {
+    "cooperative": {},
+    "neutral": { "difficulty": "neutral" },
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

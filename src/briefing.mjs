@@ -78,7 +78,54 @@ export function generateBriefing(scenario, progression) {
         required: false,
       },
     ],
+
+    // Sliders (quick mode: 3 sliders → computed contract)
+    sliders: {
+      ambition: { label: 'Ambition', min: 0, max: 100, default: 60, leftLabel: 'Prudent', rightLabel: 'Maximaliste' },
+      relation: { label: 'Relation', min: 0, max: 100, default: brief.relationalStakes ? 70 : 30, leftLabel: 'Deal pur', rightLabel: 'Relation compte' },
+      posture: { label: 'Posture', min: 0, max: 100, default: 50, leftLabel: 'Diplomate', rightLabel: 'Assertif' },
+    },
   };
+}
+
+/**
+ * Build an ObjectiveContract from 3 slider values + scenario defaults.
+ * This is the quick mode — no text input needed.
+ */
+export function buildContractFromSliders(sliders, scenario) {
+  const brief = scenario?.brief || scenario || {};
+  const adversary = scenario?.adversary || {};
+  const { ambition = 60, relation = 50, posture = 50 } = sliders;
+
+  // Compute objective text from ambition level
+  const objective = ambition >= 70
+    ? (brief.objective || 'Objectif ambitieux')
+    : ambition >= 40
+      ? (brief.minimalThreshold || brief.objective || 'Objectif modere')
+      : (brief.batna || 'Objectif minimal');
+
+  const threshold = ambition >= 60
+    ? (brief.minimalThreshold || 'Seuil standard')
+    : (brief.batna || 'Flexible');
+
+  const batna = brief.batna || 'Alternative disponible';
+
+  const relationalGoal = relation >= 70
+    ? 'Preserver la relation a long terme'
+    : relation >= 40
+      ? 'Relation correcte'
+      : 'Transaction pure, relation secondaire';
+
+  const strategies = [];
+  if (posture >= 70) strategies.push('assertif', 'ancrage haut');
+  else if (posture >= 40) strategies.push('equilibre', 'ecoute puis proposition');
+  else strategies.push('diplomate', 'ecoute active', 'empathie tactique');
+  const strategy = strategies.join(', ');
+
+  return buildObjectiveContract(
+    { objective, threshold, batna, relationalGoal, strategy },
+    scenario,
+  );
 }
 
 /**

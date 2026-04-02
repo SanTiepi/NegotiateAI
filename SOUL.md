@@ -51,6 +51,9 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
 - Progressive UI web: garder l unlock cote API opt-in (`uiProgressive`) pour ne pas casser les clients existants qui attendent le payload complet
+- Briefing web rapide: si la UI envoie des sliders (`ambition`, `relation`, `posture`), convertir cote serveur vers un objectiveContract via un helper pur, sans reconstruire cette logique dans le frontend
+- Guided rounds web: afficher les choix suggérés uniquement depuis `guidedChoices` renvoyé par l'API et garder un fallback saisie libre quand rien n'est proposé
+- Analyse theorique post-session: calculer depuis transcript + feedback via un module pur (pas dans le renderer web) puis exposer un payload mince au frontend
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -81,6 +84,10 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Mode versus: module pur src/versus.mjs avec adjudicateVersusRound({ brief, playerA, playerB, transcript? }, provider) -> verdict structure
 - Persistance locale: store.mjs comme couche d'acces unique pour sessions/progression afin d'eviter la duplication de logique
 - Progressive UI web: calculer la couche via un module pur (sessions -> layer), exposer `uiLayer`/`uiLayerDefinitions` au profil, et filtrer les payloads de tour uniquement quand le mode progressif est explicitement active
+- Briefing rapide web: `buildContractFromSliders({ ambition, relation, posture }, scenario)` doit rester pur/testable et produire le meme contrat que l'API consomme pour le scoring
+- Tutoriels web: packager les scenarios d'onboarding comme presets `category: "tutorial"` + `tutorialLevel`, puis laisser le frontend seulement les grouper/afficher
+- Guided rounds frontend: masquer le champ libre seulement pendant l'affichage de boutons guides, puis renvoyer le choix comme un tour normal sans branche metier parallele
+- Theorie de negociation: module pur `src/negotiation-theory.mjs` qui mappe transcript + biais + scores vers insights pedagogiques pour Harvard/Voss/Cialdini/Kahneman/Schelling
 
 ## REGLE CRITIQUE
 Si git log montre que les 5 anciennes priorites sont faites et npm test est vert, NE FAIS PAS un commit "docs: refresh soul". Passe directement a la PROCHAINE priorite de la liste ci-dessus (web app, telegram bot, scenarios immobiliers...). Il y a TOUJOURS quelque chose a faire.

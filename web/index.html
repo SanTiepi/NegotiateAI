@@ -295,9 +295,30 @@
         </div>
 
         <div class="card">
-          <h2>Definissez vos objectifs</h2>
-          <p class="text-muted" style="margin-bottom:16px">Formulez dans vos mots. Les suggestions sont modifiables.</p>
-          <form id="briefing-form" class="briefing-fields">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h2 style="margin:0">Calibrez votre approche</h2>
+            <button type="button" class="btn btn-ghost btn-sm" id="toggle-expert-briefing">Mode expert</button>
+          </div>
+
+          <!-- SLIDERS MODE (default) -->
+          <form id="briefing-slider-form" class="slider-mode">
+            <div class="slider-group">
+              <div class="slider-header"><span>Prudent</span><span class="slider-label" id="sl-ambition-label">Ambition: 60</span><span>Maximaliste</span></div>
+              <input type="range" name="ambition" min="0" max="100" value="60" id="sl-ambition" class="slider-input">
+            </div>
+            <div class="slider-group">
+              <div class="slider-header"><span>Deal pur</span><span class="slider-label" id="sl-relation-label">Relation: 50</span><span>Relation compte</span></div>
+              <input type="range" name="relation" min="0" max="100" value="50" id="sl-relation" class="slider-input">
+            </div>
+            <div class="slider-group">
+              <div class="slider-header"><span>Diplomate</span><span class="slider-label" id="sl-posture-label">Posture: 50</span><span>Assertif</span></div>
+              <input type="range" name="posture" min="0" max="100" value="50" id="sl-posture" class="slider-input">
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg" style="margin-top:12px;width:100%">Jouer</button>
+          </form>
+
+          <!-- EXPERT MODE (hidden by default) -->
+          <form id="briefing-form" class="briefing-fields hidden">
             <div class="form-group">
               <label>Qu'est-ce qui vous ferait partir content ?</label>
               <textarea name="objective" rows="2" required placeholder="Votre objectif ideal..."></textarea>
@@ -353,6 +374,12 @@
           <!-- Chat -->
           <div class="chat-panel">
             <div id="n-messages" class="messages"></div>
+            <!-- Guided rounds: 3 choices -->
+            <div id="guided-choices" class="guided-choices hidden">
+              <div class="guided-label">Choisissez votre reponse :</div>
+              <div id="guided-btns" class="guided-btns"></div>
+            </div>
+
             <form id="turn-form" class="turn-form">
               <div class="input-row">
                 <input id="msg-input" placeholder="Votre message..." autocomplete="off" autofocus>
@@ -523,6 +550,12 @@
             <ul id="r-recs" class="recs-list"></ul>
           </section>
         </div>
+
+        <section class="card" id="r-theory-section" style="margin-bottom:16px">
+          <h2>Analyse theorique</h2>
+          <p id="r-theory-summary" class="text-muted" style="margin-bottom:12px"></p>
+          <div id="r-theory-insights" class="theory-insights"></div>
+        </section>
 
         <div class="results-actions">
           <button class="btn btn-primary" data-view="setup">Nouvelle session</button>

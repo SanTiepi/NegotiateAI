@@ -20,11 +20,12 @@ import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
 import { generateVaccinationCard, formatShareableCard } from './vaccination.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
-import { generateBriefing, buildObjectiveContract } from './briefing.mjs';
+import { generateBriefing, buildObjectiveContract, buildContractFromSliders } from './briefing.mjs';
 import { scoreRound, buildFightCard } from './fight-card.mjs';
-import { adjudicateVersusRound } from './versus.mjs';
 import { computeUILayer, filterTurnResponse, getLayerDefinitions, shouldGuideRound } from './progressive-ui.mjs';
-import { generateGuidedChoices } from './guided-rounds.mjs';
+import { generateGuidedChoices, buildChoiceFeedback } from './guided-rounds.mjs';
+import { analyzeWithTheory } from './negotiation-theory.mjs';
+import { adjudicateVersusRound } from './versus.mjs';
 
 const SCENARIO_PRESETS = [
   {
@@ -166,6 +167,31 @@ const SCENARIO_PRESETS = [
     description: 'Médicament vital, monopole, cynisme corporatif. Trouvez du leverage.',
     difficulty: 'hostile',
     scenarioFile: 'vs-pharma-ceo',
+  },
+  // --- Tutoriels (shown first for new users) ---
+  {
+    id: 'tutorial-01-cafe', category: 'tutorial',
+    name: 'Le cafe du matin', emoji: '☕',
+    description: 'Votre premier deal. Simple, fun, zero pression. 5 min.',
+    difficulty: 'cooperative',
+    scenarioFile: 'tutorial-01-cafe',
+    tutorialLevel: 1,
+  },
+  {
+    id: 'tutorial-02-raise', category: 'tutorial',
+    name: 'Demander une augmentation', emoji: '💰',
+    description: 'Le classique. Decouvrez le coaching temps reel.',
+    difficulty: 'neutral',
+    scenarioFile: 'tutorial-02-raise',
+    tutorialLevel: 2,
+  },
+  {
+    id: 'tutorial-03-investor', category: 'tutorial',
+    name: 'Pitcher un investisseur', emoji: '📈',
+    description: 'Les enjeux montent. Full cockpit deverrouille.',
+    difficulty: 'hostile',
+    scenarioFile: 'tutorial-03-investor',
+    tutorialLevel: 3,
   },
 ];
 
@@ -471,6 +497,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      // UI layer
+      if (req.method === 'GET' && url.pathname === '/api/ui-layer') {
+        const progression = await store.loadProgression();
+        const override = url.searchParams.get('override') ? Number(url.searchParams.get('override')) : null;
+        json(res, 200, computeUILayer(progression.totalSessions || 0, override));
+        return;
+      }
+
       // Briefing: get scenario context + questions before committing
       if (req.method === 'POST' && url.pathname === '/api/briefing') {
         const body = await readBody(req);
@@ -481,7 +515,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           scenario = { brief: body.brief || {} };
         }
         const progression = await store.loadProgression();
-        json(res, 200, generateBriefing(scenario, progression));
+        const uiLayer = computeUILayer(progression.totalSessions || 0);
+        const briefing = generateBriefing(scenario, progression);
+        briefing.uiLayer = uiLayer;
+        json(res, 200, briefing);
         return;
       }
 
@@ -511,9 +548,11 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           adversary = body.adversary || await generatePersona(brief, llmProvider);
         }
 
-        // Build objective contract from player's answers (or use scenario defaults)
+        // Build objective contract: from sliders (quick) or text answers (expert)
         let objectiveContract = null;
-        if (body.objectiveContract) {
+        if (body.sliders) {
+          objectiveContract = buildContractFromSliders(body.sliders, scenario || { brief, adversary });
+        } else if (body.objectiveContract) {
           objectiveContract = buildObjectiveContract(body.objectiveContract, scenario || { brief, adversary });
         }
 
@@ -574,6 +613,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           result.feedback = feedback;
           fightCard = buildFightCard(feedback, session, session._objectiveContract);
 
+          // Theory analysis (Layer 3 or always for learning)
+          const theoryAnalysis = analyzeWithTheory(session, feedback);
+          fightCard.theory = theoryAnalysis;
+
           const sessionEntry = {
             id: randomUUID(),
             date: new Date().toISOString(),
@@ -587,6 +630,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             objectiveContract: session._objectiveContract || null,
             scenarioId: session._scenarioId || null,
             roundScores: session._roundScores,
+            theoryInsights: theoryAnalysis.insights?.length || 0,
+            uiLayer: session._uiLayer?.level || 1,
             mode: 'web',
             eventPolicy: session.eventPolicy,
             eventsActive: session.eventPolicy !== 'none',

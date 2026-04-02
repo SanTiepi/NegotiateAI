@@ -373,6 +373,7 @@ async function loadPresets() {
     const grid = document.getElementById('presets');
     grid.innerHTML = '';
 
+    const tutorials = presets.filter((p) => p.category === 'tutorial');
     const basics = presets.filter((p) => !p.category);
     const swiss = presets.filter((p) => p.category === 'swiss');
     const celebrities = presets.filter((p) => p.category === 'celebrity');
@@ -404,6 +405,7 @@ async function loadPresets() {
       }
     }
 
+    renderGroup('Commencer ici', tutorials);
     renderGroup('Situations classiques', basics);
     renderGroup('Immobilier suisse', swiss);
     renderGroup('Personnalites celebres', celebrities);
@@ -630,11 +632,18 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
     // Session over?
     if (result.sessionOver) {
       addMessage('system', `Session terminee: ${result.endReason || 'fin'}`);
+      hideGuidedChoices();
       endSession(result.feedback, result.fightCard);
     } else {
-      input.disabled = false;
-      document.getElementById('btn-send').disabled = false;
-      input.focus();
+      // Show guided choices if provided
+      if (result.guidedChoices && result.guidedChoices.length > 0) {
+        showGuidedChoices(result.guidedChoices);
+      } else {
+        hideGuidedChoices();
+        input.disabled = false;
+        document.getElementById('btn-send').disabled = false;
+        input.focus();
+      }
     }
   } catch (err) {
     document.getElementById('typing-spinner')?.remove();
@@ -1047,6 +1056,9 @@ function showResults(feedback, fightCard) {
     li.textContent = r;
     recEl.appendChild(li);
   }
+
+  // Theory analysis
+  if (fightCard?.theory) renderTheory(fightCard.theory);
 }
 
 // ============================================================
@@ -1225,6 +1237,144 @@ function speakText(text) {
 // Ensure voices are loaded (Chrome loads them async)
 if (window.speechSynthesis) {
   window.speechSynthesis.onvoiceschanged = () => {};
+}
+
+// ============================================================
+// SLIDERS + EXPERT TOGGLE
+// ============================================================
+
+// Slider live labels
+['ambition', 'relation', 'posture'].forEach((name) => {
+  const slider = document.getElementById(`sl-${name}`);
+  const label = document.getElementById(`sl-${name}-label`);
+  if (slider && label) {
+    slider.addEventListener('input', () => {
+      label.textContent = `${name.charAt(0).toUpperCase() + name.slice(1)}: ${slider.value}`;
+    });
+  }
+});
+
+// Expert mode toggle
+document.getElementById('toggle-expert-briefing')?.addEventListener('click', () => {
+  const sliderForm = document.getElementById('briefing-slider-form');
+  const expertForm = document.getElementById('briefing-form');
+  const btn = document.getElementById('toggle-expert-briefing');
+  if (sliderForm.classList.contains('hidden')) {
+    sliderForm.classList.remove('hidden');
+    expertForm.classList.add('hidden');
+    btn.textContent = 'Mode expert';
+  } else {
+    sliderForm.classList.add('hidden');
+    expertForm.classList.remove('hidden');
+    btn.textContent = 'Mode rapide';
+  }
+});
+
+// Slider form submit → create session with sliders
+document.getElementById('briefing-slider-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  btn.disabled = true;
+  btn.classList.add('loading');
+  try {
+    const sliders = {
+      ambition: Number(document.getElementById('sl-ambition').value),
+      relation: Number(document.getElementById('sl-relation').value),
+      posture: Number(document.getElementById('sl-posture').value),
+    };
+    const payload = { sliders, uiProgressive: true };
+    if (pendingScenarioFile) payload.scenarioFile = pendingScenarioFile;
+    else if (pendingBrief) payload.brief = pendingBrief;
+    const session = await post('/api/session', payload);
+    startNegotiation(session);
+  } catch (err) {
+    alert('Erreur: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.classList.remove('loading');
+  }
+});
+
+// ============================================================
+// GUIDED ROUNDS
+// ============================================================
+
+let currentGuidedChoices = null;
+
+function showGuidedChoices(choices) {
+  if (!choices || choices.length === 0) {
+    hideGuidedChoices();
+    return;
+  }
+  currentGuidedChoices = choices;
+  const container = document.getElementById('guided-choices');
+  const btns = document.getElementById('guided-btns');
+  container.classList.remove('hidden');
+
+  // Hide the free text input
+  document.getElementById('turn-form').classList.add('hidden');
+
+  btns.innerHTML = '';
+  choices.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'guided-choice';
+    btn.innerHTML = `${c.text}<span class="choice-technique">${c.technique}</span>`;
+    btn.addEventListener('click', () => selectGuidedChoice(i));
+    btns.appendChild(btn);
+  });
+}
+
+function hideGuidedChoices() {
+  currentGuidedChoices = null;
+  document.getElementById('guided-choices')?.classList.add('hidden');
+  document.getElementById('turn-form')?.classList.remove('hidden');
+}
+
+async function selectGuidedChoice(index) {
+  const choice = currentGuidedChoices[index];
+  if (!choice || !currentSessionId) return;
+  hideGuidedChoices();
+
+  // Send as a normal turn
+  const input = document.getElementById('msg-input');
+  input.value = choice.text;
+  document.getElementById('turn-form').dispatchEvent(new Event('submit'));
+}
+
+// ============================================================
+// THEORY RENDERING
+// ============================================================
+
+const FRAMEWORK_NAMES = {
+  harvard: 'Harvard (Fisher & Ury)',
+  voss: 'Tactical Empathy (Voss)',
+  cialdini: 'Influence (Cialdini)',
+  kahneman: 'Biais cognitifs (Kahneman)',
+  schelling: 'Theorie des jeux (Schelling)',
+};
+
+function renderTheory(theoryAnalysis) {
+  const section = document.getElementById('r-theory-section');
+  if (!section) return;
+  if (!theoryAnalysis || !theoryAnalysis.insights?.length) {
+    section.classList.add('hidden');
+    return;
+  }
+  section.classList.remove('hidden');
+  document.getElementById('r-theory-summary').textContent = theoryAnalysis.summary || '';
+
+  const container = document.getElementById('r-theory-insights');
+  container.innerHTML = '';
+  for (const insight of theoryAnalysis.insights) {
+    const card = document.createElement('div');
+    card.className = `theory-card ${insight.severity}`;
+    card.innerHTML = `
+      <div class="theory-framework">${FRAMEWORK_NAMES[insight.framework] || insight.framework} — ${insight.principle}</div>
+      <div class="theory-observation">${insight.observation}</div>
+      ${insight.recommendation ? `<div class="theory-recommendation">${insight.recommendation}</div>` : ''}
+    `;
+    container.appendChild(card);
+  }
 }
 
 // ============================================================
