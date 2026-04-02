@@ -9,6 +9,7 @@ import { createSession, processTurn } from './engine.mjs';
 import { analyzeFeedback } from './analyzer.mjs';
 import { createAnthropicProvider } from './provider.mjs';
 import { createStore, randomUUID } from './store.mjs';
+import { computeDashboardStats } from './dashboard.mjs';
 import { refreshProgression } from './progression.mjs';
 import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
@@ -249,6 +250,18 @@ async function buildScenarioDetailById(scenarioId, tier = 'neutral') {
   };
 }
 
+function filterDashboardSessions(sessions, filters) {
+  return sessions.filter((session) => {
+    if (filters.mode && (session.mode || 'cli') !== filters.mode) return false;
+    if (filters.difficulty && (session.brief?.difficulty || 'neutral') !== filters.difficulty) return false;
+    if (filters.scenarioId) {
+      const sessionScenarioId = session.scenario?.id || session.scenarioId || null;
+      if (sessionScenarioId !== filters.scenarioId) return false;
+    }
+    return true;
+  });
+}
+
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -358,10 +371,18 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/dashboard') {
-        const [stats, progression] = await Promise.all([
-          store.getDashboardStats(),
+        const filters = {
+          mode: url.searchParams.get('mode') || null,
+          difficulty: url.searchParams.get('difficulty') || null,
+          scenarioId: url.searchParams.get('scenarioId') || null,
+        };
+        const hasFilters = Object.values(filters).some(Boolean);
+        const [sessions, progression] = await Promise.all([
+          store.loadSessions(),
           store.loadProgression(),
         ]);
+        const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
+        const stats = computeDashboardStats(scopedSessions, progression);
         const belts = progression.belts || {};
         const earnedCount = Object.values(belts).filter((b) => b.earned).length;
         const autonomy = evaluateAutonomyLevel({
@@ -372,6 +393,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const uiLayer = computeUILayer(stats.totalSessions || progression.totalSessions || 0);
         json(res, 200, {
           ...stats,
+          filters: hasFilters ? filters : null,
           autonomy: { level: autonomy.level, label: autonomy.label, key: autonomy.key, gap: describeAutonomyGap(autonomy), next: autonomy.next },
           biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
           recommendedDrillId: recommendDrill(progression),

@@ -660,6 +660,96 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('dashboard supports filtering by mode, difficulty, and scenario', async () => {
+    await store.saveSession({
+      id: 'dash-filter-web-1',
+      date: new Date('2026-04-01T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Achat appartement',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeuse',
+        objective: 'Acheter à 500k',
+        minimalThreshold: '520k max',
+        batna: 'Continuer les visites',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'Mme Dubois' },
+      transcript: [],
+      status: 'accepted',
+      turns: 2,
+      feedback: {
+        globalScore: 78,
+        scores: {
+          outcomeLeverage: 19,
+          batnaDiscipline: 14,
+          emotionalRegulation: 20,
+          biasResistance: 10,
+          conversationalFlow: 12,
+        },
+      },
+      mode: 'web',
+      scenarioId: 'swiss-property-purchase',
+    });
+    await store.saveSession({
+      id: 'dash-filter-telegram-1',
+      date: new Date('2026-04-02T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Renegociation bail',
+        userRole: 'Locataire',
+        adversaryRole: 'Regie',
+        objective: 'Baisser le loyer',
+        minimalThreshold: 'Zero hausse',
+        batna: 'Demenager',
+        difficulty: 'neutral',
+      },
+      adversary: { identity: 'Regie SA' },
+      transcript: [],
+      status: 'ended',
+      turns: 3,
+      feedback: {
+        globalScore: 84,
+        scores: {
+          outcomeLeverage: 21,
+          batnaDiscipline: 17,
+          emotionalRegulation: 22,
+          biasResistance: 13,
+          conversationalFlow: 14,
+        },
+      },
+      mode: 'telegram',
+      scenarioId: 'swiss-lease-renegotiation',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const filteredByMode = await request('/api/dashboard?mode=telegram');
+    assert.equal(filteredByMode.response.status, 200);
+    assert.equal(filteredByMode.body.totalSessions, 1);
+    assert.equal(filteredByMode.body.averageScore, 84);
+    assert.deepEqual(filteredByMode.body.filters, {
+      mode: 'telegram',
+      difficulty: null,
+      scenarioId: null,
+    });
+    assert.deepEqual(filteredByMode.body.modeBreakdown, [{ mode: 'telegram', count: 1 }]);
+
+    const filteredByDifficulty = await request('/api/dashboard?difficulty=hostile');
+    assert.equal(filteredByDifficulty.response.status, 200);
+    assert.equal(filteredByDifficulty.body.totalSessions, 1);
+    assert.equal(filteredByDifficulty.body.latestScore, 78);
+    assert.deepEqual(filteredByDifficulty.body.difficultyBreakdown, [{ difficulty: 'hostile', count: 1 }]);
+
+    const filteredByScenario = await request('/api/dashboard?scenarioId=swiss-property-purchase');
+    assert.equal(filteredByScenario.response.status, 200);
+    assert.equal(filteredByScenario.body.totalSessions, 1);
+    assert.equal(filteredByScenario.body.scoreHistory[0].id, 'dash-filter-web-1');
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('enriched dashboard includes autonomy, belt definitions, and scoring breakdowns', async () => {
     await store.saveSession({
       id: 'dash-web-1',
