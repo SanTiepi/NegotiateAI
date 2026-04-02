@@ -12,6 +12,7 @@
     "war-room": "node src/cli/war-room-cli.mjs",
     "stats": "node src/cli/stats-cli.mjs",
     "profile": "node src/cli/profile-cli.mjs",
+    "hall-of-fame": "node src/cli/hall-of-fame-cli.mjs",
     "web": "node -e \"import('./src/web-app.mjs').then(async ({ startWebServer }) => { const app = await startWebServer(); console.log('NegotiateAI Web listening on http://127.0.0.1:' + app.address.port); })\"",
     "mcp": "node mcp/index.mjs"
   },
