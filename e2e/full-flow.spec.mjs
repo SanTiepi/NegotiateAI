@@ -23,15 +23,21 @@ test.describe('NegotiateAI — Full Flow', () => {
     expect(count).toBeGreaterThanOrEqual(14);
   });
 
-  test('clicking a classic preset fills the form', async ({ page }) => {
+  test('clicking a tutorial preset goes to briefing with sliders', async ({ page }) => {
     await page.goto('/');
     await page.click('[data-view="setup"]');
     await expect(page.locator('.preset-card').first()).toBeVisible({ timeout: 5000 });
-    // Click the first basic preset (salary)
-    await page.locator('.preset-card').first().click();
-    // Form should be filled
-    const objective = page.locator('#setup-form [name="objective"]');
-    await expect(objective).not.toHaveValue('');
+    // Click the first preset (tutorial - cafe)
+    const cafeCard = page.locator('.preset-card', { hasText: 'cafe' }).first();
+    if (await cafeCard.isVisible()) {
+      await cafeCard.click();
+    } else {
+      await page.locator('.preset-card').first().click();
+    }
+    // Should go to briefing with sliders visible
+    await expect(page.locator('#view-briefing')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#briefing-slider-form')).toBeVisible();
+    await expect(page.locator('#sl-ambition')).toBeVisible();
   });
 
   test('clicking a celebrity preset goes to briefing', async ({ page }) => {
@@ -52,7 +58,7 @@ test.describe('NegotiateAI — Full Flow', () => {
     await expect(objective).not.toHaveValue('');
   });
 
-  test('briefing → session → turn → round score', async ({ page }) => {
+  test('briefing → sliders → session → turn → round score', async ({ page }) => {
     await page.goto('/');
     await page.click('[data-view="setup"]');
     await expect(page.locator('.preset-card').first()).toBeVisible({ timeout: 5000 });
@@ -62,8 +68,8 @@ test.describe('NegotiateAI — Full Flow', () => {
     await card.click();
     await expect(page.locator('#view-briefing')).toBeVisible({ timeout: 10000 });
 
-    // Accept the briefing (objectives pre-filled)
-    await page.click('#briefing-form button[type="submit"]');
+    // Use slider mode (default) — just click Play
+    await page.click('#briefing-slider-form button[type="submit"]');
 
     // Should navigate to negotiation
     await expect(page.locator('#view-negotiate')).toBeVisible({ timeout: 15000 });
