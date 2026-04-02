@@ -1183,6 +1183,14 @@ async function loadReplay(sessionId) {
 // QUIT button
 // ============================================================
 
+// Strategic silence — sends "..." as the player's message
+document.getElementById('btn-silence')?.addEventListener('click', () => {
+  if (!currentSessionId) return;
+  const input = document.getElementById('msg-input');
+  input.value = '...';
+  document.getElementById('turn-form').dispatchEvent(new Event('submit'));
+});
+
 document.getElementById('btn-quit').addEventListener('click', () => {
   if (currentSessionId && confirm('Quitter la session en cours ?')) {
     addMessage('system', 'Session abandonnée.');

@@ -57,12 +57,22 @@ export const FRAMEWORKS = {
   },
   schelling: {
     id: 'schelling',
-    name: 'Theorie des jeux (Schelling)',
+    name: 'Théorie des jeux (Schelling)',
     source: 'The Strategy of Conflict, 1960',
     principles: [
-      { id: 'focal_point', name: 'Point focal', description: 'Certaines solutions sont "naturelles" — chiffres ronds, precedents, conventions. Les exploiter accelere l\'accord.' },
-      { id: 'credible_commitment', name: 'Engagement credible', description: 'Bruler ses propres vaisseaux rend la menace credible. Mais attention : si le bluff est decouvert, tout s\'effondre.' },
-      { id: 'information_asymmetry', name: 'Asymetrie d\'information', description: 'Celui qui sait ce que l\'autre ne sait pas a le pouvoir. La decouverte d\'information est le vrai jeu.' },
+      { id: 'focal_point', name: 'Point focal', description: 'Certaines solutions sont "naturelles" — chiffres ronds, précédents, conventions. Les exploiter accélère l\'accord.' },
+      { id: 'credible_commitment', name: 'Engagement crédible', description: 'Brûler ses propres vaisseaux rend la menace crédible. Mais attention : si le bluff est découvert, tout s\'effondre.' },
+      { id: 'information_asymmetry', name: 'Asymétrie d\'information', description: 'Celui qui sait ce que l\'autre ne sait pas a le pouvoir. La découverte d\'information est le vrai jeu.' },
+    ],
+  },
+  shapiro: {
+    id: 'shapiro',
+    name: 'Négociation identitaire (Shapiro)',
+    source: 'Negotiating the Nonnegotiable, 2016',
+    principles: [
+      { id: 'identity_threat', name: 'Menace identitaire', description: 'Quand l\'identité est menacée ("je ne suis pas le genre de personne qui..."), la logique s\'effondre. La honte pousse à la capitulation ou à l\'escalade — jamais à la rationalité.' },
+      { id: 'tribes_effect', name: 'Effet tribal', description: 'Nous classons inconsciemment l\'autre en "nous" ou "eux". Créer du "nous" (intérêts communs, vécu partagé) transforme la dynamique.' },
+      { id: 'sacred_values', name: 'Valeurs sacrées', description: 'Certains enjeux ne sont PAS négociables — honneur, justice, loyauté. Les traiter comme du marchandage est une insulte qui détruit la relation.' },
     ],
   },
 };
@@ -178,6 +188,53 @@ export function analyzeWithTheory(session, feedback) {
     });
   }
 
+  // Shame/identity detection (Shapiro, "Negotiating the Nonnegotiable")
+  const frustration = session?.frustration ?? session?._world?.emotions?.frustration ?? 30;
+  const shame = session?._world?.emotions?.shame ?? 30;
+  const belonging = session?._world?.emotions?.belonging ?? 50;
+  const hasEarlyCapitulation = userConcessions.length > 0 && transcript.length <= 4;
+
+  if (hasEarlyCapitulation && shame > 40) {
+    insights.push({
+      framework: 'shapiro',
+      principle: 'identity_threat',
+      observation: 'Tu as cédé très tôt — possiblement par peur de paraître déraisonnable (honte anticipée).',
+      recommendation: 'Ce n\'est pas de la faiblesse stratégique, c\'est la honte qui parle. Rappelle-toi : défendre tes intérêts N\'EST PAS être déraisonnable.',
+      severity: 'high',
+    });
+  }
+
+  // Logrolling detection
+  const hasLogrolling = userMessages.some((m) => /si.*en (é|e)change|en contrepartie|à condition que|package|accord global|si vous.*je peux/i.test(m));
+  if (hasLogrolling) {
+    insights.push({
+      framework: 'harvard',
+      principle: 'generate_options',
+      observation: 'Tu as proposé un échange multi-thèmes (logrolling) — c\'est la technique la plus puissante pour créer de la valeur.',
+      recommendation: 'Continue à élargir le gâteau. Chaque concession devrait ouvrir une contrepartie sur un autre axe.',
+      severity: 'positive',
+    });
+  } else if (userConcessions.length >= 2 && !hasLogrolling) {
+    insights.push({
+      framework: 'harvard',
+      principle: 'generate_options',
+      observation: 'Tu as fait plusieurs concessions sans les conditionner à des contreparties.',
+      recommendation: 'Essaie le logrolling : "Je peux bouger sur X si vous bougez sur Y." Ne cède jamais gratuitement.',
+      severity: 'medium',
+    });
+  }
+
+  // Belonging/rapport
+  if (belonging < 30 && transcript.length > 4) {
+    insights.push({
+      framework: 'voss',
+      principle: 'labeling',
+      observation: 'La relation s\'est dégradée — le rapport est faible. L\'adversaire se ferme.',
+      recommendation: 'Restaure le lien : label une émotion ("On dirait que c\'est frustrant pour vous aussi"), montre que tu comprends sa position AVANT de pousser la tienne.',
+      severity: 'medium',
+    });
+  }
+
   // Sort: positive first for encouragement, then high severity
   insights.sort((a, b) => {
     if (a.severity === 'positive' && b.severity !== 'positive') return -1;
@@ -217,6 +274,10 @@ const BIAS_TO_THEORY = {
   sunk_cost: {
     framework: 'kahneman', principle: 'sunk_cost',
     antidote: 'Le temps investi ne justifie pas de continuer. Seul le futur compte. Ta BATNA est-elle meilleure que ce deal ?',
+  },
+  premature_concession: {
+    framework: 'shapiro', principle: 'identity_threat',
+    antidote: 'Tu as cédé sans contrepartie — souvent par peur de paraître déraisonnable. Défendre tes intérêts n\'est PAS agressif. C\'est respectueux envers toi-même.',
   },
 };
 

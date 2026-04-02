@@ -36,6 +36,9 @@ export function deriveEmotions(pad) {
     fear:         clamp(Math.round(30 - p * 0.25 - d * 0.25 + a * 0.20), 0, 100),
     contempt:     clamp(Math.round(20 + d * 0.30 - p * 0.20), 0, 100),
     openness:     clamp(Math.round(50 + p * 0.30 - a * 0.15 + d * 0.05), 0, 100),
+    // Deep emotions (added for negotiation worldview completeness)
+    shame:        clamp(Math.round(30 - p * 0.25 - d * 0.35 + a * 0.10), 0, 100),   // high when low pleasure + low dominance → capitulation driver
+    belonging:    clamp(Math.round(50 + p * 0.30 + d * 0.10 - a * 0.20), 0, 100),   // desire for connection, drops under aggression
   };
 }
 
@@ -61,6 +64,10 @@ const STIMULUS_IMPACTS = {
   user_blocking:        { pleasure: -8, arousal: 10, dominance: 3 },
   user_accept:          { pleasure: 15, arousal: -10, dominance: 5 },
   user_reject:          { pleasure: -12, arousal: 12, dominance: -5 },
+  user_strategic_silence: { pleasure: -5, arousal: 12, dominance: -8 },  // powerful — forces adversary to fill void
+  user_logroll:         { pleasure: 8, arousal: -3, dominance: -5 },     // creative package deal — opens space
+  user_identity_appeal: { pleasure: 10, arousal: -5, dominance: -3 },    // "you're someone who values fairness"
+  user_shame_trigger:   { pleasure: -15, arousal: 18, dominance: 8 },    // guilt trip — high risk, high reward
 
   // Adversary self-generated (for events)
   adversary_concession: { pleasure: -5, arousal: 5, dominance: -8 },
@@ -287,13 +294,16 @@ export function worldStateToPrompt(worldState) {
   if (e.openness > 60) emoDesc.push('open to finding a solution');
   else if (e.openness < 30) emoDesc.push('closed off and defensive');
   if (e.egoThreat > 50) emoDesc.push('ego is threatened');
+  if (e.shame > 50) emoDesc.push('feeling ashamed — may capitulate to save face');
+  if (e.belonging < 30) emoDesc.push('feeling disconnected — relationship is strained');
+  else if (e.belonging > 70) emoDesc.push('feeling connected — rapport is strong');
 
   const emotionalSummary = emoDesc.length > 0 ? emoDesc.join(', ') : 'emotionally neutral';
 
   return `WORLD STATE (computed — do NOT override these values):
 Emotional state: ${emotionalSummary}
 Confidence: ${e.confidence}/100 | Frustration: ${e.frustration}/100 | Fear: ${e.fear}/100
-Openness: ${e.openness}/100 | Ego threat: ${e.egoThreat}/100
+Openness: ${e.openness}/100 | Ego threat: ${e.egoThreat}/100 | Shame: ${e.shame}/100 | Belonging: ${e.belonging}/100
 Leverage balance: ${n.leverageBalance} (${n.leverageBalance > 0 ? 'user has leverage' : n.leverageBalance < 0 ? 'you have leverage' : 'balanced'})
 Momentum: ${n.momentum} (${trend})
 User concession rate: ${n.userConcessionRate.toFixed(1)} | Your concession rate: ${n.adversaryConcessionRate.toFixed(1)}

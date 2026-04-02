@@ -247,6 +247,43 @@ export const USER_PATTERNS = {
     /another way to see this/,
     /on the other hand/,
   ],
+  logrolling: [
+    // FR — proposer un échange multi-thèmes
+    /si.*en echange/,
+    /si.*en contrepartie/,
+    /je.*si vous/,
+    /on pourrait.*et en meme temps/,
+    /je suis pret a.*si/,
+    /je peux.*a condition que/,
+    /en echange de/,
+    /je cede.*si/,
+    /package/i,
+    /accord global/,
+    // EN
+    /if.*in exchange/,
+    /i could.*if you/,
+    /what if we.*and/,
+    /i'm willing to.*if/,
+    /trade.*for/,
+    /package deal/,
+    /bundle/,
+  ],
+  identityAppeal: [
+    // FR — appel à l'identité de l'autre
+    /vous etes quelqu'un qui/,
+    /je sais que vous valorisez/,
+    /votre reputation/,
+    /en tant que professionnel/,
+    /quelqu'un de votre calibre/,
+    /vous avez toujours ete/,
+    /c'est pas votre genre de/,
+    // EN
+    /you're someone who/,
+    /i know you value/,
+    /your reputation/,
+    /someone of your caliber/,
+    /you've always been/,
+  ],
 };
 
 // ---------------------------------------------------------------------------
