@@ -352,6 +352,15 @@ describe('web-app', () => {
     assert.equal(detail.body.category, 'swiss');
     assert.equal(detail.body.scenarioFile, 'swiss-property-purchase');
     assert.equal(detail.body.name.length > 0, true);
+    assert.equal(detail.body.metadata.id, 'swiss-property-purchase');
+    assert.equal(detail.body.brief.objective.length > 0, true);
+    assert.equal(detail.body.adversary.identity.length > 0, true);
+    assert.equal(detail.body.tier, 'neutral');
+
+    const hostileDetail = await request('/api/scenarios/swiss-property-purchase?tier=hostile');
+    assert.equal(hostileDetail.response.status, 200);
+    assert.equal(hostileDetail.body.tier, 'hostile');
+    assert.equal(hostileDetail.body.brief.difficulty, 'hostile');
 
     const missing = await request('/api/scenarios/unknown-scenario');
     assert.equal(missing.response.status, 404);

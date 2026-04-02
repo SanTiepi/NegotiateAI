@@ -233,6 +233,22 @@ async function findScenarioPresetById(scenarioId) {
   return presets.find((preset) => preset.id === scenarioId) || null;
 }
 
+async function buildScenarioDetailById(scenarioId, tier = 'neutral') {
+  const preset = await findScenarioPresetById(scenarioId);
+  if (!preset) return null;
+
+  if (!preset.scenarioFile) return preset;
+
+  const scenario = await loadScenario(preset.scenarioFile, tier);
+  return {
+    ...preset,
+    tier,
+    metadata: scenario.metadata,
+    brief: buildBrief(scenario.brief),
+    adversary: scenario.adversary,
+  };
+}
+
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -398,12 +414,13 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       const scenarioDetailMatch = req.method === 'GET' && url.pathname.match(/^\/api\/scenarios\/([^/]+)$/);
       if (scenarioDetailMatch) {
         const scenarioId = decodeURIComponent(scenarioDetailMatch[1]);
-        const preset = await findScenarioPresetById(scenarioId);
-        if (!preset) {
+        const tier = url.searchParams.get('tier') || 'neutral';
+        const detail = await buildScenarioDetailById(scenarioId, tier);
+        if (!detail) {
           json(res, 404, { error: 'Scenario not found' });
           return;
         }
-        json(res, 200, preset);
+        json(res, 200, detail);
         return;
       }
 

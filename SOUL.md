@@ -55,6 +55,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Mode versus: garder l'arbitrage pur et testable (2 humains in, verdict structure out), avec fallback deterministic si le provider echoue
 - Scenarios immobiliers suisses web: exposer les presets via /api/scenarios avec `scenarioFile` + metadata de rendu, puis laisser le frontend lancer le briefing/flow sans dupliquer le contenu scenario cote navigateur
 - Scenario detail API web: /api/scenarios/:id doit rester une simple projection du catalogue packagé (preset inline ou scenarioFile), avec 404 propre si l'id n'existe pas
+- Scenario detail API web: pour les presets `scenarioFile`, supporter `?tier=` et projeter aussi `metadata` + `brief` normalisé + `adversary` sans logique produit dupliquée côté HTTP
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
 - Progressive UI web: garder l unlock cote API opt-in (`uiProgressive`) pour ne pas casser les clients existants qui attendent le payload complet
@@ -78,6 +79,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Frontend Versus Lab: formulaire statique dans web/, reponse texte mince branchee directement sur le verdict structure du module pur
 - Presets web packagés: /api/scenarios peut agreger des presets inline et des scenarios fichiers (ex: swiss-*) ; le frontend groupe par categorie et se contente d'appeler `launchScenario(scenarioFile)` ou `fillForm(brief)`
 - Detail scenario web: /api/scenarios/:id reutilise la meme source de verite que /api/scenarios pour les integrateurs/outils, sans recharger une logique produit parallele
+- Detail scenario web: si un integrateur demande un `tier`, la projection detaillee doit refléter la difficulté packagée réellement chargée, pas une surcouche frontend
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars et validation explicite des tiers autorises
 - Bot Telegram academy: brancher /weekly, /leaderboard, /halloffame et /drills sur leaderboard.mjs + hall-of-fame.mjs + drill.mjs + biasTracker.mjs + store.mjs, sans logique de classement/anonymisation/repetition espacee dupliquee dans le bot, et faire remonter /drills dans /help pour garder les commandes discoverables
