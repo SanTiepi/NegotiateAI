@@ -695,6 +695,69 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('exposes a player dashboard snapshot endpoint', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await store.saveSession({
+      id: 'player-card-1',
+      date: '2026-04-03T09:00:00.000Z',
+      brief: {
+        situation: 'Achat immeuble',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeur',
+        objective: 'Acheter a 1.2M',
+        minimalThreshold: '1.3M max',
+        batna: 'Autre dossier off-market',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'Vendeur', style: 'Dur' },
+      transcript: [],
+      status: 'accepted',
+      turns: 4,
+      mode: 'telegram',
+      scenarioId: 'swiss-property-purchase',
+      feedback: {
+        globalScore: 89,
+        scores: {
+          outcomeLeverage: 22,
+          batnaDiscipline: 18,
+          emotionalRegulation: 21,
+          biasResistance: 15,
+          conversationalFlow: 13,
+        },
+        biasesDetected: [],
+        tacticsUsed: [],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+    });
+
+    await store.saveProgression({
+      belts: { white: { earned: true } },
+      biasProfile: { anchoring: { totalCount: 3, frequency: 0.66 } },
+      totalSessions: 1,
+      currentStreak: 1,
+      lastSessionDate: '2026-04-03',
+      weakDimensions: ['biasResistance'],
+    });
+
+    const snapshot = await request('/api/dashboard/player?playerId=robin&mode=telegram');
+    assert.equal(snapshot.response.status, 200);
+    assert.equal(snapshot.body.playerId, 'robin');
+    assert.equal(snapshot.body.stats.totalSessions, 1);
+    assert.equal(snapshot.body.card.totalSessions, 1);
+    assert.equal(snapshot.body.filters.mode, 'telegram');
+    assert.equal(snapshot.body.recommendedDrillId, 'reframe');
+    assert.equal(snapshot.body.biasRecommendation.biasType, 'anchoring');
+    assert.ok(Array.isArray(snapshot.body.beltDefinitions));
+    assert.ok(Array.isArray(snapshot.body.uiLayerDefinitions));
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('dashboard supports filtering by mode, difficulty, and scenario', async () => {
     await store.saveSession({
       id: 'dash-filter-web-1',

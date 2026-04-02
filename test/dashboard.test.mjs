@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeDashboardStats } from '../src/dashboard.mjs';
+import { computeDashboardStats, buildPlayerDashboard } from '../src/dashboard.mjs';
 
 describe('dashboard stats', () => {
   it('computes average score, streak and progression delta', () => {
@@ -89,5 +89,45 @@ describe('dashboard stats', () => {
       dimension: 'batnaDiscipline',
       threshold: 14,
     });
+  });
+
+  it('builds a reusable player dashboard snapshot', () => {
+    const sessions = [
+      {
+        id: 's1',
+        mode: 'telegram',
+        date: '2026-04-03T10:00:00.000Z',
+        brief: { difficulty: 'neutral' },
+        feedback: {
+          globalScore: 88,
+          scores: {
+            outcomeLeverage: 21,
+            batnaDiscipline: 17,
+            emotionalRegulation: 22,
+            biasResistance: 14,
+            conversationalFlow: 14,
+          },
+        },
+      },
+    ];
+
+    const snapshot = buildPlayerDashboard(sessions, {
+      currentStreak: 3,
+      belts: { white: { earned: true } },
+      biasProfile: { anchoring: { totalCount: 4, frequency: 0.5 } },
+      weakDimensions: ['biasResistance'],
+    }, {
+      playerId: 'telegram:42',
+      generatedAt: '2026-04-03T10:10:00.000Z',
+    });
+
+    assert.equal(snapshot.playerId, 'telegram:42');
+    assert.equal(snapshot.generatedAt, '2026-04-03T10:10:00.000Z');
+    assert.equal(snapshot.stats.totalSessions, 1);
+    assert.equal(snapshot.card.totalSessions, 1);
+    assert.equal(snapshot.autonomy.key.length > 0, true);
+    assert.equal(snapshot.recommendedDrillId, 'reframe');
+    assert.equal(snapshot.biasRecommendation.biasType, 'anchoring');
+    assert.match(snapshot.shareable, /profil NegotiateAI/i);
   });
 });

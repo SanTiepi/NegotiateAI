@@ -1,6 +1,10 @@
 // dashboard.mjs — Pure scoring dashboard helpers reusable across store/web/CLI
 
 import { BELT_DEFINITIONS } from './belt.mjs';
+import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
+import { recommendBiasTraining } from './biasTracker.mjs';
+import { recommendDrill } from './drill.mjs';
+import { generateVaccinationCard, formatShareableCard } from './vaccination.mjs';
 
 const DASHBOARD_DIMENSIONS = [
   'outcomeLeverage',
@@ -119,5 +123,33 @@ export function computeDashboardStats(sessions = [], progression = {}) {
     dimensionAverages,
     bestDimension,
     weakestDimension,
+  };
+}
+
+export function buildPlayerDashboard(sessions = [], progression = {}, options = {}) {
+  const stats = computeDashboardStats(sessions, progression);
+  const card = generateVaccinationCard(progression, sessions);
+  const earnedCount = Object.values(progression.belts || {}).filter((belt) => belt?.earned).length;
+  const autonomy = evaluateAutonomyLevel({
+    totalSessions: stats.totalSessions,
+    avgScore: stats.averageScore,
+    earnedBelts: earnedCount,
+  });
+
+  return {
+    playerId: options.playerId || null,
+    generatedAt: options.generatedAt || new Date().toISOString(),
+    stats,
+    card,
+    shareable: formatShareableCard(card),
+    autonomy: {
+      level: autonomy.level,
+      label: autonomy.label,
+      key: autonomy.key,
+      gap: describeAutonomyGap(autonomy),
+      next: autonomy.next,
+    },
+    biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
+    recommendedDrillId: recommendDrill(progression),
   };
 }

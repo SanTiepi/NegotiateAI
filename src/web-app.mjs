@@ -9,7 +9,7 @@ import { createSession, processTurn } from './engine.mjs';
 import { analyzeFeedback } from './analyzer.mjs';
 import { createAnthropicProvider } from './provider.mjs';
 import { createStore, randomUUID } from './store.mjs';
-import { computeDashboardStats } from './dashboard.mjs';
+import { computeDashboardStats, buildPlayerDashboard } from './dashboard.mjs';
 import { refreshProgression } from './progression.mjs';
 import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
@@ -19,7 +19,6 @@ import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
 import { generateReplay } from './replay.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
-import { generateVaccinationCard, formatShareableCard } from './vaccination.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { generateBriefing, buildObjectiveContract, buildContractFromSliders } from './briefing.mjs';
 import { scoreRound, buildFightCard } from './fight-card.mjs';
@@ -424,6 +423,30 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      if (req.method === 'GET' && url.pathname === '/api/dashboard/player') {
+        const filters = {
+          mode: url.searchParams.get('mode') || null,
+          difficulty: url.searchParams.get('difficulty') || null,
+          scenarioId: url.searchParams.get('scenarioId') || null,
+        };
+        const hasFilters = Object.values(filters).some(Boolean);
+        const [sessions, progression] = await Promise.all([
+          store.loadSessions(),
+          store.loadProgression(),
+        ]);
+        const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
+        json(res, 200, {
+          ...buildPlayerDashboard(scopedSessions, progression, {
+            playerId: url.searchParams.get('playerId') || 'local-player',
+          }),
+          filters: hasFilters ? filters : null,
+          uiLayer: computeUILayer(scopedSessions.length || progression.totalSessions || 0),
+          uiLayerDefinitions: getLayerDefinitions(),
+          beltDefinitions: BELT_DEFINITIONS.map((d) => ({ color: d.color, name: d.name, dimension: d.dimension, description: d.description })),
+        });
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/dashboard') {
         const filters = {
           mode: url.searchParams.get('mode') || null,
@@ -469,13 +492,16 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           store.loadSessions(),
           store.loadProgression(),
         ]);
-        const card = generateVaccinationCard(progression, sessions);
+        const playerDashboard = buildPlayerDashboard(sessions, progression, {
+          playerId: url.searchParams.get('playerId') || 'local-player',
+        });
         const uiLayer = computeUILayer(sessions.length || progression.totalSessions || 0);
         json(res, 200, {
-          card,
-          shareable: formatShareableCard(card),
-          biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
-          recommendedDrillId: recommendDrill(progression),
+          card: playerDashboard.card,
+          shareable: playerDashboard.shareable,
+          autonomy: playerDashboard.autonomy,
+          biasRecommendation: playerDashboard.biasRecommendation,
+          recommendedDrillId: playerDashboard.recommendedDrillId,
           uiLayer,
           uiLayerDefinitions: getLayerDefinitions(),
         });

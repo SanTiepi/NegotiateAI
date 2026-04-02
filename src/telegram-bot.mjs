@@ -5,13 +5,12 @@ import { analyzeFeedback } from './analyzer.mjs';
 import { generateDaily, dailyAlreadyPlayed } from './daily.mjs';
 import { recommendDrill } from './drill.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
-import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { formatHallOfFameStories } from './hall-of-fame.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
 import { simulateBeforeSendBatch } from './simulate.mjs';
 import { buildFightCard } from './fight-card.mjs';
-import { computeDashboardStats } from './dashboard.mjs';
+import { computeDashboardStats, buildPlayerDashboard } from './dashboard.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -195,17 +194,19 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       return sendMessage(chatId, 'Profil indisponible: aucun store persistant n’est configuré.');
     }
     const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
-    const card = generateVaccinationCard(progression, sessions.filter((session) => session.mode === 'telegram'));
+    const telegramSessions = sessions.filter((session) => session.mode === 'telegram');
+    const playerDashboard = buildPlayerDashboard(telegramSessions, progression, { playerId: `telegram:${chatId}` });
+    const { card } = playerDashboard;
     const lines = [
       'Profil NegotiateAI Telegram',
       `Sessions: ${card.totalSessions}`,
       `Niveau: ${card.negotiatorLevel}`,
       `Ceinture: ${card.belt}`,
-      `Autonomie: ${card.autonomy.label}`,
+      `Autonomie: ${playerDashboard.autonomy.label}`,
       `Forces: ${card.strengths.join(', ')}`,
       `Faiblesses: ${card.weaknesses.join(', ')}`,
       '',
-      formatShareableCard(card),
+      playerDashboard.shareable,
     ];
     return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
