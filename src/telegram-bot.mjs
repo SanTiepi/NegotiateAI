@@ -11,6 +11,7 @@ import { formatHallOfFameStories } from './hall-of-fame.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
 import { simulateBeforeSendBatch } from './simulate.mjs';
 import { buildFightCard } from './fight-card.mjs';
+import { computeDashboardStats } from './dashboard.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -209,6 +210,37 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
+  async function sendDashboard(chatId) {
+    if (!store) {
+      return sendMessage(chatId, 'Dashboard indisponible: aucun store persistant n’est configuré.');
+    }
+
+    const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
+    const telegramSessions = sessions.filter((session) => (session.mode || 'cli') === 'telegram');
+    const stats = computeDashboardStats(telegramSessions, progression);
+    const bestDimensionLabel = stats.bestDimension?.dimension
+      ? stats.bestDimension.dimension
+      : '—';
+    const weakDimensionLabel = stats.weakestDimension?.dimension
+      ? stats.weakestDimension.dimension
+      : '—';
+    const topMode = stats.modeBreakdown[0]?.mode || 'telegram';
+    const topDifficulty = stats.difficultyBreakdown[0]?.difficulty || 'neutral';
+
+    const lines = [
+      'Dashboard NegotiateAI Telegram',
+      `Sessions: ${stats.totalSessions} · Score moyen: ${stats.averageScore}/100`,
+      `Dernier score: ${stats.latestScore}/100 · Streak: ${stats.currentStreak}`,
+      `Tendance: ${stats.scoreTrend} (${stats.progressionDelta >= 0 ? '+' : ''}${stats.progressionDelta})`,
+      `Point fort: ${bestDimensionLabel}`,
+      `À muscler: ${weakDimensionLabel}`,
+      `Mode dominant: ${topMode} · Difficulté dominante: ${topDifficulty}`,
+      stats.weakDimensions?.length ? `Focus action: ${stats.weakDimensions.join(', ')}` : null,
+    ].filter(Boolean);
+
+    return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
+  }
+
   async function sendDrills(chatId) {
     if (!store) {
       return sendMessage(chatId, 'Drills indisponibles: aucun store persistant n’est configuré.');
@@ -338,7 +370,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /sim variante 1 | variante 2 pour tester plusieurs formulations, /profile pour voir tes stats, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /sim variante 1 | variante 2 pour tester plusieurs formulations, /profile pour voir ton profil, /dashboard pour le résumé scoring, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
       return { ok: true, command: 'start' };
     }
 
@@ -350,6 +382,11 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/profile') {
       await sendProfile(chatId);
       return { ok: true, command: 'profile' };
+    }
+
+    if (text === '/dashboard') {
+      await sendDashboard(chatId);
+      return { ok: true, command: 'dashboard' };
     }
 
     if (text === '/drills') {

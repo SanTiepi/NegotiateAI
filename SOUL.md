@@ -33,7 +33,9 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Les sessions Telegram persistées doivent conserver assez de métadonnées (`scenarioId`, `fightCard`, analytics, mode) pour alimenter dashboard, leaderboard et exports sans traitement spécial aval
 - Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
 - Les filtres d'analytics web (`mode`, `difficulty`, `scenarioId`, `type`) doivent dégrader proprement vers des stats vides sans casser l'autonomie, l'UI layer, ni les résumés agrégés
+- Les endpoints de scénarios packagés (`/api/scenarios`, `/api/scenarios/:id`) doivent renvoyer des métadonnées stables (`category`, `scenarioFile`, `tier`, `metadata`) pour garder web + Telegram alignés
 - Simulate Before Send v2 reste borné à 5 variantes par batch sur tous les canaux (CLI, web, Telegram) avec un résumé compact orienté décision
+- Les réponses Telegram d'académie / profil / dashboard doivent rester compactes et orientées action ; privilégier les agrégats pré-calculés (`computeDashboardStats`, carte profil) plutôt que reconstruire des vues ad hoc côté bot
 
 ## Patterns
 
@@ -44,7 +46,9 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Dashboard scoring : exposer des agrégats purs dans `src/dashboard.mjs`, puis les brancher dans l'API web
 - Dashboard API : préférer des filtres query string côté route (`/api/dashboard?mode=...&difficulty=...&scenarioId=...`) plutôt que dupliquer la logique d'agrégation
 - Analytics API web : exposer une vue brute filtrable (`/api/analytics`) et une vue agrégée déterministe (`/api/analytics/summary`) avec les mêmes query filters
+- Scénarios packagés : centraliser le chargement/normalisation dans une seule source pour réutilisation CLI + web + Telegram, avec dérivation légère des tiers en bordure d'API
 - Telegram : toute feature d'analyse doit produire un résumé compact orienté décision (meilleure option + score + rewrite)
+- Telegram dashboard : réutiliser `computeDashboardStats` côté bot pour garder le scoring aligné avec le web sans divergence de format métier
 - Télégramme/persistance : enrichir la sauvegarde au moment de la fin de session (pas via migration a posteriori) pour garder les vues web et bot alignées
 - Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
 
