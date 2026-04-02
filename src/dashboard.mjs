@@ -1,5 +1,7 @@
 // dashboard.mjs — Pure scoring dashboard helpers reusable across store/web/CLI
 
+import { BELT_DEFINITIONS } from './belt.mjs';
+
 const DASHBOARD_DIMENSIONS = [
   'outcomeLeverage',
   'batnaDiscipline',
@@ -7,6 +9,31 @@ const DASHBOARD_DIMENSIONS = [
   'biasResistance',
   'conversationalFlow',
 ];
+
+function classifyScoreTrend(delta) {
+  if (delta >= 8) return 'improving';
+  if (delta <= -8) return 'declining';
+  return 'stable';
+}
+
+function buildBeltProgress(belts = {}) {
+  return BELT_DEFINITIONS.map((definition) => {
+    const status = belts[definition.color] || {};
+    const qualifyingSessions = Number(status.qualifyingSessions || 0);
+    return {
+      color: definition.color,
+      name: definition.name,
+      earned: Boolean(status.earned),
+      qualifyingSessions,
+      requiredSessions: definition.requiredSessions,
+      remainingSessions: Math.max(0, definition.requiredSessions - qualifyingSessions),
+      requiredDifficulty: definition.requiredDifficulty,
+      requiresEvents: definition.requiresEvents,
+      dimension: definition.dimension,
+      threshold: definition.threshold,
+    };
+  });
+}
 
 export function computeDashboardStats(sessions = [], progression = {}) {
   const recentSessions = sessions.slice(0, 10);
@@ -73,13 +100,17 @@ export function computeDashboardStats(sessions = [], progression = {}) {
     .map(([difficulty, count]) => ({ difficulty, count }))
     .sort((a, b) => b.count - a.count || a.difficulty.localeCompare(b.difficulty));
 
+  const progressionDelta = latest ? latestScore - earliestScore : 0;
+
   return {
     totalSessions: sessions.length,
     currentStreak: progression.currentStreak || 0,
     averageScore,
     latestScore,
-    progressionDelta: latest ? latestScore - earliestScore : 0,
+    progressionDelta,
+    scoreTrend: classifyScoreTrend(progressionDelta),
     belts: progression.belts || {},
+    beltProgress: buildBeltProgress(progression.belts || {}),
     weakDimensions: progression.weakDimensions || [],
     recentSessionIds: recentSessions.map((session) => session.id),
     scoreHistory,

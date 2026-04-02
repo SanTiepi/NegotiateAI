@@ -76,5 +76,18 @@ describe('dashboard stats', () => {
     assert.equal(stats.bestDimension.dimension, 'emotionalRegulation');
     assert.equal(stats.weakestDimension.dimension, 'biasResistance');
     assert.equal(stats.dimensionAverages.find((entry) => entry.dimension === 'outcomeLeverage')?.average, 17);
+    assert.equal(stats.scoreTrend, 'improving');
+    assert.deepEqual(stats.beltProgress.find((belt) => belt.color === 'white'), {
+      color: 'white',
+      name: 'Ceinture Blanche — BATNA',
+      earned: true,
+      qualifyingSessions: 0,
+      requiredSessions: 3,
+      remainingSessions: 3,
+      requiredDifficulty: 'cooperative',
+      requiresEvents: false,
+      dimension: 'batnaDiscipline',
+      threshold: 14,
+    });
   });
 });

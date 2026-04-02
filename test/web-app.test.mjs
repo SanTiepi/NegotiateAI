@@ -738,6 +738,9 @@ describe('web-app', () => {
     ]);
     assert.equal(body.bestDimension.dimension, 'emotionalRegulation');
     assert.equal(body.weakestDimension.dimension, 'biasResistance');
+    assert.equal(body.scoreTrend, 'stable');
+    assert.ok(Array.isArray(body.beltProgress));
+    assert.equal(body.beltProgress.find((belt) => belt.color === 'yellow')?.requiredDifficulty, 'neutral');
     assert.equal(body.scoreHistory.length, 2);
     assert.equal(body.scoreHistory[0].id, 'dash-web-1');
     assert.equal(body.scoreHistory[1].id, 'dash-telegram-1');

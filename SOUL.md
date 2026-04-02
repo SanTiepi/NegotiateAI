@@ -30,6 +30,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - `npm test` avec `--test-isolation=none` sur Windows
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe à la priorité suivante.
 - Rapports Telegram : maximum 1500 caractères
+- Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
 
 ## Patterns
 
@@ -37,6 +38,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Test : `test/[module].test.mjs` avec node:test + mock provider
 - Scénario : `buildBrief(rawInput)` → Brief valide
 - Serveur HTTP : `node:http` natif, pas Express
+- Dashboard scoring : exposer des agrégats purs dans `src/dashboard.mjs`, puis les brancher dans l'API web
 
 ## Règle critique
 
