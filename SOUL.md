@@ -43,6 +43,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
 - Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id, /api/sessions/:id/replay), sans recalcul produit cote navigateur
+- Academy web actions: jouer le daily ou le scenario of the week via briefing/session existants, et exporter le hall of fame via /api/hall-of-fame/export sans logique metier dupliquee dans le frontend
 - Drills web/Telegram: reutiliser la meme source de verite de progression (weakDimensions + biasProfile.nextDrillDate) pour les recommandations et la repetition espacee, sans scheduler parallele cote UI/bot
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
@@ -83,6 +84,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - CLI versus: `src/cli/versus-cli.mjs` doit rester un adaptateur fin de `adjudicateVersusRound(...)` avec `--brief`, `--message-a`, `--message-b`, option transcript JSON, et rendu terminal sans recalcul du verdict
 - Dashboard web: renderer des listes/chips purement presentationnelles a partir des payloads API (pas de recalcul de stats cote frontend)
 - Academy web: agreger profil/daily/drills/hall-of-fame/leaderboard en presentation only; la logique de recommandation reste dans les modules purs exposes par l'API
+- Academy web actions: les boutons de launch/export restent des adaptateurs UX (cache local leger + appels API existants), jamais une seconde implementation des flows produit
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
 - Replay web: declencher le chargement du replay a la demande depuis l'historique, via endpoint read-only, et afficher les annotations sans dupliquer la logique replay.mjs
 - Session detail API: garder /api/sessions/:id comme simple projection du store persiste (fightCard, objectiveContract, roundScores, worldState, transcript) sans recalculer les scores cote HTTP

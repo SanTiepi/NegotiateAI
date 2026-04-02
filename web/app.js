@@ -118,6 +118,8 @@ function renderMetricList(elementId, entries, labelKey, valueFormatter) {
 // ============================================================
 
 let academyLoaded = false;
+let academyDaily = null;
+let academyWeekly = null;
 
 function renderAcademyPlaceholder(elementId, text) {
   const root = document.getElementById(elementId);
@@ -138,6 +140,8 @@ async function loadAcademy(force = false) {
       api('/api/scenario-of-week'),
       api('/api/hall-of-fame?limit=3'),
     ]);
+
+    academyWeekly = weekly || null;
 
     const profileEl = document.getElementById('academy-profile');
     const card = profile.card || {};
@@ -249,6 +253,7 @@ async function loadDailyCard() {
   root.innerHTML = '<p class="text-muted">Chargement du daily…</p>';
   try {
     const daily = await api('/api/daily');
+    academyDaily = daily;
     root.innerHTML = `
       <div class="academy-item recommended">
         <div class="academy-item-head">
@@ -263,6 +268,7 @@ async function loadDailyCard() {
       </div>
     `;
   } catch (err) {
+    academyDaily = null;
     console.error('Daily load error:', err);
     root.innerHTML = '<p class="text-muted">Impossible de generer le daily.</p>';
   }
@@ -1148,12 +1154,52 @@ document.getElementById('btn-quit').addEventListener('click', () => {
 
 document.getElementById('academy-refresh')?.addEventListener('click', () => {
   academyLoaded = false;
+  academyWeekly = null;
   loadAcademy(true);
   loadDailyCard();
 });
 
 document.getElementById('academy-load-daily')?.addEventListener('click', () => {
   loadDailyCard();
+});
+
+document.getElementById('academy-play-daily')?.addEventListener('click', async () => {
+  try {
+    const daily = academyDaily || await api('/api/daily');
+    academyDaily = daily;
+    pendingScenarioFile = null;
+    pendingBrief = daily.brief;
+    const briefing = await post('/api/briefing', { brief: daily.brief });
+    showBriefing(briefing);
+  } catch (err) {
+    alert('Erreur: ' + err.message);
+  }
+});
+
+document.getElementById('academy-play-weekly')?.addEventListener('click', () => {
+  if (!academyWeekly?.id) {
+    alert('Scenario of the week indisponible pour le moment.');
+    return;
+  }
+  launchScenario(academyWeekly.id);
+});
+
+document.getElementById('academy-export-hall')?.addEventListener('click', async () => {
+  try {
+    const response = await fetch('/api/hall-of-fame/export?limit=5');
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const text = await response.text();
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'negotiateai-hall-of-fame.txt';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  } catch (err) {
+    alert('Erreur: ' + err.message);
+  }
 });
 
 // ============================================================

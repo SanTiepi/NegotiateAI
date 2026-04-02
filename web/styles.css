@@ -242,6 +242,7 @@ h3 { font-size: .9rem; font-weight: 600; color: var(--text-2); margin-bottom: 8p
 .metric-value { font-size: .85rem; font-weight: 700; color: var(--text); }
 .section-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
 .section-head h2 { margin-bottom:4px; }
+.section-actions { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; }
 .academy-stack { display:flex; flex-direction:column; gap:12px; }
 .academy-item { padding:12px; border:1px solid var(--border); border-radius: var(--radius); background: var(--surface-2, rgba(255,255,255,.02)); }
 .academy-item.recommended { border-color: var(--primary); box-shadow: 0 8px 24px rgba(99,102,241,.10); }

@@ -117,7 +117,10 @@
                 <h2>Challenge du jour</h2>
                 <p class="text-muted">Un sparring auto-calibre pour aujourd'hui.</p>
               </div>
-              <button class="btn btn-outline btn-sm" id="academy-load-daily">Generer</button>
+              <div class="section-actions">
+                <button class="btn btn-outline btn-sm" id="academy-load-daily">Generer</button>
+                <button class="btn btn-primary btn-sm" id="academy-play-daily">Jouer</button>
+              </div>
             </div>
             <div id="academy-daily" class="academy-stack">
               <p class="text-muted">Charge un daily pour voir la cible du jour.</p>
@@ -154,6 +157,9 @@
                 <h2>Scenario of the week</h2>
                 <p class="text-muted">Benchmark commun pour comparer les runs.</p>
               </div>
+              <div class="section-actions">
+                <button class="btn btn-primary btn-sm" id="academy-play-weekly">Jouer</button>
+              </div>
             </div>
             <div id="academy-weekly" class="academy-stack"></div>
             <div class="divider compact"><span>Leaderboard</span></div>
@@ -166,6 +172,9 @@
             <div>
               <h2>Hall of fame</h2>
               <p class="text-muted">Extraits anonymises des meilleurs runs.</p>
+            </div>
+            <div class="section-actions">
+              <button class="btn btn-outline btn-sm" id="academy-export-hall">Exporter</button>
             </div>
           </div>
           <div id="academy-hall" class="academy-stack"></div>
