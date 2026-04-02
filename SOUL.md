@@ -31,6 +31,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Si le top-10 git est compose des 5 feats cibles suivies de commits `docs: refresh soul after zero-delta validation batch`, traiter le run comme maintenance documentaire uniquement
 - Le commit Simulate Before Send peut sortir du top-10 apres plusieurs batches doc ; en cas de doute, verifier aussi `git log --grep="simulate" -n 5` avant de rouvrir la feature
 - Batch cron nocturne fiable : si `git log -10` ne montre que 4 feats SOUL mais `git log --grep="simulate" -n 5` retrouve Simulate Before Send et que `npm test` reste a 277 verts, traiter le run comme zero-delta documentaire
+- En batch dev-runner cron, si `git log -10` montre surtout des commits docs mais que les feats `autonomy ladder` et `mcp hardening` sont presentes et `git log --grep="simulate" -n 5` retrouve Simulate Before Send, traiter la session comme zero-delta si `npm test` reste a 277 verts
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -49,6 +50,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch zero-delta recurrent: ignorer les fichiers workspace non suivis et ne committer que `SOUL.md` avec un message `docs: refresh soul after zero-delta validation batch`
 - Audit prioritaire robuste: si le top-10 ne montre que 4 feats SOUL, confirmer la 5e via `git log --grep="simulate" -n 5` puis conserver un batch documentaire si `npm test` reste a 277 verts
 - Batch cron zero-delta: apres validation `git log -10` + grep simulate + `npm test`, ne toucher qu'a `SOUL.md` puis committer `docs: refresh soul after zero-delta validation batch`
+- Audit cron express: quand le top-10 est domine par des commits docs, verifier explicitement `git log --grep="simulate" -n 5` avant de conclure qu'une priorite SOUL manque encore
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
