@@ -30,6 +30,31 @@
           <button class="btn btn-primary" data-view="setup">Nouvelle session</button>
         </header>
 
+        <!-- Hero CTA: Prépare ta vraie négo -->
+        <div class="hero-cta" id="hero-prep">
+          <div class="hero-content">
+            <h2>Tu as une négociation qui approche ?</h2>
+            <p>Simule-la maintenant avec les vrais paramètres. Repars avec une fiche de préparation concrète.</p>
+          </div>
+          <button class="btn btn-primary btn-lg" data-view="real-prep">Préparer ma négo</button>
+        </div>
+
+        <!-- Real-world stats (shown if journal entries exist) -->
+        <div class="real-stats hidden" id="d-real-stats">
+          <div class="stat-card">
+            <div class="stat-value" id="d-real-count">0</div>
+            <div class="stat-label">Négos réelles</div>
+          </div>
+          <div class="stat-card accent">
+            <div class="stat-value" id="d-real-score">—</div>
+            <div class="stat-label">Auto-évaluation</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="d-transfer">—</div>
+            <div class="stat-label">Taux de transfert</div>
+          </div>
+        </div>
+
         <!-- Stats cards -->
         <div class="stats-grid">
           <div class="stat-card">
@@ -281,6 +306,121 @@
           </form>
           <div id="versus-result" class="versus-result text-muted">Aucun verdict pour l'instant.</div>
         </section>
+      </div>
+    </main>
+
+    <!-- VIEW: REAL PREP -->
+    <main id="view-real-prep" class="view">
+      <div class="container" style="max-width:720px">
+        <header class="page-header">
+          <h1>Prépare ta vraie négo</h1>
+        </header>
+        <div class="card" style="margin-bottom:16px">
+          <p class="text-muted">Réponds à ces questions comme si tu briefais un coach. Plus tu es précis, plus la simulation sera utile.</p>
+        </div>
+        <form id="real-prep-form" class="briefing-fields">
+          <div class="form-group">
+            <label>Quand a lieu ta négociation ?</label>
+            <input name="when" placeholder="Ex : mardi prochain, 14h" required>
+          </div>
+          <div class="form-group">
+            <label>Avec qui tu négocies ?</label>
+            <textarea name="who" rows="2" required placeholder="Nom, rôle, ce que tu sais sur cette personne."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Le contexte en 2-3 phrases</label>
+            <textarea name="context" rows="3" required placeholder="Pourquoi cette négo a lieu maintenant ?"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Si tout se passe bien, tu obtiens quoi ?</label>
+            <textarea name="objective" rows="2" required placeholder="Sois précis : chiffres, termes, conditions."></textarea>
+          </div>
+          <div class="form-group">
+            <label>En dessous de quoi tu dis non ?</label>
+            <textarea name="minimum" rows="2" required placeholder="Ton seuil. Si tu ne sais pas, c'est un problème."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Si ça échoue, c'est quoi ton plan B ?</label>
+            <textarea name="planB" rows="2" required placeholder="Ta BATNA. Plus elle est solide, plus tu es fort."></textarea>
+          </div>
+          <div class="form-group">
+            <label>C'est quoi ta plus grande peur ?</label>
+            <textarea name="fear" rows="2" placeholder="Ce qui te stresse le plus. On va s'y préparer."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Tu as déjà négocié avec cette personne ?</label>
+            <textarea name="history" rows="2" placeholder="Comment ça s'était passé ? Quel est le rapport de force ?"></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Simuler cette négociation</button>
+        </form>
+      </div>
+    </main>
+
+    <!-- VIEW: JOURNAL -->
+    <main id="view-journal" class="view">
+      <div class="container" style="max-width:720px">
+        <header class="page-header">
+          <h1>Journal post-négo</h1>
+        </header>
+        <div class="card" style="margin-bottom:16px">
+          <p class="text-muted">Ta vraie négo est passée ? Raconte comment ça s'est passé. Le système compare avec ta simulation et ferme la boucle d'apprentissage.</p>
+        </div>
+        <form id="journal-form" class="briefing-fields">
+          <div class="form-group">
+            <label>Comment ça s'est passé ?</label>
+            <textarea name="outcome" rows="3" required placeholder="Accord, rupture, report ? Résume en 2-3 phrases."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Qu'as-tu obtenu concrètement ?</label>
+            <textarea name="obtained" rows="2" required placeholder="Chiffres, termes, conditions."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Qu'est-ce qui t'a surpris ?</label>
+            <textarea name="surprise" rows="2" placeholder="Ce que tu n'avais pas prévu."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Qu'as-tu utilisé de ta préparation ?</label>
+            <textarea name="usedFromPrep" rows="2" placeholder="Quels arguments, techniques, réflexes ont servi ?"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Si c'était à refaire, tu changerais quoi ?</label>
+            <textarea name="regret" rows="2" placeholder="Le moment où tu aurais agi différemment."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Comment tu te sens maintenant ?</label>
+            <input name="emotion" placeholder="Fier, frustré, soulagé, en colère ?">
+          </div>
+          <div class="form-group">
+            <label>Note ta performance (1-10)</label>
+            <input type="range" name="score" min="1" max="10" value="5" class="slider-input" id="journal-score">
+            <div class="slider-header"><span>1</span><span class="slider-label" id="journal-score-label">5/10</span><span>10</span></div>
+          </div>
+          <input type="hidden" name="simulationSessionId" id="journal-sim-id">
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Enregistrer le débrief</button>
+        </form>
+
+        <div id="journal-result" class="hidden" style="margin-top:20px">
+          <div class="card">
+            <h2>Analyse</h2>
+            <p id="journal-summary" class="text-muted"></p>
+            <div id="journal-insights" class="theory-insights" style="margin-top:12px"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW: PREP SHEET -->
+    <main id="view-prep-sheet" class="view">
+      <div class="container" style="max-width:720px">
+        <header class="page-header">
+          <h1>Fiche de préparation</h1>
+          <button class="btn btn-outline" onclick="window.print()">Imprimer</button>
+        </header>
+        <div id="prep-sheet-content"></div>
+        <div class="results-actions" style="margin-top:24px">
+          <button class="btn btn-primary" data-view="journal">Remplir le journal après la négo</button>
+          <button class="btn btn-outline" data-view="dashboard">Tableau de bord</button>
+        </div>
       </div>
     </main>
 

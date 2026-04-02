@@ -257,6 +257,30 @@ h3 { font-size: .9rem; font-weight: 600; color: var(--text-2); margin-bottom: 8p
 .badge-success { background: var(--green-bg); color: var(--green); border-color: rgba(34,197,94,.18); }
 .divider.compact { margin: 18px 0 12px; }
 
+/* Hero CTA */
+.hero-cta {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 20px; margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--primary-bg), rgba(99,102,241,.05));
+  border: 2px solid var(--primary); border-radius: var(--radius-lg); flex-wrap: wrap;
+}
+.hero-cta h2 { font-size: 1.15rem; margin: 0 0 4px 0; }
+.hero-cta p { color: var(--text-2); font-size: .9rem; margin: 0; }
+.hero-content { flex: 1; min-width: 200px; }
+.real-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
+
+/* Prep sheet */
+.prep-section { margin-bottom: 20px; }
+.prep-section h3 { color: var(--primary-light); margin-bottom: 8px; font-size: .95rem; }
+.prep-opening { padding: 16px; background: var(--primary-bg); border: 1px solid var(--primary); border-radius: var(--radius-sm); font-size: 1.05rem; font-weight: 600; line-height: 1.5; margin-bottom: 16px; }
+.prep-list { padding-left: 18px; } .prep-list li { margin-bottom: 6px; font-size: .9rem; color: var(--text-2); line-height: 1.4; }
+.prep-if-card { padding: 10px 14px; border-radius: var(--radius-sm); background: var(--bg); border-left: 3px solid var(--amber); margin-bottom: 8px; }
+.prep-if-trigger { font-weight: 700; font-size: .85rem; color: var(--amber); }
+.prep-if-response { font-size: .9rem; color: var(--text-2); margin-top: 2px; }
+.prep-if-why { font-size: .8rem; color: var(--text-muted); font-style: italic; margin-top: 2px; }
+.prep-confidence { padding: 16px; background: var(--green-bg); border: 1px solid rgba(34,197,94,.2); border-radius: var(--radius-sm); font-size: .95rem; color: var(--green); text-align: center; font-weight: 600; margin-top: 16px; }
+.prep-one-thing { padding: 16px; background: var(--surface-2); border-radius: var(--radius-sm); font-size: 1.05rem; font-weight: 600; text-align: center; margin-top: 12px; border: 1px solid var(--border); }
+
 .empty-state { text-align: center; padding: 40px 16px; }
 .empty-icon { font-size: 3rem; margin-bottom: 12px; }
 .empty-state h2 { margin-bottom: 8px; } .empty-state p { color: var(--text-muted); margin-bottom: 20px; }
