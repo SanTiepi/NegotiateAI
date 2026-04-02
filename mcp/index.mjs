@@ -21,13 +21,14 @@ import { getMomentumTrend } from '../src/worldEngine.mjs';
 import { computeDifficulty, assessZPD } from '../src/difficulty.mjs';
 import { analyzeSessionBiases, updateBiasProfile, recommendBiasTraining } from '../src/biasTracker.mjs';
 import { generateMorningReport, runWarRoom } from '../src/war-room.mjs';
+import { createSessionRegistry, sanitizeDrillCount, formatMcpError } from '../src/mcp-hardening.mjs';
 
 // ---------------------------------------------------------------------------
 // State
 // ---------------------------------------------------------------------------
 
-/** @type {Map<string, object>} Active negotiation sessions */
-const sessions = new Map();
+/** Active negotiation sessions, bounded by TTL + max size */
+const sessions = createSessionRegistry({ maxSessions: 100, ttlMs: 1000 * 60 * 60 * 6 });
 
 /** Lazily initialized provider */
 let _provider = null;
@@ -121,7 +122,7 @@ server.tool(
         }],
       };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'setup_failed');
     }
   },
 );
@@ -170,7 +171,7 @@ server.tool(
 
       return { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'turn_failed');
     }
   },
 );
@@ -217,7 +218,7 @@ server.tool(
 
       return { content: [{ type: 'text', text: JSON.stringify(response, null, 2) }] };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'feedback_failed');
     }
   },
 );
@@ -243,7 +244,7 @@ server.tool(
       const plan = await generatePlan(session.brief, feedback, provider);
       return { content: [{ type: 'text', text: JSON.stringify(plan, null, 2) }] };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'plan_failed');
     }
   },
 );
@@ -349,7 +350,7 @@ Produce a preparation dossier in the user's language (French if the input is in 
 
       return { content: [{ type: 'text', text: JSON.stringify(synthesis, null, 2) }] };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'prepare_failed');
     }
   },
 );
@@ -365,7 +366,7 @@ server.tool(
   async ({ drillCount }) => {
     try {
       const provider = getProvider();
-      const result = await runWarRoom(store, provider, { drillCount: drillCount || 50 });
+      const result = await runWarRoom(store, provider, { drillCount: sanitizeDrillCount(drillCount, 50, 200) });
       const morningReport = await generateMorningReport(result, provider);
 
       return {
@@ -375,7 +376,7 @@ server.tool(
         }],
       };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'war_room_failed');
     }
   },
 );
@@ -422,7 +423,7 @@ server.tool(
 
       return { content: [{ type: 'text', text: JSON.stringify(profile, null, 2) }] };
     } catch (err) {
-      return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      return formatMcpError(err, 'profile_failed');
     }
   },
 );
