@@ -257,6 +257,18 @@ describe('web-app', () => {
     assert.equal(profile.body.uiLayer.key, 'discover');
     assert.ok(Array.isArray(profile.body.uiLayerDefinitions));
 
+    const dashboard = await request('/api/dashboard');
+    assert.equal(dashboard.response.status, 200);
+    assert.equal(dashboard.body.totalSessions, 1);
+    assert.equal(dashboard.body.averageScore, 91);
+    assert.equal(dashboard.body.recommendedDrillId, 'reframe');
+    assert.equal(dashboard.body.biasRecommendation.biasType, 'anchoring');
+    assert.equal(dashboard.body.uiLayer.key, 'discover');
+    assert.ok(Array.isArray(dashboard.body.uiLayerDefinitions));
+    assert.ok(Array.isArray(dashboard.body.beltDefinitions));
+    assert.equal(typeof dashboard.body.autonomy.label, 'string');
+    assert.ok(dashboard.body.autonomy.label.length > 0);
+
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
   });

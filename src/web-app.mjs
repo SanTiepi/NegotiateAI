@@ -337,8 +337,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/dashboard') {
-        const stats = await store.getDashboardStats();
-        const progression = await store.loadProgression();
+        const [stats, progression] = await Promise.all([
+          store.getDashboardStats(),
+          store.loadProgression(),
+        ]);
         const belts = progression.belts || {};
         const earnedCount = Object.values(belts).filter((b) => b.earned).length;
         const autonomy = evaluateAutonomyLevel({
@@ -346,9 +348,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           avgScore: stats.averageScore,
           earnedBelts: earnedCount,
         });
+        const uiLayer = computeUILayer(stats.totalSessions || progression.totalSessions || 0);
         json(res, 200, {
           ...stats,
           autonomy: { level: autonomy.level, label: autonomy.label, key: autonomy.key, gap: describeAutonomyGap(autonomy), next: autonomy.next },
+          biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
+          recommendedDrillId: recommendDrill(progression),
+          uiLayer,
+          uiLayerDefinitions: getLayerDefinitions(),
           beltDefinitions: BELT_DEFINITIONS.map((d) => ({ color: d.color, name: d.name, dimension: d.dimension, description: d.description })),
         });
         return;

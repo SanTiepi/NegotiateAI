@@ -35,6 +35,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Telegram runtime: separer le coeur createTelegramBot(...) du polling Telegram (getUpdates/deleteWebhook) pour tester sans reseau reel et lancer le bot via un runner CLI minimal
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Dashboard scoring enrichi: exposer les breakdowns (modes, difficultes, scoreHistory, dimensionAverages) depuis un module pur partage (`dashboard.mjs`) pour alimenter web/store/CLI sans logique dupliquee
+- Dashboard API web: /api/dashboard doit rester la vue agregee canonique pour les player stats (autonomie, recommendedDrillId, biasRecommendation, uiLayer/uiLayerDefinitions, beltDefinitions) a partir du store + modules purs, sans recalcul frontend
 - Versus CLI: parser les arguments dans un runner testable (`runVersusCli(...)`) et injecter provider/readFile/stdout/stderr pour couvrir le flux sans reseau ni sous-processus reel
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
@@ -80,6 +81,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Bot Telegram runtime: exposer un createTelegramPollingRuntime({ bot, token, fetchImpl }) pur/testable, puis garder `src/cli/telegram-bot-cli.mjs` comme simple bootstrap env+store+provider
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
+- Dashboard web endpoint: agreger stats + progression + autonomie + recommandations dans /api/dashboard pour eviter aux clients de recoller /api/profile + /api/progression cote UI
 - Dashboard CLI: consommer le meme payload calcule que l'API web (pas de second calcul artisanal dans le runner CLI)
 - CLI academy (leaderboard, scenario of the week, hall of fame): reutiliser directement les modules purs (`leaderboard.mjs`, `hall-of-fame.mjs`, `scenarios/index.mjs`) et la persistance du store, sans logique de classement dupliquee
 - CLI versus: `src/cli/versus-cli.mjs` doit rester un adaptateur fin de `adjudicateVersusRound(...)` avec `--brief`, `--message-a`, `--message-b`, option transcript JSON, et rendu terminal sans recalcul du verdict
