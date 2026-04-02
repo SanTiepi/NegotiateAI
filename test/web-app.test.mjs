@@ -70,6 +70,13 @@ const provider = createMockProvider({
     coachingB: ['State your BATNA sooner and tighten your ask.'],
     swingFactors: ['Clarity', 'BATNA discipline'],
   },
+  guidedChoices: {
+    choices: [
+      { text: 'Option 1', technique: 'mirroring', concept: 'Reflete la preoccupation.', quality: 'strong' },
+      { text: 'Option 2', technique: 'labeling', concept: 'Nomme l emotion.', quality: 'moderate' },
+      { text: 'Option 3', technique: 'split', concept: 'Coupe la poire en deux.', quality: 'trap' },
+    ],
+  },
 });
 
 let app;
@@ -234,6 +241,8 @@ describe('web-app', () => {
     assert.equal(profile.body.recommendedDrillId, 'reframe');
     assert.equal(profile.body.biasRecommendation.biasType, 'anchoring');
     assert.match(profile.body.shareable, /Vaccination|Ancrage|Autonomie/i);
+    assert.equal(profile.body.uiLayer.key, 'discover');
+    assert.ok(Array.isArray(profile.body.uiLayerDefinitions));
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
@@ -414,6 +423,79 @@ describe('web-app', () => {
     assert.equal(body.objectiveContract.strategy, 'ancrage haut');
     assert.equal(body.roundScores.length, 1);
     assert.equal(body.worldState.emotions.egoThreat, 15);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('returns progressive ui metadata and guided choices when explicitly enabled', async () => {
+    const progressiveProvider = createMockProvider({
+      adversary: {
+        identity: 'Mme Dubois',
+        style: 'Ferme mais pro',
+        publicObjective: 'Signer vite',
+        hiddenObjective: 'Maximiser sa marge',
+        batna: 'Un autre acheteur',
+        nonNegotiables: ['Pas sous 500k'],
+        timePressure: 'Fin de semaine',
+        emotionalProfile: { confidence: 70, frustration: 25, egoThreat: 20 },
+        likelyTactics: ['scarcity'],
+        vulnerabilities: ['Fin de mois'],
+      },
+      turn: {
+        adversaryResponse: 'Je peux bouger un peu, mais pas trop.',
+        sessionOver: false,
+        endReason: null,
+        sessionStatus: 'active',
+      },
+      coaching: { biasDetected: null, alternative: 'Clarifie les criteres.', momentum: 'stable', tip: 'Reste centre sur ta BATNA.' },
+      guidedChoices: {
+        choices: [
+          { text: 'Option 1', technique: 'mirroring', concept: 'Reflete la preoccupation.', quality: 'strong' },
+          { text: 'Option 2', technique: 'labeling', concept: 'Nomme l emotion.', quality: 'moderate' },
+          { text: 'Option 3', technique: 'split', concept: 'Coupe la poire en deux.', quality: 'trap' },
+        ],
+      },
+    });
+
+    app = createWebApp({ provider: progressiveProvider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const created = await request('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        uiProgressive: true,
+        brief: {
+          situation: 'Achat appartement',
+          userRole: 'Acheteur',
+          adversaryRole: 'Vendeuse',
+          objective: 'Acheter a 480k',
+          minimalThreshold: '500k max',
+          batna: 'Continuer les visites',
+        },
+      }),
+    });
+
+    assert.equal(created.response.status, 201);
+    assert.equal(created.body.uiProgressive, true);
+    assert.equal(created.body.uiLayer.key, 'discover');
+
+    app.activeSessions.get('sess-test').maxTurns = 12;
+
+    const { response, body } = await request('/api/session/sess-test/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Je peux signer vite si le prix bouge.' }),
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(body.uiLayer.key, 'discover');
+    assert.equal('coaching' in body, false);
+    assert.ok(Array.isArray(body.guidedChoices));
+    assert.equal(body.guidedChoices.length, 3);
+    assert.equal(body.guidedChoices[0].text, 'Option 1');
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

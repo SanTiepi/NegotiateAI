@@ -50,6 +50,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Scenarios immobiliers suisses web: exposer les presets via /api/scenarios avec `scenarioFile` + metadata de rendu, puis laisser le frontend lancer le briefing/flow sans dupliquer le contenu scenario cote navigateur
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
+- Progressive UI web: garder l unlock cote API opt-in (`uiProgressive`) pour ne pas casser les clients existants qui attendent le payload complet
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -79,6 +80,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI
 - Mode versus: module pur src/versus.mjs avec adjudicateVersusRound({ brief, playerA, playerB, transcript? }, provider) -> verdict structure
 - Persistance locale: store.mjs comme couche d'acces unique pour sessions/progression afin d'eviter la duplication de logique
+- Progressive UI web: calculer la couche via un module pur (sessions -> layer), exposer `uiLayer`/`uiLayerDefinitions` au profil, et filtrer les payloads de tour uniquement quand le mode progressif est explicitement active
 
 ## REGLE CRITIQUE
 Si git log montre que les 5 anciennes priorites sont faites et npm test est vert, NE FAIS PAS un commit "docs: refresh soul". Passe directement a la PROCHAINE priorite de la liste ci-dessus (web app, telegram bot, scenarios immobiliers...). Il y a TOUJOURS quelque chose a faire.

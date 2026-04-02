@@ -23,6 +23,8 @@ import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { generateBriefing, buildObjectiveContract } from './briefing.mjs';
 import { scoreRound, buildFightCard } from './fight-card.mjs';
 import { adjudicateVersusRound } from './versus.mjs';
+import { computeUILayer, filterTurnResponse, getLayerDefinitions, shouldGuideRound } from './progressive-ui.mjs';
+import { generateGuidedChoices } from './guided-rounds.mjs';
 
 const SCENARIO_PRESETS = [
   {
@@ -338,11 +340,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           store.loadProgression(),
         ]);
         const card = generateVaccinationCard(progression, sessions);
+        const uiLayer = computeUILayer(sessions.length || progression.totalSessions || 0);
         json(res, 200, {
           card,
           shareable: formatShareableCard(card),
           biasRecommendation: recommendBiasTraining(progression.biasProfile || {}),
           recommendedDrillId: recommendDrill(progression),
+          uiLayer,
+          uiLayerDefinitions: getLayerDefinitions(),
         });
         return;
       }
@@ -513,11 +518,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         }
 
         const session = createSession(brief, adversary, llmProvider, { eventPolicy: body.eventPolicy || 'none' });
+        const completedSessions = await store.loadSessions();
         session._objectiveContract = objectiveContract;
         session._roundScores = [];
         session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
         session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
         session._scenarioId = scenario?.metadata?.id || body.scenarioFile || null;
+        session._uiProgressive = body.uiProgressive === true;
+        session._uiLayer = computeUILayer(completedSessions.length, body.uiLayerOverride);
 
         session._createdAt = Date.now();
         const sessionId = nextSessionId();
@@ -529,6 +537,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           adversary: { identity: adversary.identity, style: adversary.style },
           state: { turn: session.turn, status: session.status, maxTurns: session.maxTurns },
           objectiveContract: objectiveContract ? { objective: objectiveContract.objective, threshold: objectiveContract.minimalThreshold, batna: objectiveContract.batna } : null,
+          uiLayer: session._uiLayer,
+          uiProgressive: session._uiProgressive,
         });
         return;
       }
@@ -606,7 +616,12 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           activeSessions.delete(sessionId);
         }
 
-        json(res, 200, {
+        let guidedChoices = null;
+        if (!result.sessionOver && session._uiProgressive && shouldGuideRound(session._uiLayer, result.state.turn + 1)) {
+          guidedChoices = await generateGuidedChoices(session, result.adversaryResponse, llmProvider);
+        }
+
+        const payload = {
           adversaryResponse: result.adversaryResponse,
           sessionOver: result.sessionOver,
           endReason: result.endReason,
@@ -623,7 +638,12 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           detectedSignals: result.detectedSignals,
           roundScore,
           fightCard,
-        });
+          feedback: result.feedback,
+          guidedChoices,
+          uiLayer: session._uiLayer,
+        };
+
+        json(res, 200, session._uiProgressive ? filterTurnResponse(payload, session._uiLayer) : payload);
         return;
       }
 
