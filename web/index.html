@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NegotiateAI Web</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="card">
+        <h1>NegotiateAI</h1>
+        <p class="subtitle">Simulateur de négociation en chat, sans CLI.</p>
+
+        <form id="setup-form" class="stack">
+          <input name="situation" placeholder="Situation">
+          <input name="userRole" placeholder="Votre rôle">
+          <input name="adversaryRole" placeholder="Rôle adverse">
+          <input name="objective" placeholder="Objectif" required>
+          <input name="minimalThreshold" placeholder="Seuil minimal" required>
+          <input name="batna" placeholder="BATNA" required>
+          <select name="difficulty">
+            <option value="neutral">neutral</option>
+            <option value="cooperative">cooperative</option>
+            <option value="hostile">hostile</option>
+            <option value="manipulative">manipulative</option>
+          </select>
+          <button type="submit">Démarrer</button>
+        </form>
+
+        <div id="chat" class="chat hidden">
+          <div id="status" class="status"></div>
+          <div id="messages" class="messages"></div>
+          <form id="turn-form" class="turn-row">
+            <input id="message-input" placeholder="Votre message" autocomplete="off">
+            <button type="submit">Envoyer</button>
+          </form>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
