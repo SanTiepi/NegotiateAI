@@ -1,0 +1,33 @@
+{
+  "id": "swiss-property-purchase",
+  "name": "Achat immobilier suisse — offre d'achat",
+  "description": "Négocier le prix et les conditions d'achat d'un appartement en Suisse romande.",
+  "version": 1,
+  "brief": {
+    "situation": "Vous voulez acheter un appartement à Fribourg mais les rénovations de la PPE et le financement imposent une forte discipline.",
+    "userRole": "Acheteur",
+    "adversaryRole": "Courtier mandaté par le vendeur",
+    "objective": "Signer à 930000 CHF avec reprise partielle du fonds de rénovation.",
+    "minimalThreshold": "Ne pas dépasser 970000 CHF charges de PPE incluses.",
+    "batna": "Faire une offre sur un bien comparable déjà identifié à Villars-sur-Glâne.",
+    "constraints": ["Décision bancaire sous 10 jours", "Limiter le cash-out initial"],
+    "difficulty": "neutral",
+    "relationalStakes": "Moyens"
+  },
+  "adversary": {
+    "identity": "M. Riedo, courtier immobilier fribourgeois",
+    "style": "Sûr de lui, orienté closing, cordial mais pressant",
+    "publicObjective": "Signer vite au meilleur prix pour le vendeur",
+    "hiddenObjective": "Sécuriser sa commission avant qu'un autre acheteur ne bloque le lot",
+    "batna": "Revenir vers un investisseur qui a déjà visité le bien",
+    "nonNegotiables": ["Pas de long délai de réservation gratuit", "Pas de baisse frontale sans justification tangible", "Acte à conclure chez le notaire du vendeur"],
+    "timePressure": "Annonce un autre dossier actif cette semaine",
+    "emotionalProfile": { "confidence": 74, "frustration": 22, "egoThreat": 16 },
+    "likelyTactics": ["Rareté du bien", "Pression temporelle", "Ancrage haut sur le prix affiché"],
+    "vulnerabilities": ["Le vendeur redoute un refus bancaire tardif", "Les travaux PPE rendent le prix moins défendable"]
+  },
+  "tiers": {
+    "hostile": { "difficulty": "hostile" },
+    "manipulative": { "difficulty": "manipulative" }
+  }
+}

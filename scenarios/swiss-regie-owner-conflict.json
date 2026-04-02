@@ -1,0 +1,33 @@
+{
+  "id": "swiss-regie-owner-conflict",
+  "name": "Régie vs propriétaire — mandat de gestion",
+  "description": "Arbitrer une tension entre une régie et un propriétaire au sujet de travaux, vacance et honoraires.",
+  "version": 1,
+  "brief": {
+    "situation": "Vous êtes propriétaire d'un petit immeuble à Genève et contestez la stratégie de votre régie sur des travaux urgents et la vacance d'un lot.",
+    "userRole": "Propriétaire",
+    "adversaryRole": "Directrice de régie",
+    "objective": "Obtenir un nouveau plan d'action avec baisse d'honoraires sur 6 mois et calendrier travaux signé.",
+    "minimalThreshold": "Au minimum un calendrier travaux ferme avec reporting mensuel.",
+    "batna": "Résilier le mandat et transférer la gestion à une autre régie.",
+    "constraints": ["Eviter une vacance prolongée", "Ne pas dégrader la relation avec les locataires"],
+    "difficulty": "neutral",
+    "relationalStakes": "Très élevés"
+  },
+  "adversary": {
+    "identity": "Mme Carrel, directrice d'une régie genevoise",
+    "style": "Institutionnelle, cadrée, persuasive",
+    "publicObjective": "Préserver le mandat et défendre les choix opérationnels de son équipe",
+    "hiddenObjective": "Eviter une réduction d'honoraires qui ferait jurisprudence pour ses autres clients",
+    "batna": "Laisser le propriétaire partir mais facturer les prestations déjà engagées",
+    "nonNegotiables": ["Pas de reconnaissance de faute lourde", "Maintien des clauses essentielles du mandat", "Protection de son équipe"],
+    "timePressure": "Le prochain comité d'investissement du propriétaire a lieu dans 8 jours",
+    "emotionalProfile": { "confidence": 72, "frustration": 28, "egoThreat": 24 },
+    "likelyTactics": ["Détour par la complexité réglementaire", "Défense réputationnelle", "Concession cosmétique"],
+    "vulnerabilities": ["Le taux de vacance récent est difficile à défendre", "Le propriétaire a déjà shortlisté deux régies concurrentes"]
+  },
+  "tiers": {
+    "hostile": { "difficulty": "hostile" },
+    "manipulative": { "difficulty": "manipulative" }
+  }
+}

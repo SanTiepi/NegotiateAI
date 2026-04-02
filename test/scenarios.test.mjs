@@ -5,9 +5,9 @@ import { assertValidBrief } from '../src/scenario.mjs';
 import { assertValidAdversary } from '../src/persona.mjs';
 
 describe('scenarios', () => {
-  it('listScenarios returns at least 5 scenarios', async () => {
+  it('listScenarios returns at least 8 scenarios', async () => {
     const list = await listScenarios();
-    assert.ok(list.length >= 5, `Expected >= 5, got ${list.length}`);
+    assert.ok(list.length >= 8, `Expected >= 8, got ${list.length}`);
   });
 
   it('each scenario has id, name, description', async () => {
@@ -47,6 +47,14 @@ describe('scenarios', () => {
     for (const s of list) {
       const { adversary } = await loadScenario(s.id);
       assert.doesNotThrow(() => assertValidAdversary(adversary), `Adversary for ${s.id} is invalid`);
+    }
+  });
+
+  it('loads the swiss real-estate scenarios', async () => {
+    for (const id of ['swiss-lease-renegotiation', 'swiss-property-purchase', 'swiss-regie-owner-conflict']) {
+      const { brief, adversary } = await loadScenario(id);
+      assert.ok(brief.objective, `missing objective for ${id}`);
+      assert.ok(adversary.identity, `missing adversary for ${id}`);
     }
   });
 });

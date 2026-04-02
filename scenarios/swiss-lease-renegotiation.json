@@ -1,0 +1,33 @@
+{
+  "id": "swiss-lease-renegotiation",
+  "name": "Bail suisse — baisse de loyer",
+  "description": "Négocier une baisse de loyer après une hausse des taux de référence en Suisse.",
+  "version": 1,
+  "brief": {
+    "situation": "Vous louez un appartement à Lausanne et demandez une baisse de loyer alignée au taux hypothécaire de référence.",
+    "userRole": "Locataire",
+    "adversaryRole": "Régie immobilière",
+    "objective": "Obtenir une baisse de loyer mensuelle de 120 CHF dès le prochain trimestre.",
+    "minimalThreshold": "Au moins 60 CHF de baisse ou une compensation équivalente sur les charges.",
+    "batna": "Saisir l'ASLOCA et déposer une demande formelle de contestation.",
+    "constraints": ["Conserver une relation correcte avec la régie", "Argumenter avec des bases suisses crédibles"],
+    "difficulty": "neutral",
+    "relationalStakes": "Elevés"
+  },
+  "adversary": {
+    "identity": "Mme Perrin, gestionnaire de régie à Lausanne",
+    "style": "Polie, procédurale, légèrement défensive",
+    "publicObjective": "Appliquer la politique de la régie sans ouvrir trop de précédents",
+    "hiddenObjective": "Limiter les baisses de loyer sur l'immeuble avant le prochain budget",
+    "batna": "Refuser et attendre une demande officielle écrite",
+    "nonNegotiables": ["Aucune concession sans dossier motivé", "Respect des délais contractuels", "Pas d'aveu de faute de la régie"],
+    "timePressure": "Doit finaliser les ajustements avant le prochain relevé trimestriel",
+    "emotionalProfile": { "confidence": 68, "frustration": 18, "egoThreat": 12 },
+    "likelyTactics": ["Se réfugier derrière la procédure", "Minimiser l'impact financier", "Proposer un traitement différé"],
+    "vulnerabilities": ["Craint les dossiers ASLOCA bien préparés", "Veut éviter un précédent médiatisé dans l'immeuble"]
+  },
+  "tiers": {
+    "hostile": { "difficulty": "hostile" },
+    "manipulative": { "difficulty": "manipulative" }
+  }
+}
