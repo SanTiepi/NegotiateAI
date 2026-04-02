@@ -225,9 +225,28 @@ async function buildScenarioPresets() {
       description: scenario.description,
       difficulty: SWISS_SCENARIO_PRESET_META[scenario.id]?.difficulty || 'neutral',
       scenarioFile: scenario.id,
+      tier: 'neutral',
+      metadata: {
+        ...(scenario.metadata || {}),
+        category: 'swiss',
+        scenarioFile: scenario.id,
+        tier: 'neutral',
+      },
     }));
 
-  return [...SCENARIO_PRESETS, ...swissPresets];
+  return [...SCENARIO_PRESETS, ...swissPresets].map((preset) => ({
+    ...preset,
+    tier: preset.tier || 'neutral',
+    metadata: {
+      id: preset.id,
+      name: preset.name,
+      category: preset.category || 'core',
+      scenarioFile: preset.scenarioFile || preset.id,
+      version: preset.metadata?.version,
+      tier: preset.tier || 'neutral',
+      ...(preset.metadata || {}),
+    },
+  }));
 }
 
 async function findScenarioPresetById(scenarioId) {

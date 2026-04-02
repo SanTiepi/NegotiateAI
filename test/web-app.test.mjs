@@ -335,6 +335,9 @@ describe('web-app', () => {
     assert.ok(body[0].name);
     assert.ok(body[0].brief);
     assert.ok(body[0].brief.objective);
+    assert.equal(body[0].metadata.id, body[0].id);
+    assert.equal(body[0].metadata.scenarioFile, body[0].scenarioFile || body[0].id);
+    assert.equal(body[0].metadata.tier, body[0].tier || 'neutral');
     const swiss = body.filter((entry) => entry.category === 'swiss');
     assert.equal(swiss.length, 3);
     assert.deepEqual(
@@ -342,6 +345,10 @@ describe('web-app', () => {
       ['swiss-lease-renegotiation', 'swiss-property-purchase', 'swiss-regie-owner-conflict'],
     );
     assert.ok(swiss.every((entry) => entry.scenarioFile === entry.id));
+    assert.ok(swiss.every((entry) => entry.tier === 'neutral'));
+    assert.ok(swiss.every((entry) => entry.metadata.id === entry.id));
+    assert.ok(swiss.every((entry) => entry.metadata.scenarioFile === entry.id));
+    assert.ok(swiss.every((entry) => entry.metadata.category === 'swiss'));
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
