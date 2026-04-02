@@ -523,14 +523,23 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/profile') {
+        const requestedPlayerId = url.searchParams.get('playerId') || 'local-player';
+        const filters = {
+          playerId: url.searchParams.get('playerId') || null,
+          mode: url.searchParams.get('mode') || null,
+          difficulty: url.searchParams.get('difficulty') || null,
+          scenarioId: url.searchParams.get('scenarioId') || null,
+        };
+        const hasFilters = Object.values(filters).some(Boolean);
         const [sessions, progression] = await Promise.all([
           store.loadSessions(),
           store.loadProgression(),
         ]);
-        const playerDashboard = buildPlayerDashboard(sessions, progression, {
-          playerId: url.searchParams.get('playerId') || 'local-player',
+        const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
+        const playerDashboard = buildPlayerDashboard(scopedSessions, progression, {
+          playerId: requestedPlayerId,
         });
-        const uiLayer = computeUILayer(sessions.length || progression.totalSessions || 0);
+        const uiLayer = computeUILayer(scopedSessions.length || progression.totalSessions || 0);
         json(res, 200, {
           card: playerDashboard.card,
           shareable: playerDashboard.shareable,
@@ -539,6 +548,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           recommendedDrillId: playerDashboard.recommendedDrillId,
           uiLayer,
           uiLayerDefinitions: getLayerDefinitions(),
+          filters,
         });
         return;
       }

@@ -42,6 +42,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Les stats de négos réelles (journal) doivent être injectées via agrégats purs (`computeRealWorldStats`) dans les payloads dashboard web, sans logique métier recalculée côté front
 - Les vues joueur (`/api/dashboard/player`, analytics filtrées, Telegram/web) doivent vraiment filtrer par `playerId` persisté dans les sessions/events ; ne jamais se contenter de renvoyer l’identifiant demandé sans scoper les données
 - Le front web doit propager un `playerId` stable (localStorage ou équivalent) sur `/api/session`, `/api/real-prep/start`, `/api/journal` et sur les vues profil/dashboard, sinon les snapshots joueur et stats réelles dérivent vers `local-player`
+- `/api/profile` doit refléter le même scoping que `/api/dashboard/player` (playerId + filtres query string), mais sans filtrer implicitement tout le dataset quand aucun filtre n’est fourni
 
 ## Patterns
 
@@ -59,6 +60,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Journal → dashboard web : agréger côté serveur (`computeRealWorldStats`) puis afficher côté front ; ne pas recalculer les stats réelles dans `web/app.js`
 - Player dashboard : persister `playerId` au moment de la sauvegarde (web, Telegram, analytics, journal) puis appliquer les mêmes filtres côté route pour éviter les faux snapshots multi-joueurs
 - Front web ↔ API joueur : toujours transporter le même `playerId` côté query string ET côté payload POST pour garder alignés dashboard, profil, journal et sessions persistées
+- Profil web ↔ snapshot joueur : partager exactement le même modèle de filtres (`playerId`, `mode`, `difficulty`, `scenarioId`) et le même helper de scoping pour éviter les écarts silencieux entre carte profil et dashboard joueur
 - Télégramme/persistance : enrichir la sauvegarde au moment de la fin de session (pas via migration a posteriori) pour garder les vues web et bot alignées
 - Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
 - Validation de livraison : conclure une priorité SOUL uniquement après passage complet du script `npm test`, pas sur un sous-ensemble ad hoc

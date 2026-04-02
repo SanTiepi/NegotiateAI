@@ -328,6 +328,12 @@ describe('web-app', () => {
     assert.match(profile.body.shareable, /Vaccination|Ancrage|Autonomie/i);
     assert.equal(profile.body.uiLayer.key, 'discover');
     assert.ok(Array.isArray(profile.body.uiLayerDefinitions));
+    assert.deepEqual(profile.body.filters, {
+      playerId: null,
+      mode: null,
+      difficulty: null,
+      scenarioId: null,
+    });
 
     const dashboard = await request('/api/dashboard');
     assert.equal(dashboard.response.status, 200);
@@ -895,6 +901,87 @@ describe('web-app', () => {
     assert.equal(snapshot.response.status, 200);
     assert.equal(snapshot.body.realWorldStats.totalReal, 2);
     assert.equal(snapshot.body.realWorldStats.transferRate, 50);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('profile supports player-scoped filters like the player dashboard snapshot', async () => {
+    await store.saveSession({
+      id: 'profile-filter-robin-1',
+      date: new Date('2026-04-01T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Achat appartement',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeuse',
+        objective: 'Acheter à 500k',
+        minimalThreshold: '520k max',
+        batna: 'Continuer les visites',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'Mme Dubois' },
+      transcript: [],
+      status: 'accepted',
+      turns: 2,
+      feedback: {
+        globalScore: 78,
+        scores: {
+          outcomeLeverage: 19,
+          batnaDiscipline: 14,
+          emotionalRegulation: 20,
+          biasResistance: 10,
+          conversationalFlow: 12,
+        },
+      },
+      playerId: 'robin',
+      mode: 'web',
+      scenarioId: 'swiss-property-purchase',
+    });
+    await store.saveSession({
+      id: 'profile-filter-alice-1',
+      date: new Date('2026-04-02T10:00:00.000Z').toISOString(),
+      brief: {
+        situation: 'Renegociation bail',
+        userRole: 'Locataire',
+        adversaryRole: 'Regie',
+        objective: 'Baisser le loyer',
+        minimalThreshold: 'Zero hausse',
+        batna: 'Demenager',
+        difficulty: 'neutral',
+      },
+      adversary: { identity: 'Regie SA' },
+      transcript: [],
+      status: 'ended',
+      turns: 3,
+      feedback: {
+        globalScore: 84,
+        scores: {
+          outcomeLeverage: 21,
+          batnaDiscipline: 17,
+          emotionalRegulation: 22,
+          biasResistance: 13,
+          conversationalFlow: 14,
+        },
+      },
+      playerId: 'alice',
+      mode: 'telegram',
+      scenarioId: 'swiss-lease-renegotiation',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const profile = await request('/api/profile?playerId=alice&mode=telegram');
+    assert.equal(profile.response.status, 200);
+    assert.equal(profile.body.card.totalSessions, 1);
+    assert.equal(profile.body.uiLayer.key, 'discover');
+    assert.deepEqual(profile.body.filters, {
+      playerId: 'alice',
+      mode: 'telegram',
+      difficulty: null,
+      scenarioId: null,
+    });
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
