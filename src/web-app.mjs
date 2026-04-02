@@ -262,6 +262,60 @@ function filterDashboardSessions(sessions, filters) {
   });
 }
 
+function filterAnalyticsEvents(events, filters) {
+  return events.filter((event) => {
+    if (filters.mode && (event.mode || 'cli') !== filters.mode) return false;
+    if (filters.difficulty && (event.difficulty || 'neutral') !== filters.difficulty) return false;
+    if (filters.scenarioId && (event.scenarioId || null) !== filters.scenarioId) return false;
+    if (filters.type && (event.type || null) !== filters.type) return false;
+    return true;
+  });
+}
+
+function summarizeAnalyticsEvents(events) {
+  const summary = {
+    totalEvents: events.length,
+    totalCompletedSessions: 0,
+    averageScore: 0,
+    averageTurns: 0,
+    grades: {},
+    eventTypes: {},
+    scenarios: {},
+  };
+
+  if (events.length === 0) {
+    return summary;
+  }
+
+  let scoreSum = 0;
+  let turnsSum = 0;
+
+  for (const event of events) {
+    const type = event.type || 'unknown';
+    summary.eventTypes[type] = (summary.eventTypes[type] || 0) + 1;
+
+    if (event.scenarioId) {
+      summary.scenarios[event.scenarioId] = (summary.scenarios[event.scenarioId] || 0) + 1;
+    }
+
+    if (type === 'session_complete') {
+      summary.totalCompletedSessions += 1;
+      scoreSum += Number(event.globalScore || 0);
+      turnsSum += Number(event.turns || 0);
+      if (event.grade) {
+        summary.grades[event.grade] = (summary.grades[event.grade] || 0) + 1;
+      }
+    }
+  }
+
+  if (summary.totalCompletedSessions > 0) {
+    summary.averageScore = Math.round(scoreSum / summary.totalCompletedSessions);
+    summary.averageTurns = Number((turnsSum / summary.totalCompletedSessions).toFixed(1));
+  }
+
+  return summary;
+}
+
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -510,8 +564,32 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/analytics') {
+        const filters = {
+          mode: url.searchParams.get('mode') || null,
+          difficulty: url.searchParams.get('difficulty') || null,
+          scenarioId: url.searchParams.get('scenarioId') || null,
+          type: url.searchParams.get('type') || null,
+        };
+        const hasFilters = Object.values(filters).some(Boolean);
         const events = await store.loadAnalytics(Number(url.searchParams.get('limit')) || 100);
-        json(res, 200, events);
+        json(res, 200, hasFilters ? filterAnalyticsEvents(events, filters) : events);
+        return;
+      }
+
+      if (req.method === 'GET' && url.pathname === '/api/analytics/summary') {
+        const filters = {
+          mode: url.searchParams.get('mode') || null,
+          difficulty: url.searchParams.get('difficulty') || null,
+          scenarioId: url.searchParams.get('scenarioId') || null,
+          type: url.searchParams.get('type') || null,
+        };
+        const hasFilters = Object.values(filters).some(Boolean);
+        const events = await store.loadAnalytics(Number(url.searchParams.get('limit')) || 100);
+        const scopedEvents = hasFilters ? filterAnalyticsEvents(events, filters) : events;
+        json(res, 200, {
+          ...summarizeAnalyticsEvents(scopedEvents),
+          filters: hasFilters ? filters : null,
+        });
         return;
       }
 

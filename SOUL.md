@@ -31,7 +31,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe à la priorité suivante.
 - Rapports Telegram : maximum 1500 caractères, y compris les résumés Simulate Before Send v2
 - Les enrichissements d'API web doivent rester déterministes côté tests (pas d'appel réseau implicite, payloads stables)
-- Les filtres d'analytics web (`mode`, `difficulty`, `scenarioId`) doivent dégrader proprement vers des stats vides sans casser l'autonomie ni l'UI layer
+- Les filtres d'analytics web (`mode`, `difficulty`, `scenarioId`, `type`) doivent dégrader proprement vers des stats vides sans casser l'autonomie, l'UI layer, ni les résumés agrégés
 
 ## Patterns
 
@@ -41,6 +41,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Serveur HTTP : `node:http` natif, pas Express
 - Dashboard scoring : exposer des agrégats purs dans `src/dashboard.mjs`, puis les brancher dans l'API web
 - Dashboard API : préférer des filtres query string côté route (`/api/dashboard?mode=...&difficulty=...&scenarioId=...`) plutôt que dupliquer la logique d'agrégation
+- Analytics API web : exposer une vue brute filtrable (`/api/analytics`) et une vue agrégée déterministe (`/api/analytics/summary`) avec les mêmes query filters
 - Telegram : toute feature d'analyse doit produire un résumé compact orienté décision (meilleure option + score + rewrite)
 
 ## Règle critique

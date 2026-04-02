@@ -750,6 +750,74 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('filters analytics events and exposes a deterministic analytics summary', async () => {
+    await store.appendAnalytics({
+      type: 'session_complete',
+      timestamp: '2026-04-01T10:00:00.000Z',
+      scenarioId: 'swiss-property-purchase',
+      difficulty: 'hostile',
+      turns: 4,
+      status: 'accepted',
+      globalScore: 78,
+      grade: 'B',
+      mode: 'web',
+    });
+    await store.appendAnalytics({
+      type: 'session_complete',
+      timestamp: '2026-04-02T10:00:00.000Z',
+      scenarioId: 'swiss-lease-renegotiation',
+      difficulty: 'neutral',
+      turns: 3,
+      status: 'accepted',
+      globalScore: 84,
+      grade: 'A',
+      mode: 'telegram',
+    });
+    await store.appendAnalytics({
+      type: 'briefing_view',
+      timestamp: '2026-04-02T11:00:00.000Z',
+      scenarioId: 'swiss-lease-renegotiation',
+      difficulty: 'neutral',
+      mode: 'telegram',
+    });
+
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const analytics = await request('/api/analytics?mode=telegram');
+    assert.equal(analytics.response.status, 200);
+    assert.equal(analytics.body.length, 2);
+    assert.equal(analytics.body.every((event) => event.mode === 'telegram'), true);
+
+    const summary = await request('/api/analytics/summary?mode=telegram');
+    assert.equal(summary.response.status, 200);
+    assert.equal(summary.body.totalEvents, 2);
+    assert.equal(summary.body.totalCompletedSessions, 1);
+    assert.equal(summary.body.averageScore, 84);
+    assert.equal(summary.body.averageTurns, 3);
+    assert.deepEqual(summary.body.grades, { A: 1 });
+    assert.deepEqual(summary.body.eventTypes, { session_complete: 1, briefing_view: 1 });
+    assert.deepEqual(summary.body.scenarios, { 'swiss-lease-renegotiation': 2 });
+    assert.deepEqual(summary.body.filters, {
+      mode: 'telegram',
+      difficulty: null,
+      scenarioId: null,
+      type: null,
+    });
+
+    const emptySummary = await request('/api/analytics/summary?scenarioId=unknown');
+    assert.equal(emptySummary.response.status, 200);
+    assert.equal(emptySummary.body.totalEvents, 0);
+    assert.equal(emptySummary.body.totalCompletedSessions, 0);
+    assert.equal(emptySummary.body.averageScore, 0);
+    assert.equal(emptySummary.body.averageTurns, 0);
+    assert.deepEqual(emptySummary.body.grades, {});
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('enriched dashboard includes autonomy, belt definitions, and scoring breakdowns', async () => {
     await store.saveSession({
       id: 'dash-web-1',
