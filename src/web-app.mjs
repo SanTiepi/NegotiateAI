@@ -391,8 +391,20 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       if (req.method === 'GET' && url.pathname === '/api/drills') {
         const progression = await store.loadProgression();
         const recommendedDrillId = recommendDrill(progression);
+        const biasRecommendation = recommendBiasTraining(progression.biasProfile || {});
         json(res, 200, {
           recommendedDrillId,
+          biasRecommendation,
+          dueBiasDrills: (biasRecommendation && progression.biasProfile?.[biasRecommendation.biasType])
+            ? [{
+                biasType: biasRecommendation.biasType,
+                recommendedDrillId,
+                nextDrillDate: progression.biasProfile[biasRecommendation.biasType].nextDrillDate || null,
+                frequency: progression.biasProfile[biasRecommendation.biasType].frequency || 0,
+                reason: biasRecommendation.reason,
+                urgency: biasRecommendation.urgency,
+              }]
+            : [],
           drills: DRILL_CATALOG.map((drill) => ({
             id: drill.id,
             name: drill.name,

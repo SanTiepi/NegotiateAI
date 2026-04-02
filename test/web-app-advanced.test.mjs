@@ -82,7 +82,15 @@ describe('web-app advanced api', () => {
     harness = await createHarness();
     await harness.store.saveProgression({
       belts: {},
-      biasProfile: {},
+      biasProfile: {
+        anchoring: {
+          totalCount: 3,
+          recentCount: 2,
+          frequency: 0.5,
+          lastSeen: '2026-03-20T10:00:00.000Z',
+          nextDrillDate: '2026-03-25',
+        },
+      },
       totalSessions: 4,
       currentStreak: 1,
       lastSessionDate: new Date().toISOString().slice(0, 10),
@@ -93,6 +101,8 @@ describe('web-app advanced api', () => {
 
     assert.equal(response.status, 200);
     assert.equal(body.recommendedDrillId, 'pressure');
+    assert.equal(body.biasRecommendation.biasType, 'anchoring');
+    assert.equal(body.dueBiasDrills[0].nextDrillDate, '2026-03-25');
     assert.ok(Array.isArray(body.drills));
     assert.ok(body.drills.length >= 5);
     assert.equal(body.drills.find((drill) => drill.id === 'pressure')?.recommended, true);

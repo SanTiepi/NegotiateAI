@@ -137,7 +137,7 @@ describe('telegram-bot', () => {
     assert.equal(stats.currentStreak, 1);
   });
 
-  it('returns academy summaries for profile, weekly, leaderboard and hall of fame', async () => {
+  it('returns academy summaries for profile, drills, weekly, leaderboard and hall of fame', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-profile-'));
     tempDirs.push(dir);
     const store = createStore({ dataDir: dir });
@@ -192,6 +192,10 @@ describe('telegram-bot', () => {
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
     assert.match(sent.at(-1).text, /Profil NegotiateAI Telegram/);
     assert.match(sent.at(-1).text, /Sessions: 2/);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/drills' } });
+    assert.match(sent.at(-1).text, /Drills NegotiateAI/);
+    assert.match(sent.at(-1).text, /Drill recommandé:/);
 
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/weekly' } });
     assert.match(sent.at(-1).text, /Scenario de la semaine/);

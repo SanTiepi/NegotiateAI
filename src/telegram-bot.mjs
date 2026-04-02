@@ -3,10 +3,12 @@ import { generatePersona } from './persona.mjs';
 import { createSession, processTurn } from './engine.mjs';
 import { analyzeFeedback } from './analyzer.mjs';
 import { generateDaily, dailyAlreadyPlayed } from './daily.mjs';
+import { recommendDrill } from './drill.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { formatHallOfFameStories } from './hall-of-fame.mjs';
+import { recommendBiasTraining } from './biasTracker.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -181,6 +183,30 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
+  async function sendDrills(chatId) {
+    if (!store) {
+      return sendMessage(chatId, 'Drills indisponibles: aucun store persistant n’est configuré.');
+    }
+
+    const progression = await store.loadProgression();
+    const recommendedDrillId = recommendDrill(progression);
+    const biasRecommendation = recommendBiasTraining(progression.biasProfile || {});
+    const dueDate = biasRecommendation ? progression.biasProfile?.[biasRecommendation.biasType]?.nextDrillDate : null;
+
+    const lines = [
+      'Drills NegotiateAI',
+      `Drill recommandé: ${recommendedDrillId}`,
+      biasRecommendation
+        ? `Biais prioritaire: ${biasRecommendation.biasType}${dueDate ? ` · revue ${dueDate}` : ''}`
+        : 'Biais prioritaire: aucun',
+      biasRecommendation ? `Pourquoi: ${biasRecommendation.reason}` : null,
+      '',
+      'Catalogue: /daily pour un challenge auto, sinon mirror | anchor | pressure | batna | reframe',
+    ].filter(Boolean);
+
+    return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
+  }
+
   async function sendWeekly(chatId) {
     const scenarios = await listScenarios();
     const { weekKey, scenario } = selectScenarioOfWeek(scenarios);
@@ -258,6 +284,11 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/profile') {
       await sendProfile(chatId);
       return { ok: true, command: 'profile' };
+    }
+
+    if (text === '/drills') {
+      await sendDrills(chatId);
+      return { ok: true, command: 'drills' };
     }
 
     if (text === '/weekly') {

@@ -42,6 +42,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
 - Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id, /api/sessions/:id/replay), sans recalcul produit cote navigateur
+- Drills web/Telegram: reutiliser la meme source de verite de progression (weakDimensions + biasProfile.nextDrillDate) pour les recommandations et la repetition espacee, sans scheduler parallele cote UI/bot
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
 - Frontend web simulate-batch: permettre jusqu'a 5 variantes cote UI, une formulation par ligne, et se contenter d'afficher bestIndex/reports sans reclasser cote navigateur
@@ -64,6 +65,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app MVP: GET / + assets statiques, POST /api/session pour creer la session, POST /api/session/:id/turn pour discuter; garder la reponse JSON mince et branchee directement sur engine.mjs
 - Frontend web: afficher le coaching/ticker sans framework ni logique metier dupliquee; parser seulement les champs JSON exposes par l'API
 - API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/profile, /api/hall-of-fame, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
+- API web drills: exposer recommendedDrillId + biasRecommendation + dueBiasDrills depuis progression/biasTracker, puis laisser le frontend se contenter d'afficher la file de repetition espacee
 - Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
 - Frontend simulate-batch: modal statique, une ligne = une variante, classement et bestIndex fournis par l'API; aucune logique de ranking supplementaire dans app.js
 - Versus API web: POST /api/versus -> adjudicateVersusRound(...) avec payload mince { brief, playerA, playerB, transcript? } et reponse directement exploitable par un frontend statique
@@ -71,7 +73,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Presets web packagés: /api/scenarios peut agreger des presets inline et des scenarios fichiers (ex: swiss-*) ; le frontend groupe par categorie et se contente d'appeler `launchScenario(scenarioFile)` ou `fillForm(brief)`
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars et validation explicite des tiers autorises
-- Bot Telegram academy: brancher /weekly, /leaderboard et /halloffame sur leaderboard.mjs + hall-of-fame.mjs + store.mjs, sans logique de classement/anonymisation dupliquee dans le bot
+- Bot Telegram academy: brancher /weekly, /leaderboard, /halloffame et /drills sur leaderboard.mjs + hall-of-fame.mjs + drill.mjs + biasTracker.mjs + store.mjs, sans logique de classement/anonymisation/repetition espacee dupliquee dans le bot
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Bot Telegram runtime: exposer un createTelegramPollingRuntime({ bot, token, fetchImpl }) pur/testable, puis garder `src/cli/telegram-bot-cli.mjs` comme simple bootstrap env+store+provider
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
