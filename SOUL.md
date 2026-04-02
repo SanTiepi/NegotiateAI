@@ -38,6 +38,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Les endpoints de scénarios packagés (`/api/scenarios`, `/api/scenarios/:id`) et le loader `scenarios/index.mjs` doivent renvoyer des métadonnées stables (`category`, `scenarioFile`, `tier`, `metadata`) pour garder web + Telegram alignés
 - Simulate Before Send v2 reste borné à 5 variantes par batch sur tous les canaux (CLI, web, Telegram) avec un résumé compact orienté décision
 - Les réponses Telegram d'académie / profil / dashboard doivent rester compactes et orientées action ; privilégier les agrégats pré-calculés (`computeDashboardStats`, carte profil, snapshot joueur) plutôt que reconstruire des vues ad hoc côté bot
+- Les vues Telegram joueur (`/profile`, `/dashboard`) doivent être scoppées par `playerId = telegram:<chatId>` ; ne jamais agréger toutes les sessions Telegram d’un coup
 - Les snapshots joueur web (`/api/dashboard/player`) doivent rester dérivés d’agrégats purs et accepter les mêmes filtres query string que `/api/dashboard` pour éviter les divergences web/Telegram
 - Les stats de négos réelles (journal) doivent être injectées via agrégats purs (`computeRealWorldStats`) dans les payloads dashboard web, sans logique métier recalculée côté front
 - Les vues joueur (`/api/dashboard/player`, analytics filtrées, Telegram/web) doivent vraiment filtrer par `playerId` persisté dans les sessions/events ; ne jamais se contenter de renvoyer l’identifiant demandé sans scoper les données
@@ -55,7 +56,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Analytics API web : exposer une vue brute filtrable (`/api/analytics`) et une vue agrégée déterministe (`/api/analytics/summary`) avec les mêmes query filters
 - Scénarios packagés : centraliser le chargement/normalisation dans une seule source (`scenarios/index.mjs`) pour réutilisation CLI + web + Telegram, avec résumés stables en liste et `metadata.tier` explicite au chargement détaillé
 - Telegram : toute feature d'analyse doit produire un résumé compact orienté décision (meilleure option + score + rewrite)
-- Telegram dashboard : réutiliser les agrégats purs (`computeDashboardStats`, snapshot joueur) côté bot pour garder le scoring aligné avec le web sans divergence de format métier
+- Telegram dashboard : réutiliser les agrégats purs (`computeDashboardStats`, snapshot joueur) côté bot pour garder le scoring aligné avec le web sans divergence de format métier, en filtrant d’abord les sessions du `playerId` courant
 - Snapshot joueur : construire la fiche complète dans `src/dashboard.mjs`, puis l’exposer côté web et la consommer côté Telegram au lieu de recalculer des vues métier parallèles
 - Journal → dashboard web : agréger côté serveur (`computeRealWorldStats`) puis afficher côté front ; ne pas recalculer les stats réelles dans `web/app.js`
 - Player dashboard : persister `playerId` au moment de la sauvegarde (web, Telegram, analytics, journal) puis appliquer les mêmes filtres côté route pour éviter les faux snapshots multi-joueurs

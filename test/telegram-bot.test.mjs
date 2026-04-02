@@ -219,6 +219,7 @@ describe('telegram-bot', () => {
         recommendations: ['Garde ce sang-froid.'],
       },
       mode: 'telegram',
+      playerId: 'telegram:999',
     });
     const sent = [];
     const bot = createTelegramBot({
@@ -235,12 +236,13 @@ describe('telegram-bot', () => {
     await bot.handleMessage({ message: { chat: { id: 42 }, text: 'Je veux avancer vite.' } });
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
     assert.match(sent.at(-1).text, /Profil NegotiateAI Telegram/);
-    assert.match(sent.at(-1).text, /Sessions: 2/);
+    assert.match(sent.at(-1).text, /Sessions: 1/);
 
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/dashboard' } });
     assert.match(sent.at(-1).text, /Dashboard NegotiateAI Telegram/);
-    assert.match(sent.at(-1).text, /Score moyen:/);
+    assert.match(sent.at(-1).text, /Sessions: 1 · Score moyen: 76\/100/);
     assert.match(sent.at(-1).text, /Point fort:/);
+    assert.doesNotMatch(sent.at(-1).text, /88\/100/);
 
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/drills' } });
     assert.match(sent.at(-1).text, /Drills NegotiateAI/);
@@ -280,6 +282,72 @@ describe('telegram-bot', () => {
     assert.match(sent.at(-1).text, /Meilleure option: #1/);
     assert.match(sent.at(-1).text, /Rewrite conseillé:/);
     assert.equal(bot.sessions.size, 1);
+  });
+
+  it('scopes telegram profile and dashboard to the current chat player id', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-scope-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    await store.saveSession({
+      id: 'telegram-other-player',
+      date: '2026-04-02T11:00:00.000Z',
+      brief: {
+        situation: 'Renégociation freelance',
+        userRole: 'Freelance',
+        adversaryRole: 'Client',
+        objective: '1100 CHF/jour',
+        minimalThreshold: '950 CHF/jour',
+        batna: 'Autre mission',
+        difficulty: 'hostile',
+        relationalStakes: 'high',
+        constraints: [],
+      },
+      adversary: { identity: 'Client A' },
+      transcript: [
+        { role: 'user', content: 'Je veux 1100 CHF/jour.' },
+        { role: 'assistant', content: 'Impossible.' },
+      ],
+      status: 'ended',
+      turns: 3,
+      scenarioId: 'freelance-rate',
+      feedback: {
+        globalScore: 91,
+        scores: {
+          outcomeLeverage: 22,
+          batnaDiscipline: 18,
+          emotionalRegulation: 18,
+          biasResistance: 15,
+          conversationalFlow: 18,
+        },
+        biasesDetected: [],
+        tacticsUsed: [],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+      mode: 'telegram',
+      playerId: 'telegram:777',
+    });
+
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/new Obtenir 10% | 5% mini | autre offre' } });
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: 'Je veux avancer vite.' } });
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
+    assert.match(sent.at(-1).text, /Sessions: 1/);
+    assert.doesNotMatch(sent.at(-1).text, /91/);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/dashboard' } });
+    assert.match(sent.at(-1).text, /Sessions: 1 · Score moyen: 76\/100/);
+    assert.doesNotMatch(sent.at(-1).text, /91\/100/);
   });
 
   it('starts a daily challenge and persists it in daily mode', async () => {

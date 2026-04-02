@@ -195,13 +195,28 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     );
   }
 
+  async function loadTelegramPlayerSnapshot(chatId) {
+    const playerId = getPlayerId(chatId);
+    const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
+    const telegramSessions = sessions.filter((session) => (
+      (session.mode || 'cli') === 'telegram'
+      && (session.playerId || null) === playerId
+    ));
+
+    return {
+      playerId,
+      progression,
+      sessions: telegramSessions,
+      playerDashboard: buildPlayerDashboard(telegramSessions, progression, { playerId }),
+      stats: computeDashboardStats(telegramSessions, progression),
+    };
+  }
+
   async function sendProfile(chatId) {
     if (!store) {
       return sendMessage(chatId, 'Profil indisponible: aucun store persistant n’est configuré.');
     }
-    const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
-    const telegramSessions = sessions.filter((session) => session.mode === 'telegram');
-    const playerDashboard = buildPlayerDashboard(telegramSessions, progression, { playerId: `telegram:${chatId}` });
+    const { playerDashboard } = await loadTelegramPlayerSnapshot(chatId);
     const { card } = playerDashboard;
     const lines = [
       'Profil NegotiateAI Telegram',
@@ -222,9 +237,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       return sendMessage(chatId, 'Dashboard indisponible: aucun store persistant n’est configuré.');
     }
 
-    const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
-    const telegramSessions = sessions.filter((session) => (session.mode || 'cli') === 'telegram');
-    const stats = computeDashboardStats(telegramSessions, progression);
+    const { stats } = await loadTelegramPlayerSnapshot(chatId);
     const bestDimensionLabel = stats.bestDimension?.dimension
       ? stats.bestDimension.dimension
       : '—';
