@@ -20,6 +20,9 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - SessionState.status: active/accepted/broken/ended/quit
 - Rapports Telegram: MAX 1500 chars
 - Progression.biasProfile doit rester un objet (pas un tableau), sinon biasTracker/War Room ont besoin de normalisation defensive
+- Le coach temps reel doit maintenant exposer 3 niveaux explicites: observer / suggest / draft, sans casser `coaching.tip`
+- L'Autonomy Ladder est un systeme separe des ceintures: 5 niveaux derives de sessions + score moyen + ceintures gagnees
+- Le serveur MCP doit borner ses sessions en memoire (TTL + max size) et renvoyer des erreurs JSON structurees, pas juste du texte brut
 - En environnement Windows sandboxe, npm test doit tourner avec `node --test --test-isolation=none` pour eviter `spawn EPERM`
 
 ## Patterns
@@ -27,6 +30,9 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Test: test/[module].test.mjs avec node:test + mock provider
 - Scenario: buildBrief(rawInput) -> Brief valide
 - Simulate Before Send: shadow session via createSession/processTurn + verdict JSON separé (mock provider en test)
+- Coaching Ladder: partir d'un coaching court LLM puis deriver deterministiquement les niveaux 1-3 (observer / suggest / draft)
+- Autonomy Ladder: calcul pur, testable, branche sur les stats de progression et l'affichage profil/carnet
+- MCP hardening: encapsuler TTL/cap/error-format dans un helper dedie pour tester sans lancer le serveur MCP
 - War Room: batch auto-playe via createDrill/processTurn/scoreDrill, puis persiste chaque run comme session `mode: 'war-room'`
 
 ## Apprentissage
