@@ -137,10 +137,45 @@ describe('telegram-bot', () => {
     assert.equal(stats.currentStreak, 1);
   });
 
-  it('returns a Telegram profile summary when a store is configured', async () => {
+  it('returns academy summaries for profile, weekly, leaderboard and hall of fame', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-profile-'));
     tempDirs.push(dir);
     const store = createStore({ dataDir: dir });
+    await store.saveSession({
+      id: 'weekly-1',
+      date: '2026-04-02T10:00:00.000Z',
+      brief: {
+        situation: 'Achat discret d’un bien à 950000 CHF',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeur',
+        objective: 'Signer à 900000 CHF',
+        minimalThreshold: '920000 CHF',
+        batna: 'Un autre appartement',
+        difficulty: 'neutral',
+        relationalStakes: 'medium',
+        constraints: [],
+      },
+      adversary: { identity: 'Mme Seller' },
+      transcript: [
+        { role: 'user', content: 'Je propose 900000 CHF.' },
+        { role: 'assistant', content: 'Je vise plutôt 950000 CHF.' },
+      ],
+      status: 'accepted',
+      turns: 4,
+      scenarioId: 'freelance-rate',
+      feedback: {
+        globalScore: 88,
+        scores: {
+          outcomeLeverage: 20,
+          batnaDiscipline: 18,
+          emotionalRegulation: 18,
+          biasResistance: 14,
+          conversationalFlow: 18,
+        },
+        recommendations: ['Garde ce sang-froid.'],
+      },
+      mode: 'telegram',
+    });
     const sent = [];
     const bot = createTelegramBot({
       provider,
@@ -155,9 +190,21 @@ describe('telegram-bot', () => {
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/new Obtenir 10% | 5% mini | autre offre' } });
     await bot.handleMessage({ message: { chat: { id: 42 }, text: 'Je veux avancer vite.' } });
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
-
     assert.match(sent.at(-1).text, /Profil NegotiateAI Telegram/);
-    assert.match(sent.at(-1).text, /Sessions: 1/);
+    assert.match(sent.at(-1).text, /Sessions: 2/);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/weekly' } });
+    assert.match(sent.at(-1).text, /Scenario de la semaine/);
+    assert.match(sent.at(-1).text, /Commande: \/scenario /);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/leaderboard' } });
+    assert.match(sent.at(-1).text, /Leaderboard — /);
+    assert.match(sent.at(-1).text, /#1 · /);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/halloffame' } });
+    assert.match(sent.at(-1).text, /Hall of Fame NegotiateAI/);
+    assert.match(sent.at(-1).text, /#1 · /);
+    assert.doesNotMatch(sent.at(-1).text, /950000 CHF/);
   });
 
   it('starts a daily challenge and persists it in daily mode', async () => {
@@ -242,6 +289,7 @@ describe('telegram-bot', () => {
     assert.equal(result.results[0].command, 'start');
     assert.equal(runtime.getOffset(), 11);
     assert.match(sent.at(-1).text, /Bienvenue sur NegotiateAI/);
+    assert.match(sent.at(-1).text, /\/weekly/);
     assert.equal(fetchCalls[0].body.drop_pending_updates, false);
     assert.equal(fetchCalls[1].body.offset, 0);
     assert.equal(fetchCalls[1].body.timeout, 25);

@@ -5,6 +5,8 @@ import { analyzeFeedback } from './analyzer.mjs';
 import { generateDaily, dailyAlreadyPlayed } from './daily.mjs';
 import { listScenarios, loadScenario } from '../scenarios/index.mjs';
 import { formatShareableCard, generateVaccinationCard } from './vaccination.mjs';
+import { selectScenarioOfWeek } from './leaderboard.mjs';
+import { formatHallOfFameStories } from './hall-of-fame.mjs';
 
 const DEFAULT_POLL_TIMEOUT_SECONDS = 25;
 const DEFAULT_POLL_IDLE_DELAY_MS = 1_000;
@@ -179,6 +181,64 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
+  async function sendWeekly(chatId) {
+    const scenarios = await listScenarios();
+    const { weekKey, scenario } = selectScenarioOfWeek(scenarios);
+    return sendMessage(chatId, [
+      `Scenario de la semaine — ${weekKey}`,
+      `${scenario.name}`,
+      `ID: ${scenario.id}`,
+      `Commande: /scenario ${scenario.id} neutral`,
+    ].join('\n'));
+  }
+
+  async function sendLeaderboard(chatId) {
+    if (!store) {
+      return sendMessage(chatId, 'Leaderboard indisponible: aucun store persistant n’est configuré.');
+    }
+
+    const scenarios = await listScenarios();
+    const { weekKey, scenario } = selectScenarioOfWeek(scenarios);
+    let label = `${scenario.name}`;
+    let leaderboard = await store.getScenarioLeaderboard(scenario.id, { limit: 5 });
+
+    if (!leaderboard.entries.length) {
+      const sessions = await store.loadSessions();
+      const fallbackScenarioId = sessions.find((session) => session.scenario?.id || session.scenarioId)?.scenario?.id
+        || sessions.find((session) => session.scenarioId)?.scenarioId;
+      if (fallbackScenarioId) {
+        leaderboard = await store.getScenarioLeaderboard(fallbackScenarioId, { limit: 5 });
+        label = `${fallbackScenarioId} (fallback)`;
+      }
+    }
+
+    if (!leaderboard.entries.length) {
+      return sendMessage(chatId, [
+        `Leaderboard — ${scenario.name}`,
+        `Semaine: ${weekKey}`,
+        'Aucun run persisté pour ce scenario pour le moment.',
+      ].join('\n'));
+    }
+
+    return sendMessage(chatId, [
+      `Leaderboard — ${label}`,
+      `Semaine: ${weekKey}`,
+      ...leaderboard.entries.map((entry) => `#${entry.rank} · ${entry.score}/100 · ${entry.turns} tours · ${entry.mode}`),
+    ].join('\n'));
+  }
+
+  async function sendHallOfFame(chatId) {
+    if (!store) {
+      return sendMessage(chatId, 'Hall of fame indisponible: aucun store persistant n’est configuré.');
+    }
+
+    const stories = await store.getHallOfFameStories({ limit: 3, maxChars: 180 });
+    return sendMessage(chatId, [
+      'Hall of Fame NegotiateAI',
+      formatHallOfFameStories(stories.entries),
+    ].join('\n\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
+  }
+
   async function handleMessage(update) {
     const message = update?.message;
     const chatId = message?.chat?.id;
@@ -186,7 +246,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
       return { ok: true, command: 'start' };
     }
 
@@ -198,6 +258,21 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/profile') {
       await sendProfile(chatId);
       return { ok: true, command: 'profile' };
+    }
+
+    if (text === '/weekly') {
+      await sendWeekly(chatId);
+      return { ok: true, command: 'weekly' };
+    }
+
+    if (text === '/leaderboard') {
+      await sendLeaderboard(chatId);
+      return { ok: true, command: 'leaderboard' };
+    }
+
+    if (text === '/halloffame') {
+      await sendHallOfFame(chatId);
+      return { ok: true, command: 'halloffame' };
     }
 
     if (text === '/daily') {
