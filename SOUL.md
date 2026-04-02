@@ -33,6 +33,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch cron nocturne fiable : si `git log -10` ne montre que 4 feats SOUL mais `git log --grep="simulate" -n 5` retrouve Simulate Before Send et que `npm test` reste a 277 verts, traiter le run comme zero-delta documentaire
 - En batch dev-runner cron, si `git log -10` montre surtout des commits docs mais que les feats `autonomy ladder` et `mcp hardening` sont presentes et `git log --grep="simulate" -n 5` retrouve Simulate Before Send, traiter la session comme zero-delta si `npm test` reste a 277 verts
 - Audit zero-delta robuste: si le top-10 est quasi full docs avec seulement `feat: harden mcp session handling`, verifier aussi `git log --grep="war room|war-room"`, `git log --grep="coach|coaching"`, `git log --grep="autonomy ladder"` et `git log --grep="simulate"`; si les 5 priorites SOUL reapparaissent et `npm test` reste a 277 verts, ne rien reouvrir cote feature
+- Batch cron aube fiable: si `git log -10` est 100% documentaire mais que les greps `simulate`, `war room`, `coach` et `autonomy ladder` retrouvent les feats, considerer le lot comme zero-delta des que `npm test` confirme 277 verts
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -53,6 +54,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Batch cron zero-delta: apres validation `git log -10` + grep simulate + `npm test`, ne toucher qu'a `SOUL.md` puis committer `docs: refresh soul after zero-delta validation batch`
 - Audit cron express: quand le top-10 est domine par des commits docs, verifier explicitement `git log --grep="simulate" -n 5` avant de conclure qu'une priorite SOUL manque encore
 - Audit prioritaire complet: si `git log -10` est masque par une pile de commits docs, completer avec des greps ciblés (`simulate`, `war room`, `coach`, `autonomy ladder`) avant de declarer un batch zero-delta
+- Batch aube zero-delta: en cron, lancer `git log -10 --oneline`, les greps de couverture SOUL puis `npm test`; si tout est vert, limiter le commit a `SOUL.md` pour garder un historique propre
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
