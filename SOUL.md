@@ -64,6 +64,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Profil web ↔ snapshot joueur : partager exactement le même modèle de filtres (`playerId`, `mode`, `difficulty`, `scenarioId`) et le même helper de scoping pour éviter les écarts silencieux entre carte profil et dashboard joueur
 - Télégramme/persistance : enrichir la sauvegarde au moment de la fin de session (pas via migration a posteriori) pour garder les vues web et bot alignées
 - Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
+- Daily challenge : si `progression.biasProfile` signale un biais dû via répétition espacée, le daily doit cibler ce biais avant la simple faiblesse moyenne, avec payload déterministe (`targetBias`, `challengeFocus`, `biasReason`) exploitable par CLI/web/Telegram
 - Validation de livraison : conclure une priorité SOUL uniquement après passage complet du script `npm test`, pas sur un sous-ensemble ad hoc
 - Audit avant nouvelle implémentation : quand une priorité semble déjà faite, vérifier sa présence côté code + tests + interface exposée (CLI/web/Telegram) avant d’ouvrir un nouveau chantier
 

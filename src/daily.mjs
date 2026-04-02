@@ -5,6 +5,7 @@ import { buildBrief } from './scenario.mjs';
 import { generatePersona } from './persona.mjs';
 import { identifyWeaknesses } from './belt.mjs';
 import { computeDifficulty, presetToProfile, assessZPD } from './difficulty.mjs';
+import { recommendBiasTraining } from './biasTracker.mjs';
 
 const DIFFICULTY_LADDER = ['cooperative', 'neutral', 'hostile', 'manipulative'];
 
@@ -17,6 +18,34 @@ const DAILY_SCENARIOS = [
   { situation: 'Partage des tâches domestiques', userRole: 'Partenaire A', adversaryRole: 'Partenaire B', objective: 'Répartition équitable 50/50', minimalThreshold: 'Au moins 40% pris en charge par l\'autre', batna: 'Engager une aide ménagère (coût partagé)' },
   { situation: 'Retour d\'un produit défectueux en magasin', userRole: 'Client', adversaryRole: 'Responsable SAV', objective: 'Remboursement intégral', minimalThreshold: 'Échange contre un produit neuf', batna: 'Signalement à la DGCCRF' },
 ];
+
+const BIAS_FOCUS = {
+  anchoring: {
+    targetSkill: 'outcomeLeverage',
+    scenarioIndex: 0,
+    challengeFocus: 'Ouvre avec une ancre claire avant que l’adversaire ne fixe le cadre.',
+  },
+  loss_aversion: {
+    targetSkill: 'batnaDiscipline',
+    scenarioIndex: 4,
+    challengeFocus: 'Ne cède pas sous la peur de perdre le deal : protège ton seuil minimal et ta BATNA.',
+  },
+  conflict_avoidance: {
+    targetSkill: 'emotionalRegulation',
+    scenarioIndex: 2,
+    challengeFocus: 'Reste ferme sans chercher à acheter la paix trop vite.',
+  },
+  framing: {
+    targetSkill: 'biasResistance',
+    scenarioIndex: 3,
+    challengeFocus: 'Repère le cadre imposé et reframe la discussion à ton avantage.',
+  },
+  conversational_blocking: {
+    targetSkill: 'conversationalFlow',
+    scenarioIndex: 5,
+    challengeFocus: 'Évite les blocages secs : réponds avec une alternative ou une question calibrée.',
+  },
+};
 
 /**
  * Auto-selects difficulty based on progression.
@@ -53,11 +82,15 @@ export async function generateDaily(store, provider) {
   const zpd = assessZPD(sessions);
   const difficulty = calibrateDifficulty(progression);
   const weakDims = sessions.length > 0 ? identifyWeaknesses(sessions) : ['batnaDiscipline', 'outcomeLeverage'];
-  const targetSkill = weakDims[0];
+  const biasRecommendation = recommendBiasTraining(progression.biasProfile || {});
+  const biasFocus = biasRecommendation ? BIAS_FOCUS[biasRecommendation.biasType] : null;
+  const targetSkill = biasFocus?.targetSkill || weakDims[0];
 
-  // Pick a scenario (rotate by day)
+  // Pick a scenario (bias-driven when a review is due, otherwise rotate by day)
   const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-  const scenarioBase = DAILY_SCENARIOS[dayOfYear % DAILY_SCENARIOS.length];
+  const scenarioBase = biasFocus
+    ? DAILY_SCENARIOS[biasFocus.scenarioIndex % DAILY_SCENARIOS.length]
+    : DAILY_SCENARIOS[dayOfYear % DAILY_SCENARIOS.length];
 
   const brief = buildBrief({
     ...scenarioBase,
@@ -74,6 +107,9 @@ export async function generateDaily(store, provider) {
     brief,
     adversary,
     targetSkill,
+    targetBias: biasRecommendation?.biasType || null,
+    challengeFocus: biasFocus?.challengeFocus || `Renforce ta dimension la plus faible : ${targetSkill}.`,
+    biasReason: biasRecommendation?.reason || null,
     difficulty,
     difficultyProfile: diffProfile,
     zpd: zpd.zone,

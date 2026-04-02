@@ -85,4 +85,32 @@ describe('daily', () => {
     const daily = await generateDaily(store, provider);
     assert.ok(daily.maxTurns >= 5 && daily.maxTurns <= 8);
   });
+
+  it('daily prioritizes due bias training when a bias review is scheduled', async () => {
+    const tmpDir = await mkdtemp(join(tmpdir(), 'daily-'));
+    const store = createStore({ dataDir: tmpDir });
+    await store.saveProgression({
+      totalSessions: 8,
+      recentAvgScore: 58,
+      currentDifficulty: 'neutral',
+      biasProfile: {
+        framing: {
+          totalCount: 4,
+          recentCount: 3,
+          frequency: 0.6,
+          lastSeen: '2026-03-20T10:00:00.000Z',
+          nextDrillDate: '2026-03-21',
+        },
+      },
+    });
+
+    const provider = createMockProvider({ adversary: MOCK_ADVERSARY });
+    const daily = await generateDaily(store, provider);
+
+    assert.equal(daily.targetBias, 'framing');
+    assert.equal(daily.targetSkill, 'biasResistance');
+    assert.match(daily.challengeFocus, /reframe/i);
+    assert.match(daily.biasReason, /High frequency bias|Overdue for drill|Frequency/i);
+    assert.equal(daily.brief.situation, 'Négociation d\'un délai de livraison projet');
+  });
 });
