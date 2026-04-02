@@ -17,6 +17,7 @@ function navigate(viewName) {
     l.classList.toggle('active', l.dataset.view === viewName);
   });
   if (viewName === 'dashboard') loadDashboard();
+  if (viewName === 'academy') loadAcademy();
   if (viewName === 'setup') loadPresets();
   if (viewName === 'history') loadHistory();
 }
@@ -84,6 +85,15 @@ const MODE_LABELS = {
   drill: 'Drill',
 };
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function renderMetricList(elementId, entries, labelKey, valueFormatter) {
   const root = document.getElementById(elementId);
   root.innerHTML = '';
@@ -100,6 +110,161 @@ function renderMetricList(elementId, entries, labelKey, valueFormatter) {
       <span class="metric-value">${valueFormatter(entry)}</span>
     `;
     root.appendChild(row);
+  }
+}
+
+// ============================================================
+// ACADEMY
+// ============================================================
+
+let academyLoaded = false;
+
+function renderAcademyPlaceholder(elementId, text) {
+  const root = document.getElementById(elementId);
+  root.innerHTML = `<p class="text-muted">${escapeHtml(text)}</p>`;
+}
+
+function renderSkillPill(skill) {
+  return `<span class="chip">${escapeHtml(skill)}</span>`;
+}
+
+async function loadAcademy(force = false) {
+  if (academyLoaded && !force) return;
+
+  try {
+    const [profile, drills, weekly, hall] = await Promise.all([
+      api('/api/profile'),
+      api('/api/drills'),
+      api('/api/scenario-of-week'),
+      api('/api/hall-of-fame?limit=3'),
+    ]);
+
+    const profileEl = document.getElementById('academy-profile');
+    const card = profile.card || {};
+    profileEl.innerHTML = `
+      <div class="academy-hero">
+        <div>
+          <div class="hero-kicker">Autonomie</div>
+          <div class="hero-value">${escapeHtml(card.autonomy?.label || 'Niveau —')}</div>
+        </div>
+        <div>
+          <div class="hero-kicker">Sessions</div>
+          <div class="hero-value">${escapeHtml(card.totalSessions ?? 0)}</div>
+        </div>
+      </div>
+      <div class="metric-row"><span class="metric-label">Ceinture actuelle</span><span class="metric-value">${escapeHtml(card.currentBelt?.name || 'Blanche')}</span></div>
+      <div class="metric-row"><span class="metric-label">Drill recommande</span><span class="metric-value">${escapeHtml(profile.recommendedDrillId || 'mirror')}</span></div>
+      <div class="metric-row"><span class="metric-label">Biais prioritaire</span><span class="metric-value">${escapeHtml(profile.biasRecommendation?.biasType || 'Aucun')}</span></div>
+      <details class="academy-details">
+        <summary>Version partageable</summary>
+        <pre class="academy-pre">${escapeHtml(profile.shareable || 'Pas encore de carte partageable.')}</pre>
+      </details>
+    `;
+
+    const drillsEl = document.getElementById('academy-drills');
+    drillsEl.innerHTML = '';
+    for (const drill of drills.drills || []) {
+      const item = document.createElement('div');
+      item.className = `academy-item ${drill.recommended ? 'recommended' : ''}`;
+      item.innerHTML = `
+        <div class="academy-item-head">
+          <strong>${escapeHtml(drill.name)}</strong>
+          ${drill.recommended ? '<span class="badge badge-success">Recommande</span>' : ''}
+        </div>
+        <p class="text-muted">${escapeHtml(drill.description)}</p>
+        <div class="academy-meta">
+          ${renderSkillPill(drill.skill)}
+          <span class="chip">${escapeHtml(drill.maxTurns)} tours</span>
+        </div>
+      `;
+      drillsEl.appendChild(item);
+    }
+
+    const weeklyEl = document.getElementById('academy-weekly');
+    weeklyEl.innerHTML = weekly
+      ? `
+        <div class="academy-item recommended">
+          <div class="academy-item-head">
+            <strong>${escapeHtml(weekly.name || weekly.id || 'Scenario')}</strong>
+            <span class="badge">${escapeHtml(weekly.brief?.difficulty || 'neutral')}</span>
+          </div>
+          <p class="text-muted">${escapeHtml(weekly.description || weekly.brief?.situation || '—')}</p>
+          <div class="academy-meta">
+            <span class="chip">${escapeHtml(weekly.id || 'scenario')}</span>
+          </div>
+        </div>
+      `
+      : '<p class="text-muted">Aucun scenario de la semaine.</p>';
+
+    const leaderboardEl = document.getElementById('academy-leaderboard');
+    if (weekly?.id) {
+      const leaderboard = await api(`/api/leaderboard?scenarioId=${encodeURIComponent(weekly.id)}&limit=5`);
+      leaderboardEl.innerHTML = '';
+      if (!leaderboard.entries?.length) {
+        leaderboardEl.innerHTML = '<p class="text-muted">Pas encore de runs sur ce scenario.</p>';
+      } else {
+        leaderboard.entries.forEach((entry, index) => {
+          const row = document.createElement('div');
+          row.className = 'metric-row';
+          row.innerHTML = `<span class="metric-label">#${index + 1} · ${escapeHtml(entry.sessionId)}</span><span class="metric-value">${escapeHtml(entry.score)} pts</span>`;
+          leaderboardEl.appendChild(row);
+        });
+      }
+    } else {
+      renderAcademyPlaceholder('academy-leaderboard', 'Leaderboard indisponible.');
+    }
+
+    const hallEl = document.getElementById('academy-hall');
+    hallEl.innerHTML = '';
+    if (!hall?.stories?.length) {
+      hallEl.innerHTML = '<p class="text-muted">Pas encore de runs legendaires.</p>';
+    } else {
+      for (const story of hall.stories) {
+        const item = document.createElement('div');
+        item.className = 'academy-item';
+        item.innerHTML = `
+          <div class="academy-item-head">
+            <strong>${escapeHtml(story.title)}</strong>
+            <span class="badge">${escapeHtml(story.score)} pts</span>
+          </div>
+          <p class="text-muted">${escapeHtml(story.excerpt)}</p>
+        `;
+        hallEl.appendChild(item);
+      }
+    }
+
+    academyLoaded = true;
+  } catch (err) {
+    console.error('Academy load error:', err);
+    renderAcademyPlaceholder('academy-profile', 'Impossible de charger le profil.');
+    renderAcademyPlaceholder('academy-drills', 'Impossible de charger les drills.');
+    renderAcademyPlaceholder('academy-weekly', 'Impossible de charger le scenario de la semaine.');
+    renderAcademyPlaceholder('academy-leaderboard', 'Impossible de charger le leaderboard.');
+    renderAcademyPlaceholder('academy-hall', 'Impossible de charger le hall of fame.');
+  }
+}
+
+async function loadDailyCard() {
+  const root = document.getElementById('academy-daily');
+  root.innerHTML = '<p class="text-muted">Chargement du daily…</p>';
+  try {
+    const daily = await api('/api/daily');
+    root.innerHTML = `
+      <div class="academy-item recommended">
+        <div class="academy-item-head">
+          <strong>${escapeHtml(daily.targetSkill || 'Skill')}</strong>
+          <span class="badge">${escapeHtml(daily.difficulty || 'neutral')}</span>
+        </div>
+        <p class="text-muted">${escapeHtml(daily.brief?.situation || '—')}</p>
+        <div class="academy-meta">
+          <span class="chip">${escapeHtml(daily.maxTurns)} tours</span>
+          <span class="chip">${escapeHtml(daily.date || '')}</span>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error('Daily load error:', err);
+    root.innerHTML = '<p class="text-muted">Impossible de generer le daily.</p>';
   }
 }
 
@@ -801,11 +966,13 @@ async function loadHistory() {
     if (sessions.length === 0) {
       listEl.innerHTML = '';
       emptyEl.classList.remove('hidden');
+      document.getElementById('history-replay').classList.add('hidden');
       return;
     }
 
     emptyEl.classList.add('hidden');
     listEl.innerHTML = '';
+    document.getElementById('history-replay').classList.add('hidden');
 
     for (const s of sessions) {
       const date = s.date ? new Date(s.date).toLocaleDateString('fr-CH', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
@@ -817,11 +984,45 @@ async function loadHistory() {
         <span class="history-diff ${s.difficulty}">${s.difficulty}</span>
         <span class="history-score" style="color:${s.score >= 65 ? 'var(--green)' : s.score >= 40 ? 'var(--amber)' : 'var(--red)'}">${s.score}</span>
         <span class="history-status ${s.status}">${s.status}</span>
+        <button type="button" class="btn btn-outline btn-sm history-replay-btn">Replay</button>
       `;
+      row.querySelector('.history-replay-btn').addEventListener('click', () => loadReplay(s.id));
       listEl.appendChild(row);
     }
   } catch (err) {
     console.error('History load error:', err);
+  }
+}
+
+async function loadReplay(sessionId) {
+  try {
+    const replay = await api(`/api/sessions/${encodeURIComponent(sessionId)}/replay`);
+    const container = document.getElementById('history-replay');
+    const summary = document.getElementById('history-replay-summary');
+    const turns = document.getElementById('history-replay-turns');
+
+    summary.textContent = replay.summary || `Replay pour ${sessionId}`;
+    turns.innerHTML = '';
+
+    for (const turn of replay.turns || []) {
+      const item = document.createElement('div');
+      item.className = 'academy-item';
+      item.innerHTML = `
+        <div class="academy-item-head">
+          <strong>Tour ${escapeHtml(turn.turnNumber)}</strong>
+          <span class="badge">${escapeHtml(turn.momentumLabel || 'stable')}</span>
+        </div>
+        <p>${escapeHtml(turn.annotation || '—')}</p>
+        ${turn.biasDetected ? `<p class="text-muted">Biais: ${escapeHtml(turn.biasDetected)}</p>` : ''}
+        ${turn.alternativeSuggestion ? `<p class="text-muted">Alternative: ${escapeHtml(turn.alternativeSuggestion)}</p>` : ''}
+      `;
+      turns.appendChild(item);
+    }
+
+    container.classList.remove('hidden');
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error('Replay load error:', err);
   }
 }
 
@@ -835,6 +1036,16 @@ document.getElementById('btn-quit').addEventListener('click', () => {
     endSession(null);
     setTimeout(() => navigate('dashboard'), 1000);
   }
+});
+
+document.getElementById('academy-refresh')?.addEventListener('click', () => {
+  academyLoaded = false;
+  loadAcademy(true);
+  loadDailyCard();
+});
+
+document.getElementById('academy-load-daily')?.addEventListener('click', () => {
+  loadDailyCard();
 });
 
 // ============================================================

@@ -101,6 +101,23 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('serves the web shell with academy and replay surfaces wired in', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const response = await fetch(`${baseUrl}/`);
+    const html = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(html, /data-view="academy"/);
+    assert.match(html, /id="view-academy"/);
+    assert.match(html, /id="history-replay"/);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('creates a session from a valid brief', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);

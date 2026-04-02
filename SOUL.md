@@ -39,6 +39,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Profil/vaccination card web: exposer depuis les modules purs (vaccination.mjs + biasTracker.mjs + drill.mjs), jamais via un calcul du frontend
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
+- Frontend web Academy/History: consommer uniquement les endpoints JSON minces (/api/profile, /api/daily, /api/drills, /api/scenario-of-week, /api/hall-of-fame, /api/leaderboard, /api/sessions/:id/replay), sans recalcul produit cote navigateur
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
 - Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
 - Mode versus: garder l'arbitrage pur et testable (2 humains in, verdict structure out), avec fallback deterministic si le provider echoue
@@ -59,7 +60,9 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Dashboard web: renderer des listes/chips purement presentationnelles a partir des payloads API (pas de recalcul de stats cote frontend)
+- Academy web: agreger profil/daily/drills/hall-of-fame/leaderboard en presentation only; la logique de recommandation reste dans les modules purs exposes par l'API
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)
+- Replay web: declencher le chargement du replay a la demande depuis l'historique, via endpoint read-only, et afficher les annotations sans dupliquer la logique replay.mjs
 - Hall of fame: separer le ranking brut du rendu partageable (module pur d'anonymisation/formatage reutilisable par CLI/web)
 - Progression partagee: centraliser le recalcul belts/biasProfile/ZPD dans un module reutilisable pour CLI, web et Telegram
 - Simulate Before Send v2: exposer un batch pur (offerMessages[] -> reports + bestReport) sans couplage CLI/UI

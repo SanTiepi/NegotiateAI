@@ -16,6 +16,7 @@
       </div>
       <div class="nav-links">
         <button class="nav-link active" data-view="dashboard">Dashboard</button>
+        <button class="nav-link" data-view="academy">Academy</button>
         <button class="nav-link" data-view="setup">Nouvelle session</button>
         <button class="nav-link" data-view="history">Historique</button>
       </div>
@@ -98,6 +99,77 @@
           <p>Lance ta premiere session pour commencer a t'entrainer.</p>
           <button class="btn btn-primary btn-lg" data-view="setup">Commencer</button>
         </div>
+      </div>
+    </main>
+
+    <!-- VIEW: ACADEMY -->
+    <main id="view-academy" class="view">
+      <div class="container">
+        <header class="page-header">
+          <h1>Academy</h1>
+          <button class="btn btn-primary" id="academy-refresh">Actualiser</button>
+        </header>
+
+        <div class="grid-2">
+          <section class="card">
+            <div class="section-head">
+              <div>
+                <h2>Challenge du jour</h2>
+                <p class="text-muted">Un sparring auto-calibre pour aujourd'hui.</p>
+              </div>
+              <button class="btn btn-outline btn-sm" id="academy-load-daily">Generer</button>
+            </div>
+            <div id="academy-daily" class="academy-stack">
+              <p class="text-muted">Charge un daily pour voir la cible du jour.</p>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="section-head">
+              <div>
+                <h2>Profil cognitif</h2>
+                <p class="text-muted">Vaccination card + drill recommande.</p>
+              </div>
+            </div>
+            <div id="academy-profile" class="academy-stack">
+              <p class="text-muted">Aucune donnee chargee.</p>
+            </div>
+          </section>
+        </div>
+
+        <div class="grid-2">
+          <section class="card">
+            <div class="section-head">
+              <div>
+                <h2>Drills</h2>
+                <p class="text-muted">Exercices courts pour muscler la dimension faible.</p>
+              </div>
+            </div>
+            <div id="academy-drills" class="academy-stack"></div>
+          </section>
+
+          <section class="card">
+            <div class="section-head">
+              <div>
+                <h2>Scenario of the week</h2>
+                <p class="text-muted">Benchmark commun pour comparer les runs.</p>
+              </div>
+            </div>
+            <div id="academy-weekly" class="academy-stack"></div>
+            <div class="divider compact"><span>Leaderboard</span></div>
+            <div id="academy-leaderboard" class="academy-stack"></div>
+          </section>
+        </div>
+
+        <section class="card">
+          <div class="section-head">
+            <div>
+              <h2>Hall of fame</h2>
+              <p class="text-muted">Extraits anonymises des meilleurs runs.</p>
+            </div>
+          </div>
+          <div id="academy-hall" class="academy-stack"></div>
+        </section>
       </div>
     </main>
 
@@ -399,6 +471,15 @@
         <div id="h-empty" class="empty-state hidden">
           <p>Aucune session enregistree.</p>
         </div>
+        <section id="history-replay" class="card hidden mt-12">
+          <div class="section-head">
+            <div>
+              <h2>Replay annote</h2>
+              <p id="history-replay-summary" class="text-muted">Selectionne une session pour revoir les turns.</p>
+            </div>
+          </div>
+          <div id="history-replay-turns" class="academy-stack"></div>
+        </section>
       </div>
     </main>
 
