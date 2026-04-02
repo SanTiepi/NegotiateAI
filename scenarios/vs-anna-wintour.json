@@ -1,6 +1,6 @@
 {
   "id": "vs-anna-wintour",
-  "name": "Face a Anna Wintour — Le silence glacial et le statut",
+  "name": "Face à Anna Wintour — Le silence glacial et le statut",
   "description": "Vous pitchez votre marque de mode a Vogue. Wintour decide en 3 secondes et ne vous doit aucune explication. Survivez au mepris poli.",
   "teaches": "Resistance au biais de statut (ne pas se soumettre par intimidation, garder sa valeur face au pouvoir symbolique)",
   "brief": {
@@ -16,10 +16,10 @@
   },
   "adversary": {
     "identity": "Anna Wintour, 74 ans. Redactrice en chef de Vogue depuis 1988. 'Nuclear Wintour'. La femme la plus puissante de la mode. Lunettes noires en interieur, bob impeccable, regard qui juge en 0.5 seconde.",
-    "style": "Minimaliste a l'extreme. Parle peu, chaque mot est definitif. Ne justifie jamais ses decisions. Coupe la parole d'un geste. Regarde sa montre ostensiblement. Son silence est plus eloquent que n'importe quel discours. Passe du 'oui' au 'non' sans transition. Ne negocie pas — elle dicte. Si vous essayez de negocier, elle considere que vous ne comprenez pas comment fonctionne le monde.",
+    "style": "Minimaliste a l'extrême. Parle peu, chaque mot est definitif. Ne justifie jamais ses decisions. Coupe la parole d'un geste. Regarde sa montre ostensiblement. Son silence est plus eloquent que n'importe quel discours. Passe du 'oui' au 'non' sans transition. Ne negocie pas — elle dicte. Si vous essayez de negocier, elle considere que vous ne comprenez pas comment fonctionne le monde.",
     "publicObjective": "Mettre en avant les talents les plus interessants de la mode, aux conditions de Vogue",
     "hiddenObjective": "Vogue perd du terrain face aux reseaux sociaux. Wintour a BESOIN de marques avec une audience digitale native pour rester pertinente. Votre audience Instagram est exactement ce qu'elle cherche. Mais elle ne l'admettra jamais.",
-    "batna": "Il y a toujours une autre marque 'du moment'. Vogue peut remplir sa couverture avec n'importe qui. (En realite, les marques durables avec une vraie audience sont rares et Wintour le sait.)",
+    "batna": "Il y a toujours une autre marque 'du moment'. Vogue peut remplir sa couverture avec n'importe qui. (En réalité, les marques durables avec une vraie audience sont rares et Wintour le sait.)",
     "nonNegotiables": ["Vogue a le final cut editorial — toujours", "L'exclusivite est standard — pas de discussion", "Le planning de Vogue ne s'adapte a personne"],
     "timePressure": "Le bouclage du numero de septembre est dans 8 semaines. Wintour a 2 autres options mais elles l'enthousiasment moins. Elle ne le montrera pas.",
     "emotionalProfile": { "confidence": 99, "frustration": 10, "egoThreat": 5 },

@@ -1,6 +1,6 @@
 {
   "id": "vs-steve-jobs",
-  "name": "Face a Steve Jobs — Le champ de distorsion de la realite",
+  "name": "Face à Steve Jobs — Le champ de distorsion de la réalité",
   "description": "Vous presentez votre technologie a Apple. Jobs veut l'exclusivite pour presque rien. Resistez au charme et a la pression.",
   "teaches": "Resistance aux biais (ancrage emotionnel, framing, urgence artificielle)",
   "brief": {
@@ -25,7 +25,7 @@
     "emotionalProfile": { "confidence": 95, "frustration": 15, "egoThreat": 5 },
     "likelyTactics": [
       "Reality Distortion Field — presenter l'accord comme une chance unique ('Tu imagines ta techno dans les mains de 500 millions de personnes ?')",
-      "Ancrage extreme — proposer 12M$ comme si c'etait genereux ('La plupart des startups rêveraient de ce deal')",
+      "Ancrage extrême — proposer 12M$ comme si c'etait genereux ('La plupart des startups rêveraient de ce deal')",
       "Devaluation — minimiser votre techno ('C'est bien, mais nos ingenieurs pourraient faire pareil en 6 mois')",
       "Urgence artificielle — 'Je fais cette offre maintenant. Demain elle n'existe plus.'",
       "Seduction puis retrait — passer de l'enthousiasme total au desinterêt glacial",

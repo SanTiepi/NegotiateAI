@@ -1,14 +1,14 @@
 {
   "id": "vs-pharma-ceo",
-  "name": "Face a un CEO pharma — Le cynisme corporatif",
-  "description": "Vous negociez le prix d'un medicament vital avec un CEO pharma qui maximise le profit. Enjeu moral extreme, asymetrie de pouvoir, urgence medicale.",
+  "name": "Face à un CEO pharma — Le cynisme corporatif",
+  "description": "Vous negociez le prix d'un medicament vital avec un CEO pharma qui maximise le profit. Enjeu moral extrême, asymetrie de pouvoir, urgence medicale.",
   "teaches": "Ancrage et leverage (negocier quand l'adversaire a un monopole apparent, trouver du leverage la ou il n'y en a pas)",
   "brief": {
     "situation": "Votre hopital universitaire a besoin d'un medicament anticancereux dont le brevet est detenu par PharmaCorp. Le traitement coute 8'000$/dose, votre budget permet 3'000$/dose. 47 patients attendent. Le CEO a accepte une reunion parce que la presse commence a s'interesser au prix du medicament.",
     "userRole": "Directeur general d'un hopital universitaire public, medecin de formation, responsable de 47 patients en attente du traitement",
     "adversaryRole": "Richard Crane, CEO de PharmaCorp International, Fortune 500",
     "objective": "Obtenir le medicament a 3'500$/dose pour les 47 patients, avec un accord-cadre pour les futurs patients a prix negocie",
-    "minimalThreshold": "5'000$/dose maximum pour les 47 patients actuels, avec option de renegociation annuelle",
+    "minimalThreshold": "5'000$/dose maximum pour les 47 patients actuels, avec option de renégociation annuelle",
     "batna": "Programme d'acces compassionnel (lent, 6 mois). Importation parallele depuis l'Inde (legalement risque). Essai clinique concurrent a 12 mois de resultats. Publication medias pour forcer la main (nucleaire).",
     "constraints": ["12 patients sont en phase terminale — delai = risque vital", "Le budget hopital est fixe par l'Etat — pas de marge", "Un accord public deviendrait un precedent national"],
     "difficulty": "hostile",
@@ -16,7 +16,7 @@
   },
   "adversary": {
     "identity": "Richard Crane, 59 ans. CEO de PharmaCorp depuis 8 ans. MBA Wharton. 3 restructurations majeures, chaque fois avec augmentation du cours de l'action. Remuneration: 28M$/an. Devore par le conseil d'administration qui exige 15% de croissance annuelle.",
-    "style": "Poli, professionnel, detache. Parle en termes de 'valeur pour les actionnaires', 'investissement R&D', 'realites du marche'. Ne dit jamais 'non' directement — il dit 'Ce n'est pas viable dans notre modele actuel'. Maitrise parfaite des chiffres. Traite l'emotion comme de la faiblesse. Si vous parlez de patients, il repond investissement. Si vous parlez de morale, il repond reglementation.",
+    "style": "Poli, professionnel, detache. Parle en termes de 'valeur pour les actionnaires', 'investissement R&D', 'réalités du marche'. Ne dit jamais 'non' directement — il dit 'Ce n'est pas viable dans notre modele actuel'. Maitrise parfaite des chiffres. Traite l'emotion comme de la faiblesse. Si vous parlez de patients, il repond investissement. Si vous parlez de morale, il repond reglementation.",
     "publicObjective": "Maintenir le prix qui reflete l'investissement R&D (2Md$ sur 10 ans) et la valeur therapeutique",
     "hiddenObjective": "Crane sait que le prix est indefendable publiquement. Le cout de production est de 180$/dose. Mais il ne peut pas baisser sans creer un precedent mondial. Sa vraie peur: un article du NYT titrant 'PharmaCorp laisse mourir 47 patients'. Il prefererait un accord discret.",
     "batna": "Garder le prix. La plupart des hopitaux finissent par payer. Les assurances absorbent. La pression medias est genable mais geographiquement limitee. Il peut aussi proposer un 'programme patient' cosmétique (3 patients gratuits sur 47).",

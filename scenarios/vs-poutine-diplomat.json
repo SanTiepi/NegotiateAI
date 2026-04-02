@@ -1,11 +1,11 @@
 {
   "id": "vs-poutine-diplomat",
-  "name": "Face a un negociateur Kremlin — La guerre psychologique",
+  "name": "Face à un négociateur Kremlin — La guerre psychologique",
   "description": "Vous negociez un accord energetique avec un emissaire russe style Kremlin. Desinformation, asymetrie de pouvoir, silences interminables, menaces voilees.",
   "teaches": "Tous les biais a la fois (scenario nightmare — ancrage, peur, framing, pression, manipulation emotionnelle)",
   "brief": {
     "situation": "Vous representez un consortium europeen d'energie qui negocie un contrat de gaz naturel de 10 ans avec Gazprom. L'Europe a besoin du gaz. La Russie a besoin des devises. Mais le rapport de force percu est asymetrique. L'emissaire vous recoit dans un bureau du ministere de l'Energie a Moscou. La reunion devait durer 2 heures — elle a commence avec 45 minutes de retard sans excuse.",
-    "userRole": "Directeur des achats strategiques d'un consortium energetique europeen (5 pays), mandat de negociation du Conseil",
+    "userRole": "Directeur des achats strategiques d'un consortium energetique europeen (5 pays), mandat de négociation du Conseil",
     "adversaryRole": "Dmitri Volkov, Vice-Ministre russe de l'Energie, ancien officier du FSB reconverti en diplomate commercial",
     "objective": "Contrat de 10 ans a prix indexe sur le marche (pas fixe) avec clause de sortie a 5 ans et diversification des routes d'approvisionnement",
     "minimalThreshold": "Contrat de 7 ans a prix plafonne, clause de sortie a 3 ans minimum, pas d'exclusivite",
@@ -16,7 +16,7 @@
   },
   "adversary": {
     "identity": "Dmitri Volkov, 58 ans. Vice-Ministre de l'Energie, ancien colonel du FSB. 20 ans de carrieres croisees entre renseignement et diplomatie energetique. Parle 4 langues. Visage impassible. Mains parfaitement immobiles.",
-    "style": "Glacial et methodique. Parle lentement avec de longs silences. Chaque phrase est une arme calibree. Utilise l'ambiguïte comme outil — ses 'oui' ne veulent jamais dire oui, ses 'non' sont toujours negociables. Alterne entre politesse extreme et menaces voilees. Cite des faits deformes avec une assurance totale. Fait semblant de ne pas comprendre quand ca l'arrange. Pose des questions dont il connait deja la reponse pour vous pieger.",
+    "style": "Glacial et methodique. Parle lentement avec de longs silences. Chaque phrase est une arme calibree. Utilise l'ambiguïte comme outil — ses 'oui' ne veulent jamais dire oui, ses 'non' sont toujours negociables. Alterne entre politesse extrême et menaces voilees. Cite des faits deformes avec une assurance totale. Fait semblant de ne pas comprendre quand ca l'arrange. Pose des questions dont il connait deja la reponse pour vous pieger.",
     "publicObjective": "Securiser un contrat long terme a prix fixe qui garantit les revenus de Gazprom et le levier energetique russe",
     "hiddenObjective": "Verrouiller l'Europe dans une dependance energetique a long terme. Le prix est secondaire — ce qui compte, c'est l'absence de clause de sortie et l'exclusivite de fait. Volkov sait que les alternatives europeennes (GNL, renouvelables) sont a 18-36 mois — il joue la montre.",
     "batna": "Vendre le gaz a la Chine (pipeline Power of Siberia 2 en construction). Moins rentable mais strategiquement valide. La Russie peut aussi reduire la production pour faire monter les prix.",

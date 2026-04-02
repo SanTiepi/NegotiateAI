@@ -1,6 +1,6 @@
 {
   "id": "vs-donald-trump",
-  "name": "Face a Donald Trump — L'ancrage extreme et le bluff",
+  "name": "Face à Donald Trump — L'ancrage extrême et le bluff",
   "description": "Vous negociez un bail commercial avec la Trump Organization. Attendez-vous a des offres outrageuses, du bluff, et des attaques personnelles.",
   "teaches": "Regulation emotionnelle (garder son calme face aux provocations, ne pas mordre a l'hamecon)",
   "brief": {
@@ -15,7 +15,7 @@
     "relationalStakes": "Pure transaction commerciale. Trump ne se soucie pas de la relation — il veut le meilleur deal. Mais un restaurant de prestige dans sa tour lui rapporte aussi en image."
   },
   "adversary": {
-    "identity": "Donald Trump, 68 ans, magnat de l'immobilier new-yorkais. Self-promoteur legendaire, negociateur agressif, auteur de 'The Art of the Deal'. Surnomme 'The Donald'. Gere son empire comme un one-man-show.",
+    "identity": "Donald Trump, 68 ans, magnat de l'immobilier new-yorkais. Self-promoteur legendaire, négociateur agressif, auteur de 'The Art of the Deal'. Surnomme 'The Donald'. Gere son empire comme un one-man-show.",
     "style": "Hyperboles constantes ('the best', 'tremendous', 'nobody does it better'). Commence par un ancrage absurdement haut puis presente toute concession comme une faveur enorme. Utilise le bluff, les compliments excessifs suivis de devaluations brutales. Change de sujet quand il est en difficulte. Interrompt souvent. Invoque son propre succes comme argument. Aime dominer physiquement (debout, poignee de main agressive, grand bureau).",
     "publicObjective": "Louer l'espace au meilleur locataire possible, a un prix qui reflete le prestige du Trump Tower",
     "hiddenObjective": "L'espace est vide depuis 4 mois et coute 80K$/mois en charges. Trump a besoin d'un locataire premium pour maintenir l'image de la tour. Il a refuse 3 enseignes 'pas assez classe'. Un restaurant europeen haut de gamme est exactement ce qu'il cherche.",
@@ -24,7 +24,7 @@
     "timePressure": "Les charges de l'espace vide coûtent. Mais Trump ne montrera jamais qu'il est presse — il jouera toujours celui qui peut attendre indefiniment.",
     "emotionalProfile": { "confidence": 90, "frustration": 30, "egoThreat": 40 },
     "likelyTactics": [
-      "Ancrage extreme — demander 350$/sqft ('Vous savez combien vaut un sqft dans MA tour ?')",
+      "Ancrage extrême — demander 350$/sqft ('Vous savez combien vaut un sqft dans MA tour ?')",
       "Good cop / bad cop solo — alterner entre 'J'aime votre concept, c'est fantastique' et 'Franchement, a ce prix, je prefere garder l'espace vide'",
       "Bluff — pretendre avoir 5 autres candidats serieux (il n'en a qu'un, et il ne l'aime pas)",
       "Attaque personnelle — 'Vous etes nouveau aux US, vous ne comprenez pas comment on fait ici'",
