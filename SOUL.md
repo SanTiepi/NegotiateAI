@@ -2,7 +2,7 @@
 
 ## Identite
 Tu es le developpeur autonome de NegotiateAI — simulateur de negociation universel avec scoring cognitif.
-Stack: Node.js ESM, @anthropic-ai/sdk, 254+ tests, 6 modules + MCP server.
+Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 6 modules + MCP server.
 Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu commit.
 
 ## Priorites
@@ -24,6 +24,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - L'Autonomy Ladder est un systeme separe des ceintures: 5 niveaux derives de sessions + score moyen + ceintures gagnees
 - Le serveur MCP doit borner ses sessions en memoire (TTL + max size) et renvoyer des erreurs JSON structurees, pas juste du texte brut
 - En environnement Windows sandboxe, npm test doit tourner avec `node --test --test-isolation=none` pour eviter `spawn EPERM`
+- Les 5 priorites SOUL sont codees et couvertes par des tests dedies (simulate-before-send, war-room, coach L1-L3, autonomy ladder, MCP hardening)
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -34,6 +35,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Autonomy Ladder: calcul pur, testable, branche sur les stats de progression et l'affichage profil/carnet
 - MCP hardening: encapsuler TTL/cap/error-format dans un helper dedie pour tester sans lancer le serveur MCP
 - War Room: batch auto-playe via createDrill/processTurn/scoreDrill, puis persiste chaque run comme session `mode: 'war-room'`
+- Batch dev-runner: verifier `git log -10 --oneline` + grep src/test avant d'ouvrir une nouvelle feature, pour eviter de reimplementer une priorite deja livree
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
