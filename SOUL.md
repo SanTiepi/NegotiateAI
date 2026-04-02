@@ -29,6 +29,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app temps reel: exposer coaching/ticker/actTransition via JSON mince pour que le frontend reste statique et facilement testable
 - Web app API avancee: daily/drills/replay doivent reposer sur les modules purs existants (daily.mjs, drill.mjs, replay.mjs) et sur les sessions persistées, jamais sur un etat frontend implicite
 - Telegram bot: injecter fetch + provider + sessionStore pour tester sans reseau ni webhook reel
+- Telegram bot: valider /scenario <id> [tier] avec erreur utilisateur propre (tier invalide, scenario inconnu, aide si id absent) au lieu de laisser fuiter des exceptions brutes
 - Telegram bot: supporter des commandes courtes et deterministes (/help, /daily, /scenarios, /scenario <id> [tier], /profile) sans dupliquer la logique scenario/profil hors des modules purs
 - Telegram /daily: reutiliser daily.mjs + store pour generer le challenge du jour, persister la session en mode `daily`, et garder les replies < 1500 chars
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
@@ -54,7 +55,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/profile, /api/hall-of-fame, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
 - Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
-- Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars
+- Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars et validation explicite des tiers autorises
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Dashboard web: renderer des listes/chips purement presentationnelles a partir des payloads API (pas de recalcul de stats cote frontend)

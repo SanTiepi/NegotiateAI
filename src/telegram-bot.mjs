@@ -13,6 +13,7 @@ function jsonHeaders() {
 }
 
 const MAX_TELEGRAM_MESSAGE_LENGTH = 1500;
+const VALID_SCENARIO_TIERS = new Set(['cooperative', 'neutral', 'hostile', 'manipulative']);
 
 export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_TOKEN, apiBaseUrl = 'https://api.telegram.org', fetchImpl = globalThis.fetch, sessionStore, store } = {}) {
   if (!provider || typeof provider.generateJson !== 'function') {
@@ -92,8 +93,27 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
   }
 
   async function startPresetScenario(chatId, scenarioId, tier = 'neutral') {
-    const { brief, adversary } = await loadScenario(scenarioId, tier);
-    return startSession(chatId, buildBrief(brief), adversary);
+    const normalizedTier = String(tier || 'neutral').trim().toLowerCase();
+    if (!scenarioId) {
+      await sendScenarioCatalog(chatId);
+      return { ok: true, command: 'scenario-help' };
+    }
+    if (!VALID_SCENARIO_TIERS.has(normalizedTier)) {
+      await sendMessage(chatId, `Tier invalide: ${tier}. Utilise cooperative, neutral, hostile ou manipulative.`);
+      return { ok: true, command: 'scenario-invalid-tier', scenarioId, tier: normalizedTier };
+    }
+
+    try {
+      const { brief, adversary } = await loadScenario(scenarioId, normalizedTier);
+      await startSession(chatId, buildBrief(brief), adversary);
+      return { ok: true, command: 'scenario', scenarioId, tier: normalizedTier };
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Scenario not found:')) {
+        await sendMessage(chatId, `Scenario inconnu: ${scenarioId}. Utilise /scenarios pour voir la liste.`);
+        return { ok: true, command: 'scenario-missing', scenarioId, tier: normalizedTier };
+      }
+      throw error;
+    }
   }
 
   async function startDaily(chatId) {
@@ -187,10 +207,14 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       return { ok: true, command: 'new' };
     }
 
+    if (text === '/scenario') {
+      await sendScenarioCatalog(chatId);
+      return { ok: true, command: 'scenario-help' };
+    }
+
     if (text.startsWith('/scenario ')) {
       const [, scenarioId = '', tier = 'neutral'] = text.split(/\s+/);
-      await startPresetScenario(chatId, scenarioId, tier);
-      return { ok: true, command: 'scenario', scenarioId, tier };
+      return startPresetScenario(chatId, scenarioId, tier);
     }
 
     if (text === '/end') {

@@ -84,6 +84,29 @@ describe('telegram-bot', () => {
     assert.equal(activeSession.brief.difficulty, 'hostile');
   });
 
+  it('shows scenario help and friendly validation errors for preset commands', async () => {
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 8 }, text: '/scenario' } });
+    assert.match(sent.at(-1).text, /Commande: \/scenario <id>/);
+
+    await bot.handleMessage({ message: { chat: { id: 8 }, text: '/scenario swiss-property-purchase nightmare' } });
+    assert.match(sent.at(-1).text, /Tier invalide/);
+    assert.equal(bot.sessions.size, 0);
+
+    await bot.handleMessage({ message: { chat: { id: 8 }, text: '/scenario does-not-exist hostile' } });
+    assert.match(sent.at(-1).text, /Scenario inconnu/);
+    assert.equal(bot.sessions.size, 0);
+  });
+
   it('creates a session, persists completed Telegram sessions, and updates progression', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-'));
     tempDirs.push(dir);
