@@ -295,6 +295,13 @@ describe('web-app', () => {
     assert.ok(body[0].name);
     assert.ok(body[0].brief);
     assert.ok(body[0].brief.objective);
+    const swiss = body.filter((entry) => entry.category === 'swiss');
+    assert.equal(swiss.length, 3);
+    assert.deepEqual(
+      swiss.map((entry) => entry.id).sort(),
+      ['swiss-lease-renegotiation', 'swiss-property-purchase', 'swiss-regie-owner-conflict'],
+    );
+    assert.ok(swiss.every((entry) => entry.scenarioFile === entry.id));
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

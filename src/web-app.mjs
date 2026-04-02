@@ -177,6 +177,29 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8',
 };
 
+const SWISS_SCENARIO_PRESET_META = {
+  'swiss-lease-renegotiation': { emoji: '🇨🇭', difficulty: 'cooperative' },
+  'swiss-property-purchase': { emoji: '🏔️', difficulty: 'neutral' },
+  'swiss-regie-owner-conflict': { emoji: '🏢', difficulty: 'hostile' },
+};
+
+async function buildScenarioPresets() {
+  const packaged = await listScenarios();
+  const swissPresets = packaged
+    .filter((scenario) => scenario.id.startsWith('swiss-'))
+    .map((scenario) => ({
+      id: scenario.id,
+      category: 'swiss',
+      emoji: SWISS_SCENARIO_PRESET_META[scenario.id]?.emoji || '🇨🇭',
+      name: scenario.name,
+      description: scenario.description,
+      difficulty: SWISS_SCENARIO_PRESET_META[scenario.id]?.difficulty || 'neutral',
+      scenarioFile: scenario.id,
+    }));
+
+  return [...SCENARIO_PRESETS, ...swissPresets];
+}
+
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -325,7 +348,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/scenarios') {
-        json(res, 200, SCENARIO_PRESETS);
+        json(res, 200, await buildScenarioPresets());
         return;
       }
 

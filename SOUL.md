@@ -47,6 +47,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app /api/versus: rester un simple adaptateur HTTP de adjudicateVersusRound, avec validation des champs via le module pur et sans logique de scoring dupliquee
 - Frontend web Versus Lab: n'envoyer que { brief, playerA, playerB } au endpoint /api/versus et afficher le verdict/coaching sans recalcul local
 - Mode versus: garder l'arbitrage pur et testable (2 humains in, verdict structure out), avec fallback deterministic si le provider echoue
+- Scenarios immobiliers suisses web: exposer les presets via /api/scenarios avec `scenarioFile` + metadata de rendu, puis laisser le frontend lancer le briefing/flow sans dupliquer le contenu scenario cote navigateur
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
 
@@ -62,6 +63,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Frontend simulate-batch: modal statique, une ligne = une variante, classement et bestIndex fournis par l'API; aucune logique de ranking supplementaire dans app.js
 - Versus API web: POST /api/versus -> adjudicateVersusRound(...) avec payload mince { brief, playerA, playerB, transcript? } et reponse directement exploitable par un frontend statique
 - Frontend Versus Lab: formulaire statique dans web/, reponse texte mince branchee directement sur le verdict structure du module pur
+- Presets web packagés: /api/scenarios peut agreger des presets inline et des scenarios fichiers (ex: swiss-*) ; le frontend groupe par categorie et se contente d'appeler `launchScenario(scenarioFile)` ou `fillForm(brief)`
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Bot Telegram presets: reutiliser scenarios/index.mjs pour /scenario et vaccination.mjs + store.mjs pour /profile, avec messages replies <= 1500 chars et validation explicite des tiers autorises
 - Bot Telegram daily: brancher /daily sur generateDaily(store, provider) puis createSession(..., { maxTurns, eventPolicy }) sans recoder la calibration dans le bot

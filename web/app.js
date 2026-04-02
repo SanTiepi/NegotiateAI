@@ -374,6 +374,7 @@ async function loadPresets() {
     grid.innerHTML = '';
 
     const basics = presets.filter((p) => !p.category);
+    const swiss = presets.filter((p) => p.category === 'swiss');
     const celebrities = presets.filter((p) => p.category === 'celebrity');
     const extremes = presets.filter((p) => p.category === 'extreme');
 
@@ -404,6 +405,7 @@ async function loadPresets() {
     }
 
     renderGroup('Situations classiques', basics);
+    renderGroup('Immobilier suisse', swiss);
     renderGroup('Personnalites celebres', celebrities);
     renderGroup('Scenarios extremes', extremes);
 
