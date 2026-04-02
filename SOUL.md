@@ -36,6 +36,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web/Telegram: quand une session se termine, persister feedback + progression dans le store pour alimenter le dashboard cross-interface
 - Store: les stats et dashboards doivent survivre aux redemarrages; source de verite = fichiers de persistance, jamais l'etat HTTP en RAM
 - Simulate Before Send v2: batch pur et deterministic-friendly en test; classer les variantes sans coupler ranking a une UI specifique
+- Web app / simulate-batch: exposer le batch via un endpoint mince qui prend messages[] et reutilise simulateBeforeSendBatch sans duplicer la logique de ranking
 - Mode versus: garder l'arbitrage pur et testable (2 humains in, verdict structure out), avec fallback deterministic si le provider echoue
 - Ne PAS ajouter de commits docs-only en boucle. Si tout est fait, passe a la priorite suivante.
 - Rapports Telegram: MAX 1500 chars
@@ -48,6 +49,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Web app MVP: GET / + assets statiques, POST /api/session pour creer la session, POST /api/session/:id/turn pour discuter; garder la reponse JSON mince et branchee directement sur engine.mjs
 - Frontend web: afficher le coaching/ticker sans framework ni logique metier dupliquee; parser seulement les champs JSON exposes par l'API
 - API web secondaire: preferer des endpoints read-only minces (/api/daily, /api/drills, /api/profile, /api/hall-of-fame, /api/sessions/:id/replay) qui orchestrent les modules existants au lieu de recoder la logique produit dans le serveur HTTP
+- Simulate API web: garder /api/session/:id/simulate et /api/session/:id/simulate-batch comme simples adaptateurs HTTP des modules purs simulate.mjs
 - Bot Telegram MVP: createTelegramBot({ provider, token, fetchImpl, sessionStore }) + handleMessage(update)
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)

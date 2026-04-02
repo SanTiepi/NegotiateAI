@@ -46,6 +46,21 @@ const provider = createMockProvider({
     missedOpportunities: [],
     recommendations: ['Continue à cadrer la BATNA.'],
   },
+  offerSimulation: ({ prompt }) => {
+    const match = prompt.match(/Candidate message:\n([\s\S]*?)\n\nRecent transcript:/);
+    const message = match?.[1]?.trim() || '';
+    const score = message.includes('vite') ? 84 : 67;
+    return {
+      sendVerdict: score >= 80 ? 'send' : 'revise',
+      approvalScore: score,
+      predictedOutcome: score >= 80 ? 'Bon levier' : 'Trop timide',
+      riskLevel: score >= 80 ? 'low' : 'medium',
+      likelyObjections: ['Prix'],
+      strengths: ['Clarté'],
+      vulnerabilities: ['Ancrage faible'],
+      recommendedRewrite: `Version revue: ${message}`,
+    };
+  },
 });
 
 let app;
@@ -291,6 +306,42 @@ describe('web-app', () => {
     assert.equal(body.length, 1);
     assert.equal(body[0].id, 'test-session-1');
     assert.equal(body[0].score, 70);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('simulates a batch of offer variants for an active session', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await request('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        brief: {
+          situation: 'Achat appartement',
+          userRole: 'Acheteur',
+          adversaryRole: 'Vendeuse',
+          objective: 'Acheter a 480k',
+          minimalThreshold: '500k max',
+          batna: 'Continuer les visites',
+        },
+      }),
+    });
+
+    const { response, body } = await request('/api/session/sess-test/simulate-batch', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ messages: ['Je peux signer vite aujourd\'hui.', 'Pouvez-vous faire un geste ?'] }),
+    });
+
+    assert.equal(response.status, 200);
+    assert.equal(body.bestIndex, 0);
+    assert.equal(body.bestReport.approvalScore, 84);
+    assert.equal(body.reports.length, 2);
+    assert.equal(body.reports[1].approvalScore, 67);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

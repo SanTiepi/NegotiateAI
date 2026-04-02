@@ -12,7 +12,7 @@ import { createStore, randomUUID } from './store.mjs';
 import { refreshProgression } from './progression.mjs';
 import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
-import { simulateBeforeSend } from './simulate.mjs';
+import { simulateBeforeSend, simulateBeforeSendBatch } from './simulate.mjs';
 import { generateDaily } from './daily.mjs';
 import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
 import { generateReplay } from './replay.mjs';
@@ -551,6 +551,27 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           roundScore,
           fightCard,
         });
+        return;
+      }
+
+      const simBatchMatch = req.method === 'POST' && url.pathname.match(/^\/api\/session\/([^/]+)\/simulate-batch$/);
+      if (simBatchMatch) {
+        const sessionId = decodeURIComponent(simBatchMatch[1]);
+        const session = activeSessions.get(sessionId);
+        if (!session) { json(res, 404, { error: 'Session not found' }); return; }
+        const body = await readBody(req);
+        if (!Array.isArray(body.messages) || body.messages.length === 0) {
+          json(res, 400, { error: 'messages array is required' });
+          return;
+        }
+        const batch = await simulateBeforeSendBatch({
+          brief: session.brief,
+          adversary: session.adversary,
+          offerMessages: body.messages,
+          provider: llmProvider,
+          transcript: session.transcript,
+        });
+        json(res, 200, batch);
         return;
       }
 
