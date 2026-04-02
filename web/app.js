@@ -324,7 +324,9 @@ document.getElementById('turn-form').addEventListener('submit', async (e) => {
     document.getElementById('typing-spinner')?.remove();
     sendBtn.classList.remove('loading');
 
-    addMessage('adversary', result.adversaryResponse || '[silence]');
+    const adversaryText = result.adversaryResponse || '[silence]';
+    addMessage('adversary', adversaryText);
+    speakText(adversaryText);
 
     // Update top bar
     document.getElementById('n-turn').textContent = `Tour ${result.state.turn}/${12}`;
@@ -762,6 +764,89 @@ document.getElementById('btn-quit').addEventListener('click', () => {
     setTimeout(() => navigate('dashboard'), 1000);
   }
 });
+
+// ============================================================
+// VOICE MODE (Web Speech API — zero deps)
+// ============================================================
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isRecording = false;
+
+const voiceBtn = document.getElementById('btn-voice');
+const ttsCheckbox = document.getElementById('chk-tts');
+
+// Speech-to-Text: player speaks → text input
+if (SpeechRecognition) {
+  recognition = new SpeechRecognition();
+  recognition.lang = 'fr-FR';
+  recognition.interimResults = true;
+  recognition.continuous = false;
+
+  recognition.onresult = (event) => {
+    const input = document.getElementById('msg-input');
+    let transcript = '';
+    for (const result of event.results) {
+      transcript += result[0].transcript;
+    }
+    input.value = transcript;
+  };
+
+  recognition.onend = () => {
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.innerHTML = '&#127908; Parler';
+  };
+
+  recognition.onerror = (event) => {
+    isRecording = false;
+    voiceBtn.classList.remove('recording');
+    voiceBtn.innerHTML = '&#127908; Parler';
+    if (event.error !== 'aborted' && event.error !== 'no-speech') {
+      console.error('Speech recognition error:', event.error);
+    }
+  };
+
+  voiceBtn.addEventListener('click', () => {
+    if (!currentSessionId) return;
+    if (isRecording) {
+      recognition.stop();
+    } else {
+      isRecording = true;
+      voiceBtn.classList.add('recording');
+      voiceBtn.innerHTML = '&#128308; Ecoute...';
+      recognition.start();
+    }
+  });
+} else {
+  voiceBtn.style.display = 'none';
+}
+
+// Text-to-Speech: adversary response read aloud
+function speakText(text) {
+  if (!ttsCheckbox.checked) return;
+  if (!window.speechSynthesis) return;
+
+  // Cancel any ongoing speech
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'fr-FR';
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+
+  // Try to find a French voice
+  const voices = window.speechSynthesis.getVoices();
+  const frenchVoice = voices.find((v) => v.lang.startsWith('fr')) || null;
+  if (frenchVoice) utterance.voice = frenchVoice;
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// Ensure voices are loaded (Chrome loads them async)
+if (window.speechSynthesis) {
+  window.speechSynthesis.onvoiceschanged = () => {};
+}
 
 // ============================================================
 // INIT

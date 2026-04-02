@@ -516,6 +516,27 @@ h3 { font-size: .95rem; font-weight: 600; color: var(--text-2); margin-bottom: 8
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ============================================================
+   VOICE MODE
+   ============================================================ */
+
+.btn-voice {
+  background: transparent; color: var(--primary-light); border: 1px solid var(--primary);
+  border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);
+}
+.btn-voice:hover { background: var(--primary-bg); }
+.btn-voice.recording {
+  background: var(--red); color: white; border-color: var(--red);
+  animation: pulse 1.2s ease infinite;
+}
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .6; } }
+
+.voice-toggle {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: .8rem; color: var(--text-muted); cursor: pointer; user-select: none;
+}
+.voice-toggle input { width: 14px; height: 14px; accent-color: var(--primary); }
+
 .btn.loading { position: relative; color: transparent; pointer-events: none; }
 .btn.loading::after {
   content: ''; position: absolute; inset: 0; margin: auto;
