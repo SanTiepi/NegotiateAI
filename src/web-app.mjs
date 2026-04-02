@@ -272,6 +272,7 @@ async function buildScenarioDetailById(scenarioId, tier = 'neutral') {
 
 function filterDashboardSessions(sessions, filters) {
   return sessions.filter((session) => {
+    if (filters.playerId && (session.playerId || null) !== filters.playerId) return false;
     if (filters.mode && (session.mode || 'cli') !== filters.mode) return false;
     if (filters.difficulty && (session.brief?.difficulty || 'neutral') !== filters.difficulty) return false;
     if (filters.scenarioId) {
@@ -284,6 +285,7 @@ function filterDashboardSessions(sessions, filters) {
 
 function filterAnalyticsEvents(events, filters) {
   return events.filter((event) => {
+    if (filters.playerId && (event.playerId || null) !== filters.playerId) return false;
     if (filters.mode && (event.mode || 'cli') !== filters.mode) return false;
     if (filters.difficulty && (event.difficulty || 'neutral') !== filters.difficulty) return false;
     if (filters.scenarioId && (event.scenarioId || null) !== filters.scenarioId) return false;
@@ -445,7 +447,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/dashboard/player') {
+        const requestedPlayerId = url.searchParams.get('playerId') || 'local-player';
         const filters = {
+          playerId: requestedPlayerId,
           mode: url.searchParams.get('mode') || null,
           difficulty: url.searchParams.get('difficulty') || null,
           scenarioId: url.searchParams.get('scenarioId') || null,
@@ -457,12 +461,13 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           store.loadAnalytics(500),
         ]);
         const scopedSessions = hasFilters ? filterDashboardSessions(sessions, filters) : sessions;
-        const realWorldStats = computeRealWorldStats(analytics.filter((event) => event.type === 'journal'));
+        const scopedAnalytics = hasFilters ? filterAnalyticsEvents(analytics, { ...filters, type: 'journal' }) : analytics.filter((event) => event.type === 'journal');
+        const realWorldStats = computeRealWorldStats(scopedAnalytics);
         json(res, 200, {
           ...buildPlayerDashboard(scopedSessions, progression, {
-            playerId: url.searchParams.get('playerId') || 'local-player',
+            playerId: requestedPlayerId,
           }),
-          filters: hasFilters ? filters : null,
+          filters,
           realWorldStats,
           uiLayer: computeUILayer(scopedSessions.length || progression.totalSessions || 0),
           uiLayerDefinitions: getLayerDefinitions(),
@@ -618,6 +623,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
 
       if (req.method === 'GET' && url.pathname === '/api/analytics') {
         const filters = {
+          playerId: url.searchParams.get('playerId') || null,
           mode: url.searchParams.get('mode') || null,
           difficulty: url.searchParams.get('difficulty') || null,
           scenarioId: url.searchParams.get('scenarioId') || null,
@@ -631,6 +637,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
 
       if (req.method === 'GET' && url.pathname === '/api/analytics/summary') {
         const filters = {
+          playerId: url.searchParams.get('playerId') || null,
           mode: url.searchParams.get('mode') || null,
           difficulty: url.searchParams.get('difficulty') || null,
           scenarioId: url.searchParams.get('scenarioId') || null,
@@ -776,7 +783,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         }
 
         // Store journal entry
-        await store.appendAnalytics({ type: 'journal', ...entry, comparison });
+        await store.appendAnalytics({ type: 'journal', ...entry, comparison, playerId: 'local-player' });
 
         json(res, 201, { entry, comparison });
         return;
@@ -933,6 +940,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             uiLayer: session._uiLayer?.level || 1,
             isRealPrep: session._isRealPrep || false,
             realPrepMeta: session._realPrepMeta || null,
+            playerId: session._playerId || 'local-player',
             mode: 'web',
             eventPolicy: session.eventPolicy,
             eventsActive: session.eventPolicy !== 'none',
@@ -957,6 +965,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             roundScores: session._roundScores.map((r) => r.points),
             objectiveSet: !!session._objectiveContract,
             strategy: session._objectiveContract?.strategy || null,
+            playerId: sessionEntry.playerId,
           });
 
           activeSessions.delete(sessionId);

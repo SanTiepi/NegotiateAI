@@ -729,6 +729,7 @@ describe('web-app', () => {
       transcript: [],
       status: 'accepted',
       turns: 4,
+      playerId: 'robin',
       mode: 'telegram',
       scenarioId: 'swiss-property-purchase',
       feedback: {
@@ -792,6 +793,7 @@ describe('web-app', () => {
       regret: 'J’aurais pu demander plus tôt une contrepartie',
       emotion: 'fier',
       selfScore: 8,
+      playerId: 'robin',
     });
     await store.appendAnalytics({
       type: 'journal',
@@ -803,6 +805,7 @@ describe('web-app', () => {
       regret: null,
       emotion: 'soulagé',
       selfScore: 6,
+      playerId: 'robin',
     });
 
     const dashboard = await request('/api/dashboard');
@@ -852,6 +855,7 @@ describe('web-app', () => {
           conversationalFlow: 12,
         },
       },
+      playerId: 'robin',
       mode: 'web',
       scenarioId: 'swiss-property-purchase',
     });
@@ -881,6 +885,7 @@ describe('web-app', () => {
           conversationalFlow: 14,
         },
       },
+      playerId: 'alice',
       mode: 'telegram',
       scenarioId: 'swiss-lease-renegotiation',
     });
@@ -911,6 +916,17 @@ describe('web-app', () => {
     assert.equal(filteredByScenario.body.totalSessions, 1);
     assert.equal(filteredByScenario.body.scoreHistory[0].id, 'dash-filter-web-1');
 
+    const filteredByPlayer = await request('/api/dashboard/player?playerId=alice');
+    assert.equal(filteredByPlayer.response.status, 200);
+    assert.equal(filteredByPlayer.body.stats.totalSessions, 1);
+    assert.equal(filteredByPlayer.body.stats.latestScore, 84);
+    assert.deepEqual(filteredByPlayer.body.filters, {
+      playerId: 'alice',
+      mode: null,
+      difficulty: null,
+      scenarioId: null,
+    });
+
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });
   });
@@ -925,6 +941,7 @@ describe('web-app', () => {
       status: 'accepted',
       globalScore: 78,
       grade: 'B',
+      playerId: 'robin',
       mode: 'web',
     });
     await store.appendAnalytics({
@@ -936,6 +953,7 @@ describe('web-app', () => {
       status: 'accepted',
       globalScore: 84,
       grade: 'A',
+      playerId: 'alice',
       mode: 'telegram',
     });
     await store.appendAnalytics({
@@ -943,6 +961,7 @@ describe('web-app', () => {
       timestamp: '2026-04-02T11:00:00.000Z',
       scenarioId: 'swiss-lease-renegotiation',
       difficulty: 'neutral',
+      playerId: 'alice',
       mode: 'telegram',
     });
 
@@ -965,11 +984,18 @@ describe('web-app', () => {
     assert.deepEqual(summary.body.eventTypes, { session_complete: 1, briefing_view: 1 });
     assert.deepEqual(summary.body.scenarios, { 'swiss-lease-renegotiation': 2 });
     assert.deepEqual(summary.body.filters, {
+      playerId: null,
       mode: 'telegram',
       difficulty: null,
       scenarioId: null,
       type: null,
     });
+
+    const playerSummary = await request('/api/analytics/summary?playerId=alice');
+    assert.equal(playerSummary.response.status, 200);
+    assert.equal(playerSummary.body.totalEvents, 2);
+    assert.equal(playerSummary.body.totalCompletedSessions, 1);
+    assert.equal(playerSummary.body.averageScore, 84);
 
     const emptySummary = await request('/api/analytics/summary?scenarioId=unknown');
     assert.equal(emptySummary.response.status, 200);

@@ -53,6 +53,10 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return `telegram:${chatId}`;
   }
 
+  function getPlayerId(chatId) {
+    return `telegram:${chatId}`;
+  }
+
   async function persistCompletedSession(chatId, session) {
     if (!store) return;
 
@@ -71,6 +75,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       feedback,
       fightCard,
       scenarioId: session._scenarioId || null,
+      playerId: getPlayerId(chatId),
       mode: session._mode || 'telegram',
       eventPolicy: session.eventPolicy,
       eventsActive: session.eventPolicy !== 'none',
@@ -92,6 +97,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
       roundScores: (session._roundScores || []).map((round) => round.points),
       objectiveSet: Boolean(session._objectiveContract),
       strategy: session._objectiveContract?.strategy || null,
+      playerId: getPlayerId(chatId),
       mode: session._mode || 'telegram',
     });
 

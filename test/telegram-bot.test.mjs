@@ -149,6 +149,7 @@ describe('telegram-bot', () => {
     const analytics = await store.loadAnalytics();
     assert.equal(analytics.length, 1);
     assert.equal(analytics[0].mode, 'telegram');
+    assert.equal(analytics[0].playerId, 'telegram:42');
     assert.equal(analytics[0].globalScore, 76);
     assert.equal(analytics[0].grade, 'B');
   });
@@ -174,6 +175,7 @@ describe('telegram-bot', () => {
     const sessions = await store.loadSessions();
     assert.equal(sessions.length, 1);
     assert.equal(sessions[0].scenarioId, 'swiss-property-purchase');
+    assert.equal(sessions[0].playerId, 'telegram:77');
     assert.equal(sessions[0].mode, 'telegram');
     assert.equal(sessions[0].fightCard?.grade?.grade, 'B');
     assert.match(sent.at(-1).text, /Je peux discuter/);
