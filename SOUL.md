@@ -35,6 +35,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Telegram runtime: separer le coeur createTelegramBot(...) du polling Telegram (getUpdates/deleteWebhook) pour tester sans reseau reel et lancer le bot via un runner CLI minimal
 - Dashboard scoring: calculer les stats depuis store/progression, pas depuis l'etat HTTP en memoire
 - Dashboard scoring enrichi: exposer les breakdowns (modes, difficultes, scoreHistory, dimensionAverages) depuis un module pur partage (`dashboard.mjs`) pour alimenter web/store/CLI sans logique dupliquee
+- Versus CLI: parser les arguments dans un runner testable (`runVersusCli(...)`) et injecter provider/readFile/stdout/stderr pour couvrir le flux sans reseau ni sous-processus reel
 - Leaderboard/hall of fame: toujours calculer depuis les sessions persistées, jamais depuis les sessions actives en RAM
 - Hall of fame partageable: anonymiser les titres/extraits avant affichage, export ET API web, et redact les montants/percentages bruts
 - Hall of fame web: exposer aussi un export texte partageable (`/api/hall-of-fame/export`) en reutilisant le meme formatter pur que l'API JSON
@@ -79,6 +80,7 @@ Stack: Node.js ESM, @anthropic-ai/sdk, 277+ tests, 25 modules + MCP server.
 - Dashboard API: exposer des fonctions de calcul pures reutilisables par HTTP/CLI/tests
 - Dashboard CLI: consommer le meme payload calcule que l'API web (pas de second calcul artisanal dans le runner CLI)
 - CLI academy (leaderboard, scenario of the week, hall of fame): reutiliser directement les modules purs (`leaderboard.mjs`, `hall-of-fame.mjs`, `scenarios/index.mjs`) et la persistance du store, sans logique de classement dupliquee
+- CLI versus: `src/cli/versus-cli.mjs` doit rester un adaptateur fin de `adjudicateVersusRound(...)` avec `--brief`, `--message-a`, `--message-b`, option transcript JSON, et rendu terminal sans recalcul du verdict
 - Dashboard web: renderer des listes/chips purement presentationnelles a partir des payloads API (pas de recalcul de stats cote frontend)
 - Academy web: agreger profil/daily/drills/hall-of-fame/leaderboard en presentation only; la logique de recommandation reste dans les modules purs exposes par l'API
 - Leaderboard API: garder un ranking pur et deterministic-friendly (score desc, puis moins de tours, puis plus recent)

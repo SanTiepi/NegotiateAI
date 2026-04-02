@@ -16,6 +16,7 @@
     "leaderboard": "node src/cli/leaderboard-cli.mjs",
     "weekly": "node src/cli/weekly-cli.mjs",
     "hall-of-fame": "node src/cli/hall-of-fame-cli.mjs",
+    "versus": "node src/cli/versus-cli.mjs",
     "web": "node -e \"import('./src/web-app.mjs').then(async ({ startWebServer }) => { const app = await startWebServer(); console.log('NegotiateAI Web listening on http://127.0.0.1:' + app.address.port); })\"",
     "telegram": "node src/cli/telegram-bot-cli.mjs",
     "mcp": "node mcp/index.mjs"
