@@ -293,6 +293,7 @@ describe('telegram-bot', () => {
     assert.equal(result.results[0].command, 'start');
     assert.equal(runtime.getOffset(), 11);
     assert.match(sent.at(-1).text, /Bienvenue sur NegotiateAI/);
+    assert.match(sent.at(-1).text, /\/drills/);
     assert.match(sent.at(-1).text, /\/weekly/);
     assert.equal(fetchCalls[0].body.drop_pending_updates, false);
     assert.equal(fetchCalls[1].body.offset, 0);

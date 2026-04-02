@@ -272,7 +272,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (!chatId || !text) return { ignored: true };
 
     if (text === '/start' || text === '/help') {
-      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
+      await sendMessage(chatId, 'Bienvenue sur NegotiateAI. Utilise /new objectif | seuil minimal | batna pour lancer une simulation, /daily pour le challenge du jour, /scenarios pour voir les presets, /scenario <id> pour lancer un scénario packagé, /profile pour voir tes stats, /drills pour les exercices ciblés, /weekly pour le scénario de la semaine, /leaderboard pour le top runs et /halloffame pour les meilleures sessions.');
       return { ok: true, command: 'start' };
     }
 
