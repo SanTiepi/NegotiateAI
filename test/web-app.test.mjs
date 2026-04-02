@@ -341,6 +341,26 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('serves scenario preset detail by id', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const detail = await request('/api/scenarios/swiss-property-purchase');
+    assert.equal(detail.response.status, 200);
+    assert.equal(detail.body.id, 'swiss-property-purchase');
+    assert.equal(detail.body.category, 'swiss');
+    assert.equal(detail.body.scenarioFile, 'swiss-property-purchase');
+    assert.equal(detail.body.name.length > 0, true);
+
+    const missing = await request('/api/scenarios/unknown-scenario');
+    assert.equal(missing.response.status, 404);
+    assert.equal(missing.body.error, 'Scenario not found');
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('serves progression endpoint', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);

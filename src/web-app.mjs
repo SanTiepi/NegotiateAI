@@ -228,6 +228,11 @@ async function buildScenarioPresets() {
   return [...SCENARIO_PRESETS, ...swissPresets];
 }
 
+async function findScenarioPresetById(scenarioId) {
+  const presets = await buildScenarioPresets();
+  return presets.find((preset) => preset.id === scenarioId) || null;
+}
+
 function json(res, statusCode, payload) {
   res.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(payload));
@@ -387,6 +392,18 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
 
       if (req.method === 'GET' && url.pathname === '/api/scenarios') {
         json(res, 200, await buildScenarioPresets());
+        return;
+      }
+
+      const scenarioDetailMatch = req.method === 'GET' && url.pathname.match(/^\/api\/scenarios\/([^/]+)$/);
+      if (scenarioDetailMatch) {
+        const scenarioId = decodeURIComponent(scenarioDetailMatch[1]);
+        const preset = await findScenarioPresetById(scenarioId);
+        if (!preset) {
+          json(res, 404, { error: 'Scenario not found' });
+          return;
+        }
+        json(res, 200, preset);
         return;
       }
 
