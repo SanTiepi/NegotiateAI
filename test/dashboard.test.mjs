@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { computeDashboardStats } from '../src/store.mjs';
+import { computeDashboardStats } from '../src/dashboard.mjs';
 
 describe('dashboard stats', () => {
   it('computes average score, streak and progression delta', () => {
