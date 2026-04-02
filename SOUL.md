@@ -35,6 +35,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Audit zero-delta robuste: si le top-10 est quasi full docs avec seulement `feat: harden mcp session handling`, verifier aussi `git log --grep="war room|war-room"`, `git log --grep="coach|coaching"`, `git log --grep="autonomy ladder"` et `git log --grep="simulate"`; si les 5 priorites SOUL reapparaissent et `npm test` reste a 277 verts, ne rien reouvrir cote feature
 - Batch cron aube fiable: si `git log -10` est 100% documentaire mais que les greps `simulate`, `war room`, `coach` et `autonomy ladder` retrouvent les feats, considerer le lot comme zero-delta des que `npm test` confirme 277 verts
 - Audit docs-only confirme: si le top-10 git est entierement compose de `docs: refresh soul after zero-delta validation batch`, utiliser les greps cibles (`simulate`, `war room`, `coach`, `autonomy ladder`, `mcp`) + `npm test` avant toute reouverture de feature
+- Batch cron zero-delta confirme: quand `git log -10` est full `docs: refresh soul after zero-delta validation batch`, considerer la couverture SOUL valide si les greps cibles retrouvent les 5 feats et que `npm test` reste a 277 verts
 
 ## Patterns
 - Module: src/[module].mjs avec export fonctions
@@ -57,6 +58,7 @@ Tu lis le CLAUDE.md pour les contrats d'interface, tu implementes, tu testes, tu
 - Audit prioritaire complet: si `git log -10` est masque par une pile de commits docs, completer avec des greps ciblés (`simulate`, `war room`, `coach`, `autonomy ladder`) avant de declarer un batch zero-delta
 - Batch aube zero-delta: en cron, lancer `git log -10 --oneline`, les greps de couverture SOUL puis `npm test`; si tout est vert, limiter le commit a `SOUL.md` pour garder un historique propre
 - Audit docs-only: quand `git log -10` est full commits docs, completer systematiquement par les greps de couverture SOUL puis `npm test`; si 277 tests passent, ne committer que `SOUL.md`
+- Batch cron docs-only: si le top-10 est integralement documentaire, la sequence minimale fiable est `git log -10`, greps SOUL cibles, puis `npm test`; en cas de 277 verts, faire un commit docs unique sans rouvrir une feature
 
 ## Apprentissage
 Apres chaque session, mets a jour Gotchas/Patterns ci-dessus.
