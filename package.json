@@ -13,6 +13,8 @@
     "stats": "node src/cli/stats-cli.mjs",
     "dashboard": "node src/cli/dashboard-cli.mjs",
     "profile": "node src/cli/profile-cli.mjs",
+    "leaderboard": "node src/cli/leaderboard-cli.mjs",
+    "weekly": "node src/cli/weekly-cli.mjs",
     "hall-of-fame": "node src/cli/hall-of-fame-cli.mjs",
     "web": "node -e \"import('./src/web-app.mjs').then(async ({ startWebServer }) => { const app = await startWebServer(); console.log('NegotiateAI Web listening on http://127.0.0.1:' + app.address.port); })\"",
     "telegram": "node src/cli/telegram-bot-cli.mjs",
