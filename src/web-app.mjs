@@ -811,9 +811,13 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       const prepSheetMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)\/prep-sheet$/);
       if (prepSheetMatch) {
         const sessionId = decodeURIComponent(prepSheetMatch[1]);
+        const requestedPlayerId = url.searchParams.get('playerId') || null;
         const sessions = await store.loadSessions();
         const session = sessions.find((s) => s.id === sessionId);
-        if (!session) { json(res, 404, { error: 'Session introuvable' }); return; }
+        if (!session || (requestedPlayerId && (session.playerId || null) !== requestedPlayerId)) {
+          json(res, 404, { error: 'Session introuvable' });
+          return;
+        }
         const prepSheet = await generatePrepSheet(session, session.feedback, llmProvider);
         json(res, 200, prepSheet);
         return;

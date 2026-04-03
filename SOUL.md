@@ -48,6 +48,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Le dashboard web visible par l’utilisateur doit exposer les mêmes filtres joueur que `/api/dashboard/player` (`mode`, `difficulty`, `scenarioId`) ; ne pas laisser ces filtres uniquement côté API
 - `/api/profile` doit refléter le même scoping que `/api/dashboard/player` (playerId + filtres query string), mais sans filtrer implicitement tout le dataset quand aucun filtre n’est fourni
 - L’historique web (`/api/sessions`, détail, replay) doit accepter `playerId` et masquer les sessions d’un autre joueur ; le front history/replay doit propager ce même `playerId`
+- Les endpoints dérivés d’une session persistée côté web (dont `/api/sessions/:id/prep-sheet`) doivent appliquer le même scoping `playerId` que détail/replay, et le front doit transmettre ce filtre systématiquement
 
 ## Patterns
 
@@ -70,12 +71,14 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Académie web : toute entrée “Jouer” (daily, weekly, drill) doit transmettre son contexte de lancement jusqu’à la persistance serveur (`mode`, `dailyMeta`, `drillId`) ; ne pas lancer une session guidée en perdant son typage métier au moment du POST `/api/session`
 - Profil web ↔ snapshot joueur : partager exactement le même modèle de filtres (`playerId`, `mode`, `difficulty`, `scenarioId`) et le même helper de scoping pour éviter les écarts silencieux entre carte profil et dashboard joueur
 - Historique web ↔ sessions API : toujours transporter `playerId` sur la liste, le détail et le replay pour éviter les fuites cross-player entre dashboard et historique
+- Fiche de prépa web ↔ sessions API : transporter `playerId` sur `/api/sessions/:id/prep-sheet` et appliquer le même garde-fou serveur que sur détail/replay pour éviter une fuite cross-player via une URL directe
 - Dashboard web ↔ snapshot joueur : les contrôles UI de filtre doivent écrire exactement les mêmes query params (`mode`, `difficulty`, `scenarioId`) que l’API, sans remapper ni recalculer côté front
 - Télégramme/persistance : enrichir la sauvegarde au moment de la fin de session (pas via migration a posteriori) pour garder les vues web et bot alignées
 - Simulate batch : retourner un `summary` stable (`headline`, `confidence`, `scoreGap`, `recommendedRewrite`, `topComparisons`) pour réutilisation multi-interface
 - Daily challenge : si `progression.biasProfile` signale un biais dû via répétition espacée, le daily doit cibler ce biais avant la simple faiblesse moyenne, avec payload déterministe (`targetBias`, `challengeFocus`, `biasReason`) exploitable par CLI/web/Telegram
 - Validation de livraison : conclure une priorité SOUL uniquement après passage complet du script `npm test`, pas sur un sous-ensemble ad hoc
 - Audit avant nouvelle implémentation : quand une priorité semble déjà faite, vérifier sa présence côté code + tests + interface exposée (CLI/web/Telegram) avant d’ouvrir un nouveau chantier
+- Dev-runner : si les 5 priorités SOUL sont déjà couvertes et que `npm test` est vert, arrêter la chaîne de features, documenter le constat dans le rapport, puis basculer sur un audit du prochain gap produit au lieu d’inventer une feature
 
 ## Règle critique
 

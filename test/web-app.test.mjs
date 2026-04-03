@@ -77,6 +77,16 @@ const provider = createMockProvider({
       { text: 'Option 3', technique: 'split', concept: 'Coupe la poire en deux.', quality: 'trap' },
     ],
   },
+  prepSheet: {
+    openingLine: 'Je veux trouver un accord soutenable pour les deux parties.',
+    keyArguments: ['Argument 1', 'Argument 2'],
+    redLines: ['Pas de hausse immediate'],
+    trapsToAvoid: ['Ceder trop vite'],
+    ifTheyDo: [{ trigger: 'Mettent la pression', response: 'Revenir aux criteres', why: 'Recadrer la discussion' }],
+    batnaReminder: 'Tu peux partir sur une autre option.',
+    confidenceBooster: 'Tu arrives avec une BATNA claire.',
+    oneThingToRemember: 'Ne negocie pas contre toi-meme.',
+  },
 });
 
 let app;
@@ -953,6 +963,57 @@ describe('web-app', () => {
 
     const hiddenReplay = await request('/api/sessions/history-bob/replay?playerId=alice');
     assert.equal(hiddenReplay.response.status, 404);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('scopes prep-sheet access to the requested player id', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await store.saveSession({
+      id: 'prep-alice',
+      date: '2026-04-06T09:00:00.000Z',
+      brief: {
+        situation: 'Renegociation de bail',
+        userRole: 'Locataire',
+        adversaryRole: 'Regie',
+        objective: 'Limiter la hausse',
+        minimalThreshold: 'Pas de hausse',
+        batna: 'Changer d appartement',
+        difficulty: 'neutral',
+      },
+      adversary: { identity: 'Regie', style: 'Ferme' },
+      transcript: [{ role: 'user', content: 'Je veux une solution stable.' }],
+      status: 'ended',
+      turns: 1,
+      playerId: 'alice',
+      mode: 'web',
+      scenarioId: 'swiss-lease-renegotiation',
+      feedback: {
+        globalScore: 78,
+        scores: {
+          outcomeLeverage: 18,
+          batnaDiscipline: 15,
+          emotionalRegulation: 19,
+          biasResistance: 12,
+          conversationalFlow: 14,
+        },
+        biasesDetected: [],
+        tacticsUsed: ['anchoring'],
+        missedOpportunities: [],
+        recommendations: ['Rappelle la BATNA.'],
+      },
+    });
+
+    const ownSheet = await request('/api/sessions/prep-alice/prep-sheet?playerId=alice');
+    assert.equal(ownSheet.response.status, 200);
+    assert.equal(typeof ownSheet.body.openingLine, 'string');
+
+    const hiddenSheet = await request('/api/sessions/prep-alice/prep-sheet?playerId=bob');
+    assert.equal(hiddenSheet.response.status, 404);
 
     await app.close();
     await rm(tmpDir, { recursive: true, force: true });

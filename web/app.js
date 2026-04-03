@@ -1516,7 +1516,7 @@ async function showPrepSheet(sessionId) {
   const container = document.getElementById('prep-sheet-content');
   container.innerHTML = '<div class="loading"><div class="spinner">Génération de la fiche...</div></div>';
   try {
-    const sheet = await api(`/api/sessions/${encodeURIComponent(sessionId)}/prep-sheet`);
+    const sheet = await api(withPlayerQuery(`/api/sessions/${encodeURIComponent(sessionId)}/prep-sheet`));
     container.innerHTML = `
       <div class="prep-opening">"${sheet.openingLine}"</div>
       <div class="prep-section card"><h3>Arguments clés</h3><ol class="prep-list">${(sheet.keyArguments || []).map((a) => `<li>${a}</li>`).join('')}</ol></div>
