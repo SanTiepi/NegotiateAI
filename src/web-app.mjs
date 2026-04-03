@@ -700,8 +700,12 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       }
 
       if (req.method === 'GET' && url.pathname === '/api/sessions') {
+        const requestedPlayerId = url.searchParams.get('playerId') || null;
         const sessions = await store.loadSessions();
-        const summaries = sessions.slice(0, 20).map((s) => ({
+        const scopedSessions = requestedPlayerId
+          ? sessions.filter((session) => (session.playerId || null) === requestedPlayerId)
+          : sessions;
+        const summaries = scopedSessions.slice(0, 20).map((s) => ({
           id: s.id,
           date: s.date,
           situation: s.brief?.situation || '-',
@@ -714,6 +718,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           mode: s.mode || 'cli',
           grade: s.fightCard?.grade?.grade || null,
           scenarioId: s.scenarioId || s.scenario?.id || null,
+          playerId: s.playerId || null,
         }));
         json(res, 200, summaries);
         return;
@@ -722,9 +727,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       const sessionDetailMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)$/);
       if (sessionDetailMatch) {
         const sessionId = decodeURIComponent(sessionDetailMatch[1]);
+        const requestedPlayerId = url.searchParams.get('playerId') || null;
         const sessions = await store.loadSessions();
         const session = sessions.find((entry) => entry.id === sessionId);
-        if (!session) {
+        if (!session || (requestedPlayerId && (session.playerId || null) !== requestedPlayerId)) {
           json(res, 404, { error: 'Session not found' });
           return;
         }
@@ -735,6 +741,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           status: session.status,
           mode: session.mode || 'cli',
           scenarioId: session.scenarioId || session.scenario?.id || null,
+          playerId: session.playerId || null,
           brief: session.brief,
           adversary: session.adversary,
           turns: session.turns || session.transcript?.length || 0,
@@ -757,9 +764,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
       const replayMatch = req.method === 'GET' && url.pathname.match(/^\/api\/sessions\/([^/]+)\/replay$/);
       if (replayMatch) {
         const sessionId = decodeURIComponent(replayMatch[1]);
+        const requestedPlayerId = url.searchParams.get('playerId') || null;
         const sessions = await store.loadSessions();
         const session = sessions.find((entry) => entry.id === sessionId);
-        if (!session) {
+        if (!session || (requestedPlayerId && (session.playerId || null) !== requestedPlayerId)) {
           json(res, 404, { error: 'Session not found' });
           return;
         }

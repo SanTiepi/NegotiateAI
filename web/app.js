@@ -1217,7 +1217,7 @@ function showResults(feedback, fightCard) {
 
 async function loadHistory() {
   try {
-    const sessions = await api('/api/sessions');
+    const sessions = await api(withPlayerQuery('/api/sessions'));
     const listEl = document.getElementById('h-list');
     const emptyEl = document.getElementById('h-empty');
 
@@ -1254,7 +1254,7 @@ async function loadHistory() {
 
 async function loadReplay(sessionId) {
   try {
-    const replay = await api(`/api/sessions/${encodeURIComponent(sessionId)}/replay`);
+    const replay = await api(withPlayerQuery(`/api/sessions/${encodeURIComponent(sessionId)}/replay`));
     const container = document.getElementById('history-replay');
     const summary = document.getElementById('history-replay-summary');
     const turns = document.getElementById('history-replay-turns');

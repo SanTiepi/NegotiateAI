@@ -858,6 +858,106 @@ describe('web-app', () => {
     await rm(tmpDir, { recursive: true, force: true });
   });
 
+  it('scopes sessions list, detail, and replay to the requested player id', async () => {
+    app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
+    const address = await app.listen(0);
+    baseUrl = `http://127.0.0.1:${address.port}`;
+
+    await store.saveSession({
+      id: 'history-alice',
+      date: '2026-04-05T09:00:00.000Z',
+      brief: {
+        situation: 'Achat immeuble',
+        userRole: 'Acheteuse',
+        adversaryRole: 'Vendeur',
+        objective: 'Signer a 1.1M',
+        minimalThreshold: '1.2M max',
+        batna: 'Autre actif off-market',
+        difficulty: 'neutral',
+      },
+      adversary: { identity: 'Courtier', style: 'Direct' },
+      transcript: [{ role: 'user', content: 'Je peux signer vite si on reste sous 1.1M.' }],
+      status: 'accepted',
+      turns: 1,
+      playerId: 'alice',
+      mode: 'web',
+      scenarioId: 'swiss-property-purchase',
+      feedback: {
+        globalScore: 84,
+        scores: {
+          outcomeLeverage: 20,
+          batnaDiscipline: 17,
+          emotionalRegulation: 18,
+          biasResistance: 14,
+          conversationalFlow: 15,
+        },
+        biasesDetected: [],
+        tacticsUsed: ['anchor'],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+    });
+
+    await store.saveSession({
+      id: 'history-bob',
+      date: '2026-04-05T10:00:00.000Z',
+      brief: {
+        situation: 'Renegociation de bail',
+        userRole: 'Locataire',
+        adversaryRole: 'Regie',
+        objective: 'Geler le loyer',
+        minimalThreshold: 'Pas de hausse',
+        batna: 'Deménager',
+        difficulty: 'hostile',
+      },
+      adversary: { identity: 'Regie', style: 'Froide' },
+      transcript: [{ role: 'user', content: 'Je ne peux pas absorber une hausse maintenant.' }],
+      status: 'ended',
+      turns: 1,
+      playerId: 'bob',
+      mode: 'web',
+      scenarioId: 'swiss-lease-renegotiation',
+      feedback: {
+        globalScore: 61,
+        scores: {
+          outcomeLeverage: 15,
+          batnaDiscipline: 12,
+          emotionalRegulation: 14,
+          biasResistance: 10,
+          conversationalFlow: 10,
+        },
+        biasesDetected: [],
+        tacticsUsed: [],
+        missedOpportunities: [],
+        recommendations: [],
+      },
+    });
+
+    const list = await request('/api/sessions?playerId=alice');
+    assert.equal(list.response.status, 200);
+    assert.equal(list.body.length, 1);
+    assert.equal(list.body[0].id, 'history-alice');
+    assert.equal(list.body[0].playerId, 'alice');
+
+    const detail = await request('/api/sessions/history-alice?playerId=alice');
+    assert.equal(detail.response.status, 200);
+    assert.equal(detail.body.id, 'history-alice');
+    assert.equal(detail.body.playerId, 'alice');
+
+    const hiddenDetail = await request('/api/sessions/history-bob?playerId=alice');
+    assert.equal(hiddenDetail.response.status, 404);
+
+    const replay = await request('/api/sessions/history-alice/replay?playerId=alice');
+    assert.equal(replay.response.status, 200);
+    assert.equal(Array.isArray(replay.body.turns), true);
+
+    const hiddenReplay = await request('/api/sessions/history-bob/replay?playerId=alice');
+    assert.equal(hiddenReplay.response.status, 404);
+
+    await app.close();
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
   it('dashboard includes journal-derived real-world stats', async () => {
     app = createWebApp({ provider, sessionIdFactory: () => 'sess-test', store });
     const address = await app.listen(0);
