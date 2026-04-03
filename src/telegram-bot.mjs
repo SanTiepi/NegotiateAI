@@ -162,7 +162,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function startDaily(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Daily indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Daily indisponible: aucun store persistant n'est configuré.");
     }
 
     const alreadyPlayed = await dailyAlreadyPlayed(store);
@@ -182,10 +182,10 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendScenarioCatalog(chatId) {
     const scenarios = await listScenarios();
-    const featured = scenarios.slice(0, 8).map((scenario) => `• ${scenario.id} — ${scenario.name}`);
+    const featured = scenarios.slice(0, 8).map((scenario) => `• ${scenario.id} - ${scenario.name}`);
     const swiss = scenarios
       .filter((scenario) => scenario.id.startsWith('swiss-'))
-      .map((scenario) => `• ${scenario.id} — ${scenario.name}`);
+      .map((scenario) => `• ${scenario.id} - ${scenario.name}`);
     return sendMessage(
       chatId,
       [
@@ -216,7 +216,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendProfile(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Profil indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Profil indisponible: aucun store persistant n'est configuré.");
     }
     const { playerDashboard } = await loadTelegramPlayerSnapshot(chatId);
     const { card } = playerDashboard;
@@ -236,16 +236,16 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendDashboard(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Dashboard indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Dashboard indisponible: aucun store persistant n'est configuré.");
     }
 
     const { stats } = await loadTelegramPlayerSnapshot(chatId);
     const bestDimensionLabel = stats.bestDimension?.dimension
       ? stats.bestDimension.dimension
-      : '—';
+      : '-';
     const weakDimensionLabel = stats.weakestDimension?.dimension
       ? stats.weakestDimension.dimension
-      : '—';
+      : '-';
     const topMode = stats.modeBreakdown[0]?.mode || 'telegram';
     const topDifficulty = stats.difficultyBreakdown[0]?.difficulty || 'neutral';
 
@@ -265,7 +265,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendDrills(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Drills indisponibles: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Drills indisponibles: aucun store persistant n'est configuré.");
     }
 
     const progression = await store.loadProgression();
@@ -296,7 +296,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
         mode: 'weekly',
         command: 'weekly-play',
         label: [
-          `Scenario de la semaine — ${weekKey}`,
+          `Scenario de la semaine - ${weekKey}`,
           `${scenario.name}`,
           `ID: ${scenario.id}`,
         ].join('\n'),
@@ -304,7 +304,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     }
 
     return sendMessage(chatId, [
-      `Scenario de la semaine — ${weekKey}`,
+      `Scenario de la semaine - ${weekKey}`,
       `${scenario.name}`,
       `ID: ${scenario.id}`,
       'Commande: /weekly play',
@@ -314,7 +314,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendLeaderboard(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Leaderboard indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Leaderboard indisponible: aucun store persistant n'est configuré.");
     }
 
     const scenarios = await listScenarios();
@@ -343,13 +343,16 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return sendMessage(chatId, [
       `Leaderboard — ${label}`,
       `Semaine: ${weekKey}`,
-      ...leaderboard.entries.map((entry) => `#${entry.rank} · ${entry.score}/100 · ${entry.turns} tours · ${entry.mode}`),
+      ...leaderboard.entries.map((entry) => {
+        const meta = [entry.grade, entry.mode, `${entry.turns} tours`].filter(Boolean).join(' · ');
+        return `#${entry.rank} · ${entry.score}/100 · ${meta}`;
+      }),
     ].join('\n'));
   }
 
   async function sendHallOfFame(chatId) {
     if (!store) {
-      return sendMessage(chatId, 'Hall of fame indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Hall of fame indisponible: aucun store persistant n'est configuré.");
     }
 
     const stories = await store.getHallOfFameStories({ limit: 3, maxChars: 180 });
@@ -361,7 +364,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
   async function sendReplay(chatId, requestedSessionId = null) {
     if (!store) {
-      return sendMessage(chatId, 'Replay indisponible: aucun store persistant n’est configuré.');
+      return sendMessage(chatId, "Replay indisponible: aucun store persistant n'est configuré.");
     }
 
     const playerId = getPlayerId(chatId);
@@ -369,7 +372,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     const playerSessions = sessions.filter((session) => (session.playerId || null) === playerId);
 
     if (playerSessions.length === 0) {
-      return sendMessage(chatId, 'Aucune session terminée à rejouer pour l’instant.');
+      return sendMessage(chatId, "Aucune session terminée à rejouer pour l'instant.");
     }
 
     const targetSession = requestedSessionId
@@ -382,7 +385,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
     const replay = await generateReplay(targetSession, provider);
     const lines = [
-      `Replay Telegram — ${targetSession.scenarioId || targetSession.id}`,
+      `Replay Telegram - ${targetSession.scenarioId || targetSession.id}`,
       replay.summary || 'Résumé indisponible.',
       '',
     ];
@@ -404,7 +407,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
   async function runBatchSimulation(chatId, text) {
     const session = sessions.get(getSessionKey(chatId));
     if (!session) {
-      await sendMessage(chatId, 'Aucune session active. Lance d’abord /new ou /scenario avant /sim.');
+      await sendMessage(chatId, "Aucune session active. Lance d'abord /new ou /scenario avant /sim.");
       return { ok: true, command: 'simulate-missing-session' };
     }
 
@@ -428,7 +431,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     });
 
     const lines = [
-      `Simulate Before Send v2 — ${variants.length} variantes`,
+      `Simulate Before Send v2 - ${variants.length} variantes`,
       `Meilleure option: #${batch.bestIndex + 1} (${batch.bestReport.approvalScore}/100, ${batch.bestReport.sendVerdict})`,
       batch.summary ? `Confiance: ${batch.summary.confidence} · Écart: ${batch.summary.scoreGap}` : null,
       '',

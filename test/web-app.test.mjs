@@ -314,6 +314,10 @@ describe('web-app', () => {
     const leaderboard = await request('/api/leaderboard?scenarioId=salary-negotiation');
     assert.equal(leaderboard.response.status, 200);
     assert.equal(leaderboard.body.entries[0].sessionId, 'hof-1');
+    assert.equal(leaderboard.body.entries[0].mode, 'web');
+    assert.equal(leaderboard.body.entries[0].playerId, null);
+    assert.equal(leaderboard.body.entries[0].grade, null);
+    assert.match(leaderboard.body.entries[0].title, /Acheteur vs Mme Dubois/);
 
     await store.saveProgression({
       belts: { white: { earned: true } },

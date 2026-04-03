@@ -38,6 +38,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Les endpoints de scénarios packagés (`/api/scenarios`, `/api/scenarios/:id`) et le loader `scenarios/index.mjs` doivent renvoyer des métadonnées stables (`category`, `scenarioFile`, `tier`, `metadata`) pour garder web + Telegram alignés
 - Simulate Before Send v2 reste borné à 5 variantes par batch sur tous les canaux (CLI, web, Telegram) avec un résumé compact orienté décision
 - Les réponses Telegram d'académie / profil / dashboard / replay doivent rester compactes et orientées action ; privilégier les agrégats pré-calculés (`computeDashboardStats`, carte profil, snapshot joueur) plutôt que reconstruire des vues ad hoc côté bot
+- Les payloads de leaderboard partagés entre web/CLI/Telegram doivent exposer des métadonnées de présentation stables (`grade`, `mode`, `playerId`, `title`) pour éviter des classements riches divergents selon l’interface
 - Les surfaces Telegram joueur (`/profile`, `/dashboard`, `/replay`) doivent scoper par `playerId = telegram:<chatId>` sur tous les modes persistés du joueur (telegram, daily, weekly…), pas seulement `mode=telegram`, sinon l’académie Telegram sous-compte ses propres runs guidés
 - Les vues Telegram joueur (`/profile`, `/dashboard`) doivent être scoppées par `playerId = telegram:<chatId>` ; ne jamais agréger toutes les sessions Telegram d’un coup
 - Les snapshots joueur web (`/api/dashboard/player`) doivent rester dérivés d’agrégats purs et accepter les mêmes filtres query string que `/api/dashboard` pour éviter les divergences web/Telegram
@@ -65,6 +66,7 @@ Stack : Node.js ESM, @anthropic-ai/sdk, 339+ tests, 25 modules + serveur MCP.
 - Telegram replay : générer un replay annoté compact depuis les sessions persistées du `playerId` courant, par défaut sur la dernière session, sans jamais exposer les runs d’un autre chat ; inclure aussi les runs `daily`/`weekly` du même joueur
 - Weekly Telegram : `/weekly` peut rester informatif mais doit offrir un chemin de lancement direct (`/weekly play`) qui persiste `mode: 'weekly'` pour garder leaderboard, dashboard et replay alignés
 - Snapshot joueur : construire la fiche complète dans `src/dashboard.mjs`, puis l’exposer côté web et la consommer côté Telegram au lieu de recalculer des vues métier parallèles
+- Leaderboard multi-interface : enrichir `computeScenarioLeaderboard` à la source avec les champs de rendu stables (grade, mode, playerId, title), puis laisser web/CLI/Telegram formater sans réinventer le classement
 - Journal → dashboard web : agréger côté serveur (`computeRealWorldStats`) puis afficher côté front ; ne pas recalculer les stats réelles dans `web/app.js`
 - Player dashboard : persister `playerId` au moment de la sauvegarde (web, Telegram, analytics, journal) puis appliquer les mêmes filtres côté route pour éviter les faux snapshots multi-joueurs
 - Front web ↔ API joueur : toujours transporter le même `playerId` côté query string ET côté payload POST pour garder alignés dashboard, profil, journal, drills et sessions persistées

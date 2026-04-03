@@ -8,9 +8,11 @@ function makeSession(overrides = {}) {
     date: overrides.date || '2026-04-02T06:00:00.000Z',
     turns: overrides.turns ?? 4,
     mode: overrides.mode || 'web',
+    playerId: overrides.playerId || null,
     brief: { userRole: 'Acheteur', ...(overrides.brief || {}) },
     adversary: { identity: 'Mme Dubois', ...(overrides.adversary || {}) },
     feedback: { globalScore: overrides.score ?? 80, scores: {} },
+    fightCard: overrides.fightCard || null,
     scenario: overrides.scenario || null,
   };
 }
@@ -28,6 +30,36 @@ describe('leaderboard', () => {
     assert.equal(result.entries[0].sessionId, 'b');
     assert.equal(result.entries[1].sessionId, 'a');
     assert.equal(result.entries[2].sessionId, 'c');
+    assert.equal(result.entries[0].playerId, null);
+    assert.equal(result.entries[0].grade, null);
+    assert.match(result.entries[0].title, /Acheteur vs Mme Dubois/);
+  });
+
+  it('computeScenarioLeaderboard keeps stable presentation metadata for rich clients', () => {
+    const result = computeScenarioLeaderboard([
+      makeSession({
+        id: 'rich',
+        score: 94,
+        turns: 3,
+        mode: 'telegram',
+        playerId: 'telegram:42',
+        fightCard: { grade: { grade: 'A' } },
+        scenario: { id: 'salary-negotiation' },
+      }),
+    ], { scenarioId: 'salary-negotiation' });
+
+    assert.deepEqual(result.entries[0], {
+      rank: 1,
+      sessionId: 'rich',
+      scenarioId: 'salary-negotiation',
+      score: 94,
+      turns: 3,
+      mode: 'telegram',
+      playerId: 'telegram:42',
+      grade: 'A',
+      title: 'Acheteur vs Mme Dubois',
+      date: '2026-04-02T06:00:00.000Z',
+    });
   });
 
   it('computeHallOfFame returns the best sessions across all modes', () => {

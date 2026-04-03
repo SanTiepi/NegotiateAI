@@ -13,6 +13,14 @@ function getScore(session) {
   return Number(session?.feedback?.globalScore || 0);
 }
 
+function getGrade(session) {
+  return session?.fightCard?.grade?.grade || null;
+}
+
+function getTitle(session) {
+  return `${session?.brief?.userRole || 'Joueur'} vs ${session?.adversary?.identity || 'Adversaire'}`;
+}
+
 function isRankableSession(session) {
   return Boolean(session && session.feedback && Number.isFinite(getScore(session)));
 }
@@ -43,6 +51,9 @@ export function computeScenarioLeaderboard(sessions = [], options = {}) {
       score: getScore(session),
       turns: Number(session.turns || 0),
       mode: session.mode || 'unknown',
+      playerId: session.playerId || null,
+      grade: getGrade(session),
+      title: getTitle(session),
       date: session.date || null,
     }));
 
@@ -66,7 +77,7 @@ export function computeHallOfFame(sessions = [], options = {}) {
       scenarioId: getScenarioId(session),
       mode: session.mode || 'unknown',
       date: session.date || null,
-      title: `${session?.brief?.userRole || 'Joueur'} vs ${session?.adversary?.identity || 'Adversaire'}`,
+      title: getTitle(session),
     }));
 
   return {

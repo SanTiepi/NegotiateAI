@@ -263,7 +263,10 @@ async function loadAcademy(force = false) {
         leaderboard.entries.forEach((entry, index) => {
           const row = document.createElement('div');
           row.className = 'metric-row';
-          row.innerHTML = `<span class="metric-label">#${index + 1} · ${escapeHtml(entry.sessionId)}</span><span class="metric-value">${escapeHtml(entry.score)} pts</span>`;
+          const label = entry.grade
+            ? `#${index + 1} · ${escapeHtml(entry.grade)} · ${escapeHtml(entry.mode || 'unknown')}`
+            : `#${index + 1} · ${escapeHtml(entry.mode || 'unknown')}`;
+          row.innerHTML = `<span class="metric-label">${label}</span><span class="metric-value">${escapeHtml(entry.score)} pts</span>`;
           leaderboardEl.appendChild(row);
         });
       }

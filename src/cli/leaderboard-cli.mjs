@@ -32,7 +32,8 @@ async function main() {
   }
 
   for (const entry of leaderboard.entries) {
-    console.log(`  ${c.yellow}#${entry.rank}${c.reset} ${entry.score}/100 ${c.dim}· ${entry.turns} tours · ${entry.mode} · ${entry.date || 'date inconnue'}${c.reset}`);
+    const meta = [entry.grade, entry.mode, `${entry.turns} tours`, entry.date || 'date inconnue'].filter(Boolean).join(' · ');
+    console.log(`  ${c.yellow}#${entry.rank}${c.reset} ${entry.score}/100 ${c.dim}· ${meta}${c.reset}`);
   }
   console.log('');
 }
