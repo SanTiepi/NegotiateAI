@@ -170,6 +170,7 @@ function renderMetricList(elementId, entries, labelKey, valueFormatter) {
 let academyLoaded = false;
 let academyDaily = null;
 let academyWeekly = null;
+let pendingSessionMeta = null;
 
 function renderAcademyPlaceholder(elementId, text) {
   const root = document.getElementById(elementId);
@@ -229,8 +230,10 @@ async function loadAcademy(force = false) {
         <div class="academy-meta">
           ${renderSkillPill(drill.skill)}
           <span class="chip">${escapeHtml(drill.maxTurns)} tours</span>
+          <button type="button" class="btn btn-outline btn-sm academy-play-drill" data-drill-id="${escapeHtml(drill.id)}">Jouer</button>
         </div>
       `;
+      item.querySelector('.academy-play-drill')?.addEventListener('click', () => startDrill(drill.id));
       drillsEl.appendChild(item);
     }
 
@@ -522,12 +525,22 @@ async function loadPresets() {
 let pendingScenarioFile = null;
 let pendingBrief = null;
 
-async function launchScenario(scenarioFile) {
+async function launchScenario(scenarioFile, options = {}) {
   try {
     const briefing = await post('/api/briefing', { scenarioFile });
     pendingScenarioFile = scenarioFile;
     pendingBrief = null;
+    pendingSessionMeta = options;
     showBriefing(briefing);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  }
+}
+
+async function startDrill(drillId) {
+  try {
+    const session = await post(`/api/drills/${encodeURIComponent(drillId)}/start`, withPlayerPayload({}));
+    startNegotiation(session);
   } catch (err) {
     alert('Erreur : ' + err.message);
   }
@@ -565,6 +578,7 @@ document.getElementById('setup-form').addEventListener('submit', async (e) => {
     const briefing = await post('/api/briefing', { brief });
     pendingScenarioFile = null;
     pendingBrief = brief;
+    pendingSessionMeta = null;
     showBriefing(briefing);
     return;
   } catch (err) { /* fallback to direct start */ }
@@ -631,6 +645,9 @@ let currentBrief = null;
 
 function startNegotiation(session) {
   currentSessionId = session.sessionId;
+  pendingScenarioFile = null;
+  pendingBrief = null;
+  pendingSessionMeta = null;
   navigate('negotiate');
 
   document.getElementById('n-adversary').textContent = session.adversary?.identity || '—';
@@ -1046,6 +1063,7 @@ document.getElementById('briefing-form').addEventListener('submit', async (e) =>
     const payload = { objectiveContract };
     if (pendingScenarioFile) payload.scenarioFile = pendingScenarioFile;
     else if (pendingBrief) payload.brief = pendingBrief;
+    Object.assign(payload, pendingSessionMeta || {});
 
     const session = await post('/api/session', withPlayerPayload(payload));
     startNegotiation(session);
@@ -1303,6 +1321,7 @@ document.getElementById('academy-play-daily')?.addEventListener('click', async (
     academyDaily = daily;
     pendingScenarioFile = null;
     pendingBrief = daily.brief;
+    pendingSessionMeta = { mode: 'daily', dailyMeta: { date: daily.date, targetSkill: daily.targetSkill, difficulty: daily.difficulty } };
     const briefing = await post('/api/briefing', { brief: daily.brief });
     showBriefing(briefing);
   } catch (err) {
@@ -1315,7 +1334,7 @@ document.getElementById('academy-play-weekly')?.addEventListener('click', () => 
     alert('Scénario de la semaine indisponible pour le moment.');
     return;
   }
-  launchScenario(academyWeekly.id);
+  launchScenario(academyWeekly.id, { mode: 'weekly' });
 });
 
 document.getElementById('academy-export-hall')?.addEventListener('click', async () => {
@@ -1561,6 +1580,7 @@ document.getElementById('briefing-slider-form')?.addEventListener('submit', asyn
     const payload = { sliders, uiProgressive: true };
     if (pendingScenarioFile) payload.scenarioFile = pendingScenarioFile;
     else if (pendingBrief) payload.brief = pendingBrief;
+    Object.assign(payload, pendingSessionMeta || {});
     const session = await post('/api/session', withPlayerPayload(payload));
     startNegotiation(session);
   } catch (err) {

@@ -15,7 +15,7 @@ import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
 import { simulateBeforeSend, simulateBeforeSendBatch } from './simulate.mjs';
 import { generateDaily } from './daily.mjs';
-import { DRILL_CATALOG, recommendDrill } from './drill.mjs';
+import { DRILL_CATALOG, recommendDrill, createDrill } from './drill.mjs';
 import { generateReplay } from './replay.mjs';
 import { selectScenarioOfWeek } from './leaderboard.mjs';
 import { recommendBiasTraining } from './biasTracker.mjs';
@@ -605,6 +605,39 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         return;
       }
 
+      const drillStartMatch = req.method === 'POST' && url.pathname.match(/^\/api\/drills\/([^/]+)\/start$/);
+      if (drillStartMatch) {
+        const drillId = decodeURIComponent(drillStartMatch[1]);
+        const body = await readBody(req);
+        const { session, drill } = await createDrill(drillId, llmProvider, { brief: body.brief });
+        session._mode = 'drill';
+        session._drillId = drill.id;
+        session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
+        session._roundScores = [];
+        session._createdAt = Date.now();
+        session._prevConfidence = session.adversary?.emotionalProfile?.confidence ?? 50;
+        session._prevFrustration = session.adversary?.emotionalProfile?.frustration ?? 30;
+
+        const sessionId = nextSessionId();
+        cleanupSessions(activeSessions);
+        activeSessions.set(sessionId, session);
+
+        json(res, 201, {
+          sessionId,
+          drill: {
+            id: drill.id,
+            name: drill.name,
+            description: drill.description,
+            skill: drill.skill,
+            maxTurns: drill.maxTurns,
+          },
+          adversary: { identity: session.adversary.identity, style: session.adversary.style },
+          state: { turn: session.turn, status: session.status, maxTurns: session.maxTurns },
+          mode: 'drill',
+        });
+        return;
+      }
+
       if (req.method === 'GET' && url.pathname === '/api/scenario-of-week') {
         json(res, 200, selectScenarioOfWeek(await listScenarios()));
         return;
@@ -883,6 +916,8 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
         session._scenarioId = scenario?.metadata?.id || body.scenarioFile || null;
         session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
+        session._mode = typeof body.mode === 'string' && body.mode.trim() ? body.mode.trim() : 'web';
+        session._dailyMeta = body.dailyMeta || null;
         session._uiProgressive = body.uiProgressive === true;
         session._uiLayer = computeUILayer(completedSessions.length, body.uiLayerOverride);
 
@@ -961,7 +996,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             isRealPrep: session._isRealPrep || false,
             realPrepMeta: session._realPrepMeta || null,
             playerId: session._playerId || 'local-player',
-            mode: 'web',
+            mode: session._mode || 'web',
+            dailyMeta: session._dailyMeta || null,
+            drillId: session._drillId || null,
             eventPolicy: session.eventPolicy,
             eventsActive: session.eventPolicy !== 'none',
             worldState: session._world ? { emotions: session._world.emotions, pad: session._world.pad } : null,
@@ -986,6 +1023,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             objectiveSet: !!session._objectiveContract,
             strategy: session._objectiveContract?.strategy || null,
             playerId: sessionEntry.playerId,
+            mode: sessionEntry.mode,
           });
 
           activeSessions.delete(sessionId);

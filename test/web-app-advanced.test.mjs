@@ -21,6 +21,31 @@ const provider = createMockProvider({
     likelyTactics: ['scarcity'],
     vulnerabilities: ['Fin de mois'],
   },
+  turn: {
+    adversaryResponse: 'Je peux bouger, mais il me faut une justification concrète.',
+    sessionStatus: 'continue',
+  },
+  coaching: {
+    biasDetected: null,
+    alternative: null,
+    momentum: 'stable',
+    tip: 'Reste précise et protège ta BATNA.',
+  },
+  feedback: {
+    summary: 'Bonne session.',
+    globalScore: 76,
+    scores: {
+      outcomeLeverage: 16,
+      batnaDiscipline: 15,
+      emotionalRegulation: 16,
+      biasResistance: 14,
+      conversationalFlow: 15,
+    },
+    biasesDetected: [],
+    tacticsUsed: [],
+    missedOpportunities: [],
+    recommendations: ['Clarifie encore plus ton seuil.'],
+  },
   replay: {
     turns: [
       {
@@ -108,6 +133,24 @@ describe('web-app advanced api', () => {
     assert.equal(body.drills.find((drill) => drill.id === 'pressure')?.recommended, true);
   });
 
+  it('starts a drill session from the web academy api', async () => {
+    harness = await createHarness();
+
+    const { response, body } = await harness.request('/api/drills/pressure/start', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ playerId: 'web-robin' }),
+    });
+
+    assert.equal(response.status, 201);
+    assert.equal(body.mode, 'drill');
+    assert.equal(body.drill.id, 'pressure');
+    assert.equal(body.drill.maxTurns, 5);
+    assert.equal(body.state.maxTurns, 5);
+    assert.equal(harness.app.activeSessions.get('sess-advanced')._mode, 'drill');
+    assert.equal(harness.app.activeSessions.get('sess-advanced')._playerId, 'web-robin');
+  });
+
   it('serves persisted session replay by id', async () => {
     harness = await createHarness();
     await harness.store.saveSession({
@@ -152,6 +195,52 @@ describe('web-app advanced api', () => {
     assert.equal(body.turns.length, 1);
     assert.equal(body.turns[0].momentumLabel, 'gaining');
     assert.equal(body.summary, 'Session courte mais bien cadrée.');
+  });
+
+  it('persists academy daily sessions with daily mode and metadata', async () => {
+    harness = await createHarness();
+
+    const daily = await harness.request('/api/daily');
+    const created = await harness.request('/api/session', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        brief: daily.body.brief,
+        playerId: 'web-robin',
+        mode: 'daily',
+        dailyMeta: {
+          date: daily.body.date,
+          targetSkill: daily.body.targetSkill,
+          difficulty: daily.body.difficulty,
+        },
+      }),
+    });
+
+    assert.equal(created.response.status, 201);
+
+    const activeSession = harness.app.activeSessions.get('sess-advanced');
+    activeSession.maxTurns = 1;
+
+    const turn = await harness.request('/api/session/sess-advanced/turn', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: 'Je pose calmement mon cadre.' }),
+    });
+
+    assert.equal(turn.response.status, 200);
+    assert.equal(turn.body.sessionOver, true);
+
+    const sessions = await harness.store.loadSessions();
+    assert.equal(sessions[0].mode, 'daily');
+    assert.equal(sessions[0].playerId, 'web-robin');
+    assert.deepEqual(sessions[0].dailyMeta, {
+      date: daily.body.date,
+      targetSkill: daily.body.targetSkill,
+      difficulty: daily.body.difficulty,
+    });
+
+    const analytics = await harness.store.loadAnalytics();
+    assert.equal(analytics.at(-1).mode, 'daily');
   });
 
   it('returns 404 for unknown replay id', async () => {
