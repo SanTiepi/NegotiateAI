@@ -132,7 +132,7 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return startSession(chatId, brief, adversary);
   }
 
-  async function startPresetScenario(chatId, scenarioId, tier = 'neutral') {
+  async function startPresetScenario(chatId, scenarioId, tier = 'neutral', options = {}) {
     const normalizedTier = String(tier || 'neutral').trim().toLowerCase();
     if (!scenarioId) {
       await sendScenarioCatalog(chatId);
@@ -145,8 +145,12 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
     try {
       const { brief, adversary } = await loadScenario(scenarioId, normalizedTier);
-      await startSession(chatId, buildBrief(brief), adversary, { scenarioId });
-      return { ok: true, command: 'scenario', scenarioId, tier: normalizedTier };
+      await startSession(chatId, buildBrief(brief), adversary, {
+        scenarioId,
+        mode: options.mode || 'telegram',
+        label: options.label || null,
+      });
+      return { ok: true, command: options.command || 'scenario', scenarioId, tier: normalizedTier };
     } catch (error) {
       if (error instanceof Error && error.message.startsWith('Scenario not found:')) {
         await sendMessage(chatId, `Scenario inconnu: ${scenarioId}. Utilise /scenarios pour voir la liste.`);
@@ -199,17 +203,14 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
   async function loadTelegramPlayerSnapshot(chatId) {
     const playerId = getPlayerId(chatId);
     const [sessions, progression] = await Promise.all([store.loadSessions(), store.loadProgression()]);
-    const telegramSessions = sessions.filter((session) => (
-      (session.mode || 'cli') === 'telegram'
-      && (session.playerId || null) === playerId
-    ));
+    const playerSessions = sessions.filter((session) => (session.playerId || null) === playerId);
 
     return {
       playerId,
       progression,
-      sessions: telegramSessions,
-      playerDashboard: buildPlayerDashboard(telegramSessions, progression, { playerId }),
-      stats: computeDashboardStats(telegramSessions, progression),
+      sessions: playerSessions,
+      playerDashboard: buildPlayerDashboard(playerSessions, progression, { playerId }),
+      stats: computeDashboardStats(playerSessions, progression),
     };
   }
 
@@ -286,14 +287,28 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     return sendMessage(chatId, lines.join('\n').slice(0, MAX_TELEGRAM_MESSAGE_LENGTH));
   }
 
-  async function sendWeekly(chatId) {
+  async function sendWeekly(chatId, mode = 'info') {
     const scenarios = await listScenarios();
     const { weekKey, scenario } = selectScenarioOfWeek(scenarios);
+
+    if (mode === 'play') {
+      return startPresetScenario(chatId, scenario.id, 'neutral', {
+        mode: 'weekly',
+        command: 'weekly-play',
+        label: [
+          `Scenario de la semaine — ${weekKey}`,
+          `${scenario.name}`,
+          `ID: ${scenario.id}`,
+        ].join('\n'),
+      });
+    }
+
     return sendMessage(chatId, [
       `Scenario de la semaine — ${weekKey}`,
       `${scenario.name}`,
       `ID: ${scenario.id}`,
-      `Commande: /scenario ${scenario.id} neutral`,
+      'Commande: /weekly play',
+      `Ou: /scenario ${scenario.id} neutral`,
     ].join('\n'));
   }
 
@@ -351,18 +366,15 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
 
     const playerId = getPlayerId(chatId);
     const sessions = await store.loadSessions();
-    const telegramSessions = sessions.filter((session) => (
-      (session.mode || 'cli') === 'telegram'
-      && (session.playerId || null) === playerId
-    ));
+    const playerSessions = sessions.filter((session) => (session.playerId || null) === playerId);
 
-    if (telegramSessions.length === 0) {
-      return sendMessage(chatId, 'Aucune session Telegram terminée à rejouer pour l’instant.');
+    if (playerSessions.length === 0) {
+      return sendMessage(chatId, 'Aucune session terminée à rejouer pour l’instant.');
     }
 
     const targetSession = requestedSessionId
-      ? telegramSessions.find((session) => session.id === requestedSessionId)
-      : telegramSessions[0];
+      ? playerSessions.find((session) => session.id === requestedSessionId)
+      : playerSessions[0];
 
     if (!targetSession) {
       return sendMessage(chatId, `Replay introuvable: ${requestedSessionId}. Utilise /replay pour la dernière session.`);
@@ -463,6 +475,10 @@ export function createTelegramBot({ provider, token = process.env.TELEGRAM_BOT_T
     if (text === '/weekly') {
       await sendWeekly(chatId);
       return { ok: true, command: 'weekly' };
+    }
+
+    if (text === '/weekly play' || text === '/weekly start') {
+      return sendWeekly(chatId, 'play');
     }
 
     if (text === '/leaderboard') {

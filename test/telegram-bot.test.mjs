@@ -250,7 +250,7 @@ describe('telegram-bot', () => {
 
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/weekly' } });
     assert.match(sent.at(-1).text, /Scenario de la semaine/);
-    assert.match(sent.at(-1).text, /Commande: \/scenario /);
+    assert.match(sent.at(-1).text, /Commande: \/weekly play/);
 
     await bot.handleMessage({ message: { chat: { id: 42 }, text: '/leaderboard' } });
     assert.match(sent.at(-1).text, /Leaderboard — /);
@@ -528,6 +528,101 @@ describe('telegram-bot', () => {
     const sessions = await store.loadSessions();
     assert.equal(sessions.length, 1);
     assert.equal(sessions[0].mode, 'daily');
+  });
+
+  it('can launch the weekly scenario directly and persist it in weekly mode', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-weekly-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    const weeklyResult = await bot.handleMessage({ message: { chat: { id: 77 }, text: '/weekly play' } });
+    assert.equal(weeklyResult.command, 'weekly-play');
+    assert.equal(bot.sessions.size, 1);
+    assert.match(sent.at(-1).text, /Scenario de la semaine/);
+    assert.match(sent.at(-1).text, /Envoie ton premier message/);
+
+    await bot.handleMessage({ message: { chat: { id: 77 }, text: 'Je peux signer rapidement.' } });
+
+    const sessions = await store.loadSessions();
+    assert.equal(sessions.length, 1);
+    assert.equal(sessions[0].mode, 'weekly');
+    assert.equal(sessions[0].playerId, 'telegram:77');
+    assert.ok(sessions[0].scenarioId);
+  });
+
+  it('includes non-telegram session modes for the same telegram player in profile and replay', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'negotiate-tg-weekly-scope-'));
+    tempDirs.push(dir);
+    const store = createStore({ dataDir: dir });
+    await store.saveSession({
+      id: 'weekly-player-run',
+      date: '2026-04-02T12:00:00.000Z',
+      brief: {
+        situation: 'Achat immobilier',
+        userRole: 'Acheteur',
+        adversaryRole: 'Vendeur',
+        objective: 'Signer à 900000 CHF',
+        minimalThreshold: '920000 CHF',
+        batna: 'Un autre appartement',
+        difficulty: 'neutral',
+        relationalStakes: 'medium',
+        constraints: [],
+      },
+      adversary: { identity: 'Mme Seller' },
+      transcript: [
+        { role: 'user', content: 'Je propose 900000 CHF.' },
+        { role: 'assistant', content: 'Je vise 940000 CHF.' },
+      ],
+      status: 'accepted',
+      turns: 4,
+      scenarioId: 'swiss-property-purchase',
+      feedback: {
+        globalScore: 88,
+        scores: {
+          outcomeLeverage: 20,
+          batnaDiscipline: 18,
+          emotionalRegulation: 18,
+          biasResistance: 14,
+          conversationalFlow: 18,
+        },
+        biasesDetected: [{ biasType: 'anchoring', turn: 2, excerpt: '940000 CHF', explanation: 'Anchor detected' }],
+        tacticsUsed: ['labeling'],
+        missedOpportunities: [],
+        recommendations: ['Reste ferme.'],
+      },
+      fightCard: { grade: { grade: 'A' }, summary: 'Belle progression' },
+      mode: 'weekly',
+      playerId: 'telegram:42',
+    });
+
+    const sent = [];
+    const bot = createTelegramBot({
+      provider,
+      store,
+      token: 'token-123',
+      fetchImpl: async (_url, options) => {
+        sent.push(JSON.parse(options.body));
+        return { ok: true, async json() { return { ok: true }; } };
+      },
+    });
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/profile' } });
+    assert.match(sent.at(-1).text, /Sessions: 1/);
+
+    await bot.handleMessage({ message: { chat: { id: 42 }, text: '/replay' } });
+    assert.match(sent.at(-1).text, /weekly-player-run/);
+    assert.match(sent.at(-1).text, /Replay Telegram/);
+    assert.match(sent.at(-1).text, /Je propose 900000 CHF/);
   });
 
   it('formatTurnReply includes coaching and ending when present', () => {
