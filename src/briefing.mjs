@@ -7,14 +7,68 @@ import { computePreSessionOdds } from './ticker.mjs';
 /**
  * Generate briefing context for a scenario — what the player sees before committing.
  */
+const BRIEFING_QUESTIONS = {
+  negotiation: [
+    { id: 'objective', label: 'Qu\'est-ce qui te ferait partir content ?', hint: 'Ton objectif ideal — sois precis.', required: true },
+    { id: 'threshold', label: 'En dessous de quoi tu refuses ?', hint: 'Le minimum acceptable. En dessous, active ton plan B.', required: true },
+    { id: 'batna', label: 'Si ca echoue, quel est ton plan B ?', hint: 'Ton meilleure alternative. Elle definit ta marge de manoeuvre.', required: true },
+    { id: 'relationalGoal', label: 'Comment tu veux que la relation soit apres ?', hint: 'Partenariat long terme ? Transaction unique ? Peu importe ?', required: false },
+    { id: 'strategy', label: 'Quelle approche tu vas utiliser ?', hint: 'Ecoute d\'abord ? Proposition haute ? Collaboration ? Pression ?', required: false },
+  ],
+  assertiveness: [
+    { id: 'objective', label: 'Qu\'est-ce que tu veux dire clairement ?', hint: 'Le message central que tu veux faire passer.', required: true },
+    { id: 'threshold', label: 'Qu\'est-ce que tu n\'acceptes plus ?', hint: 'Ta limite. Ce qui n\'est plus negociable pour toi.', required: true },
+    { id: 'batna', label: 'Si la conversation se ferme, tu fais quoi ?', hint: 'Ton alternative si l\'autre ne comprend pas.', required: true },
+    { id: 'relationalGoal', label: 'Tu veux preserver la relation ?', hint: 'Oui, c\'est important ? Ou tu es pret(e) a assumer une distance ?', required: false },
+    { id: 'strategy', label: 'Comment tu comptes aborder le sujet ?', hint: 'Direct ? En douceur ? Avec un exemple concret ?', required: false },
+  ],
+  feedback: [
+    { id: 'objective', label: 'Quel message tu veux faire passer ?', hint: 'Le point precis que l\'autre doit comprendre.', required: true },
+    { id: 'threshold', label: 'C\'est quoi le minimum acceptable ?', hint: 'Au minimum, qu\'est-ce qui doit changer ?', required: true },
+    { id: 'batna', label: 'Si ca ne passe pas, tu fais quoi ?', hint: 'Escalader ? Laisser tomber ? Documenter ?', required: true },
+    { id: 'relationalGoal', label: 'Tu veux que la relation reste intacte ?', hint: 'Oui a tout prix ? Oui si possible ? Secondaire ?', required: false },
+    { id: 'strategy', label: 'Comment tu comptes formuler ?', hint: 'Factuel ? Empathique d\'abord ? Direct sans detour ?', required: false },
+  ],
+};
+
+const BRIEFING_SLIDERS = {
+  negotiation: {
+    ambition: { label: 'Ambition', leftLabel: 'Prudent', rightLabel: 'Maximaliste' },
+    relation: { label: 'Relation', leftLabel: 'Accord pur', rightLabel: 'Relation compte' },
+    posture: { label: 'Posture', leftLabel: 'Diplomate', rightLabel: 'Assertif' },
+  },
+  assertiveness: {
+    ambition: { label: 'Fermete', leftLabel: 'Souple', rightLabel: 'Intransigeant' },
+    relation: { label: 'Relation', leftLabel: 'Secondaire', rightLabel: 'Essentielle' },
+    posture: { label: 'Ton', leftLabel: 'Doux', rightLabel: 'Direct' },
+  },
+  feedback: {
+    ambition: { label: 'Precision', leftLabel: 'Vague', rightLabel: 'Chirurgical' },
+    relation: { label: 'Relation', leftLabel: 'Secondaire', rightLabel: 'Prioritaire' },
+    posture: { label: 'Approche', leftLabel: 'Empathique', rightLabel: 'Factuel' },
+  },
+};
+
 export function generateBriefing(scenario, progression) {
   const brief = scenario.brief || scenario;
   const adversary = scenario.adversary || null;
   const difficulty = brief.difficulty || 'neutral';
+  const convType = scenario.metadata?.conversationType || 'negotiation';
 
   const odds = progression
     ? computePreSessionOdds(progression, difficulty)
-    : { successRate: 50, confidence: 'low', message: 'Première session — estimation par défaut.' };
+    : { successRate: 50, confidence: 'low', message: 'Premiere session — estimation par defaut.' };
+
+  const questions = (BRIEFING_QUESTIONS[convType] || BRIEFING_QUESTIONS.negotiation).map((q) => ({
+    ...q,
+    suggestion: q.id === 'objective' ? (brief.objective || '')
+      : q.id === 'threshold' ? (brief.minimalThreshold || '')
+        : q.id === 'batna' ? (brief.batna || '')
+          : q.id === 'relationalGoal' ? (brief.relationalStakes ? 'Preserver la relation' : '')
+            : '',
+  }));
+
+  const sliderDefs = BRIEFING_SLIDERS[convType] || BRIEFING_SLIDERS.negotiation;
 
   return {
     // Context shown to player
@@ -27,6 +81,7 @@ export function generateBriefing(scenario, progression) {
       publicObjective: adversary.publicObjective,
     } : null,
     difficulty,
+    conversationType: convType,
     constraints: brief.constraints || [],
     relationalStakes: brief.relationalStakes || '',
 
@@ -40,50 +95,14 @@ export function generateBriefing(scenario, progression) {
     // Pre-session odds
     odds,
 
-    // Briefing questions
-    questions: [
-      {
-        id: 'objective',
-        label: 'Qu\'est-ce qui vous ferait partir content ?',
-        hint: 'Votre objectif ideal — soyez precis.',
-        suggestion: brief.objective || '',
-        required: true,
-      },
-      {
-        id: 'threshold',
-        label: 'En dessous de quoi vous refusez ?',
-        hint: 'Le minimum acceptable. En dessous, activez votre plan B.',
-        suggestion: brief.minimalThreshold || '',
-        required: true,
-      },
-      {
-        id: 'batna',
-        label: 'Si ca echoue, quel est votre plan B ?',
-        hint: 'Votre meilleure alternative. Elle definit votre pouvoir de negociation.',
-        suggestion: brief.batna || '',
-        required: true,
-      },
-      {
-        id: 'relationalGoal',
-        label: 'Comment voulez-vous que la relation soit apres ?',
-        hint: 'Partenariat long terme ? Transaction unique ? Peu importe ?',
-        suggestion: brief.relationalStakes ? 'Preserver la relation' : 'Transaction pure',
-        required: false,
-      },
-      {
-        id: 'strategy',
-        label: 'Quelle approche allez-vous utiliser ?',
-        hint: 'Ecoute d\'abord ? Ancrage haut ? Collaboration ? Pression ?',
-        suggestion: '',
-        required: false,
-      },
-    ],
+    // Briefing questions (contextual)
+    questions,
 
-    // Sliders (quick mode: 3 sliders → computed contract)
+    // Sliders (quick mode: 3 sliders -> computed contract)
     sliders: {
-      ambition: { label: 'Ambition', min: 0, max: 100, default: 60, leftLabel: 'Prudent', rightLabel: 'Maximaliste' },
-      relation: { label: 'Relation', min: 0, max: 100, default: brief.relationalStakes ? 70 : 30, leftLabel: 'Deal pur', rightLabel: 'Relation compte' },
-      posture: { label: 'Posture', min: 0, max: 100, default: 50, leftLabel: 'Diplomate', rightLabel: 'Assertif' },
+      ambition: { ...sliderDefs.ambition, min: 0, max: 100, default: 60 },
+      relation: { ...sliderDefs.relation, min: 0, max: 100, default: brief.relationalStakes ? 70 : 30 },
+      posture: { ...sliderDefs.posture, min: 0, max: 100, default: 50 },
     },
   };
 }

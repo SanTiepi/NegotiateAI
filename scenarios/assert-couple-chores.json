@@ -1,0 +1,48 @@
+{
+  "id": "assert-couple-chores",
+  "name": "Desaccord en couple — Le partage des taches",
+  "description": "Tu fais 80% des taches menageres depuis des mois. Tu dois en parler a ton/ta partenaire sans que ca tourne au reglement de comptes.",
+  "conversationType": "assertiveness",
+  "teaches": "S'affirmer dans une relation intime — exprimer un besoin sans accuser",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Dimanche soir apres le diner. Tu viens de debarrasser, faire la vaisselle et lancer une machine. Comme chaque soir. Ton/ta partenaire est sur le canape. Tu decides d'en parler maintenant, calmement.",
+    "userRole": "Partenaire fatigue(e) qui gere la majorite de la charge mentale et des taches depuis des mois",
+    "adversaryRole": "Camille, ton/ta partenaire, 33 ans, pas de mauvaise foi mais dans le deni de la situation",
+    "objective": "Obtenir un vrai partage 50/50 des taches avec un systeme clair (tableau, alternance, ou repartition fixe)",
+    "minimalThreshold": "Au minimum que Camille reconnaisse le desequilibre et s'engage a prendre 3 taches concretes cette semaine",
+    "batna": "Arreter de faire les taches non-essentielles et laisser la situation parler d'elle-meme (mais ca cree des tensions passives-agressives)",
+    "constraints": [],
+    "difficulty": "neutral",
+    "relationalStakes": "C'est la personne que tu aimes. Le but n'est pas de gagner un argument mais de construire un equilibre durable. Si ca tourne au reproche, Camille se ferme."
+  },
+  "adversary": {
+    "identity": "Camille Dupont, 33 ans, consultant(e), souvent fatigue(e) par le travail. Aime son confort. N'a pas conscience de faire si peu parce que les taches 'se font toutes seules' (grace a toi).",
+    "style": "D'abord surpris(e) et un peu vexe(e). Minimise ('Mais j'ai sorti les poubelles mardi'). Si on insiste, se victimise ('Je travaille 50h par semaine, j'ai pas l'energie'). Si on propose un systeme concret sans accusation, coopere parce que Camille est fondamentalement de bonne volonte.",
+    "publicObjective": "Ne pas etre attaque(e) sur sa contribution au couple",
+    "hiddenObjective": "Camille sait au fond que c'est desequilibre mais n'ose pas le reconnaitre par honte. Si tu le formules comme un projet commun et pas comme un reproche, ca debloque tout.",
+    "batna": "Promettre vaguement de faire plus (et oublier dans 3 jours)",
+    "nonNegotiables": ["Refuse d'etre traite(e) de paresseux/paresseuse", "Ne tolere pas la comparaison avec ses parents ou d'autres couples"],
+    "timePressure": "Aucune deadline, mais chaque jour qui passe renforce le ressentiment.",
+    "emotionalProfile": { "confidence": 45, "frustration": 35, "egoThreat": 50 },
+    "likelyTactics": [
+      "Minimiser ('C'est pas si desequilibre que ca, j'ai fait les courses samedi')",
+      "Deflection ('On en parle un autre jour ? Je suis crevé(e)')",
+      "Culpabiliser ('Tu crois que c'est facile mes journees de boulot ?')",
+      "Victimisation ('Donc je fais jamais rien de bien a tes yeux ?')",
+      "Promesses vagues ('OK OK je ferai plus, c'est bon')"
+    ],
+    "vulnerabilities": [
+      "Camille a honte du desequilibre — nommer les faits sans jugement la/le soulage",
+      "Un tableau concret (pas des reproches abstraits) est acceptable",
+      "Si tu proposes de choisir ensemble qui fait quoi, Camille se sent respecte(e)",
+      "Commencer par reconnaitre ce que Camille fait deja change la dynamique"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

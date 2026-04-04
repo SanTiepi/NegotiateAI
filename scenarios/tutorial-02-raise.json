@@ -8,21 +8,21 @@
   "guidedTurns": 2,
   "maxTurns": 8,
   "brief": {
-    "situation": "Vous travaillez chez WebCraft depuis 18 mois. Vous êtes dev front senior, vous avez livré le redesign du site client qui a augmenté les conversions de 25%. Votre salaire est de 85k CHF. Le marché est à 95-105k pour votre profil. Entretien annuel avec votre manager Sophie.",
+    "situation": "Vous travaillez chez WebCraft depuis 18 mois. Vous êtes dev front senior, vous avez livré le redesign du site client qui a augmenté les conversions de 25%. Votre salaire est de 85k CHF. Le marché est à 95-105k pour votre profil. Entretien annuel avec votre manager Nathalie.",
     "userRole": "Dev front senior, 18 mois d'ancienneté, auteur du redesign client (+25% conversions)",
-    "adversaryRole": "Sophie Moreau, Engineering Manager, votre manager directe",
+    "adversaryRole": "Nathalie Kern, Engineering Manager, votre manager directe",
     "objective": "Augmentation à 98k CHF avec titre de Tech Lead",
     "minimalThreshold": "92k CHF minimum avec perspective claire à 6 mois",
     "batna": "Offre chez un concurrent à 102k CHF (vous préférez rester mais c'est une option réelle)",
-    "constraints": ["Budget d'équipe validé trimestriellement", "Vous ne voulez pas menacer de partir explicitement", "Sophie décide mais le VP Engineering doit valider au-dessus de 10%"],
+    "constraints": ["Budget d'équipe validé trimestriellement", "Vous ne voulez pas menacer de partir explicitement", "Nathalie décide mais le VP Engineering doit valider au-dessus de 10%"],
     "difficulty": "neutral",
-    "relationalStakes": "Sophie est votre manager au quotidien. Un conflit ouvert rendrait le travail pénible. Mais ne rien dire vous frustre depuis 6 mois."
+    "relationalStakes": "Nathalie est votre manager au quotidien. Un conflit ouvert rendrait le travail pénible. Mais ne rien dire vous frustre depuis 6 mois."
   },
   "adversary": {
-    "identity": "Sophie Moreau, 36 ans, Engineering Manager depuis 2 ans. Ancienne dev, comprend votre valeur technique. Coincée entre votre demande et son budget serré.",
+    "identity": "Nathalie Kern, 36 ans, Engineering Manager depuis 2 ans. Ancienne dev, comprend votre valeur technique. Coincée entre votre demande et son budget serré.",
     "style": "Empathique et à l'écoute mais prudente. Dit souvent 'je comprends' et 'laisse-moi voir ce que je peux faire'. Évite les engagements fermes. Utilise les processus RH comme bouclier.",
     "publicObjective": "Retenir un talent clé dans le cadre du budget d'équipe",
-    "hiddenObjective": "Sophie a une enveloppe de 15k CHF pour toute l'équipe. Elle sait que vous valez plus mais doit aussi augmenter un junior qui menace de partir. Elle cherche un compromis créatif.",
+    "hiddenObjective": "Nathalie a une enveloppe de 15k CHF pour toute l'équipe. Elle sait que vous valez plus mais doit aussi augmenter un junior qui menace de partir. Elle cherche un compromis créatif.",
     "batna": "Proposer 89k + bonus variable de 5k + 2 jours de télétravail supplémentaires",
     "nonNegotiables": ["Ne peut pas dépasser 95k sans approbation VP (processus de 3 semaines)", "Le titre Tech Lead nécessite une promotion formelle"],
     "timePressure": "Les budgets se bouclent fin du mois. Après, tout est reporté au trimestre suivant.",

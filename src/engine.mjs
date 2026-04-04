@@ -130,11 +130,13 @@ export async function processTurn(session, userMessage) {
   }
 
   // --- STEP 4: Build LLM prompt with WorldEngine state ---
+  const convType = session._conversationType || 'negotiation';
+  const userLabel = convType === 'negotiation' ? 'Negotiator' : (session.brief?.userRole || 'Speaker');
   const transcriptText = [
     ...session.transcript,
     { role: 'user', content: userMessage },
   ]
-    .map((m) => `${m.role === 'user' ? 'Negotiator' : session.adversary.identity}: ${m.content}`)
+    .map((m) => `${m.role === 'user' ? userLabel : session.adversary.identity}: ${m.content}`)
     .join('\n');
 
   const worldPrompt = worldStateToPrompt(session._world);
@@ -143,9 +145,23 @@ export async function processTurn(session, userMessage) {
     ? `\n\nIMPORTANT EVENT: ${firedEvent.adversaryInstruction}`
     : '';
 
+  const SYSTEM_INTROS = {
+    negotiation: 'You are simulating a negotiation counterpart. You ARE this person:',
+    assertiveness: 'You are simulating a person in a tense interpersonal conversation. You ARE this person. This is NOT a formal negotiation — it is a real relationship situation with emotional stakes. React naturally and emotionally, not strategically:',
+    feedback: 'You are simulating a colleague receiving difficult feedback. You ARE this person. This is NOT a negotiation — it is a sensitive workplace conversation. React with the full range of human emotions (defensiveness, vulnerability, pride):',
+  };
+  const systemIntro = SYSTEM_INTROS[convType] || SYSTEM_INTROS.negotiation;
+
+  const PROMPT_VERBS = {
+    negotiation: 'The negotiator just said',
+    assertiveness: 'The other person just said',
+    feedback: 'Your colleague just said',
+  };
+  const promptVerb = PROMPT_VERBS[convType] || PROMPT_VERBS.negotiation;
+
   // LLM generates ONLY the adversary's response text — no state computation
   const result = await session.provider.generateJson({
-    system: `You are simulating a negotiation adversary. You ARE this person:
+    system: `${systemIntro}
 ${JSON.stringify(session.adversary, null, 2)}
 
 ${worldPrompt}
@@ -156,7 +172,7 @@ ${isLastTurn ? 'This is the FINAL turn. Wrap up — accept, reject, or final com
 
 Return JSON with: adversaryResponse (string — your in-character response), sessionOver (boolean), endReason (string|null), sessionStatus ("accepted"|"broken"|null).
 Do NOT include stateUpdates — the WorldEngine handles state computation.`,
-    prompt: `Conversation so far:\n${transcriptText}\n\nThe negotiator just said: "${userMessage}"\n\nRespond as ${session.adversary.identity}.`,
+    prompt: `Conversation so far:\n${transcriptText}\n\n${promptVerb}: "${userMessage}"\n\nRespond as ${session.adversary.identity}.`,
     schemaName: 'turn',
     temperature: 0.7,
   });
@@ -217,8 +233,8 @@ Do NOT include stateUpdates — the WorldEngine handles state computation.`,
     const biasNames = biasIndicators.map((b) => b.biasType).join(', ');
     const techNames = userTechniques.map((t) => t.technique).join(', ');
     coaching = await session.provider.generateJson({
-      system: `You are a negotiation coach. Give a brief real-time hint. Return JSON: biasDetected (string|null), alternative (string|null), momentum ("gaining"|"losing"|"stable"), tip (string).`,
-      prompt: `User: "${userMessage}"\nAdversary: "${adversaryResponse}"\nBiases detected: ${biasNames || 'none'}\nTechniques used: ${techNames || 'none'}\nMomentum: ${session.momentum}\nConfidence: ${session.confidence}`,
+      system: `You are a conversation coach helping someone navigate a difficult ${convType === 'negotiation' ? 'negotiation' : 'interpersonal conversation'}. Give a brief real-time hint. Return JSON: biasDetected (string|null), alternative (string|null), momentum ("gaining"|"losing"|"stable"), tip (string).`,
+      prompt: `User: "${userMessage}"\nOther person: "${adversaryResponse}"\nBiases detected: ${biasNames || 'none'}\nTechniques used: ${techNames || 'none'}\nMomentum: ${session.momentum}\nConfidence: ${session.confidence}`,
       schemaName: 'coaching',
       temperature: 0.3,
     });

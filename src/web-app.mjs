@@ -9,7 +9,7 @@ import { createSession, processTurn } from './engine.mjs';
 import { analyzeFeedback } from './analyzer.mjs';
 import { createAnthropicProvider } from './provider.mjs';
 import { createStore, randomUUID } from './store.mjs';
-import { computeDashboardStats, buildPlayerDashboard } from './dashboard.mjs';
+import { computeDashboardStats, buildPlayerDashboard, buildCognitiveInsights } from './dashboard.mjs';
 import { refreshProgression } from './progression.mjs';
 import { evaluateAutonomyLevel, describeAutonomyGap } from './autonomy.mjs';
 import { BELT_DEFINITIONS } from './belt.mjs';
@@ -272,6 +272,8 @@ async function buildScenarioDetailById(scenarioId, tier = 'neutral') {
 
 function filterDashboardSessions(sessions, filters) {
   return sessions.filter((session) => {
+    // Exclude synthetic/benchmark sessions from player dashboards by default
+    if ((session.cohort || 'player') !== 'player') return false;
     if (filters.playerId && (session.playerId || null) !== filters.playerId) return false;
     if (filters.mode && (session.mode || 'cli') !== filters.mode) return false;
     if (filters.difficulty && (session.brief?.difficulty || 'neutral') !== filters.difficulty) return false;
@@ -466,12 +468,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const playerDashboard = buildPlayerDashboard(scopedSessions, progression, {
           playerId: requestedPlayerId,
         });
+        const cognitiveInsights = buildCognitiveInsights(scopedSessions, progression);
         json(res, 200, {
           ...playerDashboard,
           ...playerDashboard.stats,
           belts: progression.belts || {},
           filters,
           realWorldStats,
+          cognitiveInsights,
           uiLayer: computeUILayer(scopedSessions.length || progression.totalSessions || 0),
           uiLayerDefinitions: getLayerDefinitions(),
           beltDefinitions: BELT_DEFINITIONS.map((d) => ({ color: d.color, name: d.name, dimension: d.dimension, description: d.description })),
@@ -540,12 +544,14 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           playerId: requestedPlayerId,
         });
         const uiLayer = computeUILayer(scopedSessions.length || progression.totalSessions || 0);
+        const cognitiveInsights = buildCognitiveInsights(scopedSessions, progression);
         json(res, 200, {
           card: playerDashboard.card,
           shareable: playerDashboard.shareable,
           autonomy: playerDashboard.autonomy,
           biasRecommendation: playerDashboard.biasRecommendation,
           recommendedDrillId: playerDashboard.recommendedDrillId,
+          cognitiveInsights,
           uiLayer,
           uiLayerDefinitions: getLayerDefinitions(),
           filters,
@@ -612,7 +618,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const { session, drill } = await createDrill(drillId, llmProvider, { brief: body.brief });
         session._mode = 'drill';
         session._drillId = drill.id;
+        session._conversationType = 'negotiation';
         session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
+        session._playerName = typeof body.playerName === 'string' && body.playerName.trim() ? body.playerName.trim() : '';
         session._roundScores = [];
         session._createdAt = Date.now();
         session._prevConfidence = session.adversary?.emotionalProfile?.confidence ?? 50;
@@ -719,6 +727,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           grade: s.fightCard?.grade?.grade || null,
           scenarioId: s.scenarioId || s.scenario?.id || null,
           playerId: s.playerId || null,
+          playerName: s.playerName || '',
         }));
         json(res, 200, summaries);
         return;
@@ -742,6 +751,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           mode: session.mode || 'cli',
           scenarioId: session.scenarioId || session.scenario?.id || null,
           playerId: session.playerId || null,
+          playerName: session.playerName || '',
           brief: session.brief,
           adversary: session.adversary,
           turns: session.turns || session.transcript?.length || 0,
@@ -788,8 +798,10 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         const adversary = await generatePersona(brief, llmProvider);
         const session = createSession(brief, adversary, llmProvider, { eventPolicy: 'none' });
         session._isRealPrep = true;
+        session._conversationType = body.conversationType || 'negotiation';
         session._realPrepMeta = metadata;
         session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
+        session._playerName = typeof body.playerName === 'string' && body.playerName.trim() ? body.playerName.trim() : '';
         session._roundScores = [];
         session._createdAt = Date.now();
         session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
@@ -927,7 +939,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
         session._prevConfidence = adversary?.emotionalProfile?.confidence ?? 50;
         session._prevFrustration = adversary?.emotionalProfile?.frustration ?? 30;
         session._scenarioId = scenario?.metadata?.id || body.scenarioFile || null;
+        session._conversationType = scenario?.metadata?.conversationType || body.conversationType || 'negotiation';
         session._playerId = typeof body.playerId === 'string' && body.playerId.trim() ? body.playerId.trim() : 'local-player';
+        session._playerName = typeof body.playerName === 'string' && body.playerName.trim() ? body.playerName.trim() : '';
         session._mode = typeof body.mode === 'string' && body.mode.trim() ? body.mode.trim() : 'web';
         session._dailyMeta = body.dailyMeta || null;
         session._uiProgressive = body.uiProgressive === true;
@@ -943,6 +957,7 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
           adversary: { identity: adversary.identity, style: adversary.style },
           state: { turn: session.turn, status: session.status, maxTurns: session.maxTurns },
           objectiveContract: objectiveContract ? { objective: objectiveContract.objective, threshold: objectiveContract.minimalThreshold, batna: objectiveContract.batna } : null,
+          conversationType: session._conversationType || 'negotiation',
           uiLayer: session._uiLayer,
           uiProgressive: session._uiProgressive,
         });
@@ -1008,6 +1023,9 @@ export function createWebApp({ provider, sessionIdFactory, store: injectedStore 
             isRealPrep: session._isRealPrep || false,
             realPrepMeta: session._realPrepMeta || null,
             playerId: session._playerId || 'local-player',
+            playerName: session._playerName || '',
+            source: session._source || 'real',
+            cohort: session._cohort || 'player',
             mode: session._mode || 'web',
             dailyMeta: session._dailyMeta || null,
             drillId: session._drillId || null,

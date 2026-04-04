@@ -9,7 +9,26 @@ const CATEGORY_PREFIXES = [
   { prefix: 'swiss-', category: 'swiss' },
   { prefix: 'tutorial-', category: 'tutorial' },
   { prefix: 'vs-', category: 'celebrity' },
+  { prefix: 'assert-', category: 'assertiveness' },
 ];
+
+const CONVERSATION_TYPES = {
+  tutorial: 'negotiation',
+  core: 'negotiation',
+  swiss: 'negotiation',
+  celebrity: 'negotiation',
+  extreme: 'negotiation',
+  assertiveness: 'assertiveness',
+  feedback: 'feedback',
+};
+
+const CANONICAL_TIERS = ['cooperative', 'neutral', 'hostile', 'manipulative'];
+
+function extractAvailableTiers(raw) {
+  const configured = Object.keys(raw?.tiers || {}).filter(Boolean);
+  const all = new Set(['neutral', ...configured]);
+  return CANONICAL_TIERS.filter((tier) => all.has(tier));
+}
 
 function inferScenarioCategory(id) {
   if (typeof id !== 'string') return 'core';
@@ -17,12 +36,15 @@ function inferScenarioCategory(id) {
 }
 
 function buildScenarioMetadata(raw, scenarioFile) {
+  const category = raw.category || inferScenarioCategory(raw.id);
   return {
     id: raw.id,
     name: raw.name,
     version: raw.version,
-    category: raw.category || inferScenarioCategory(raw.id),
+    category,
+    conversationType: raw.conversationType || CONVERSATION_TYPES[category] || 'negotiation',
     scenarioFile,
+    availableTiers: extractAvailableTiers(raw),
   };
 }
 

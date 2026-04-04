@@ -39,9 +39,12 @@ export function computeScenarioLeaderboard(sessions = [], options = {}) {
   const scenarioId = options.scenarioId || null;
   const limit = Math.max(1, options.limit || 10);
 
+  const cohort = options.cohort || null;
+
   const filtered = sessions
     .filter(isRankableSession)
     .filter((session) => !scenarioId || getScenarioId(session) === scenarioId)
+    .filter((session) => !cohort || (session.cohort || 'player') === cohort)
     .sort(rankSessions)
     .slice(0, limit)
     .map((session, index) => ({
@@ -52,6 +55,7 @@ export function computeScenarioLeaderboard(sessions = [], options = {}) {
       turns: Number(session.turns || 0),
       mode: session.mode || 'unknown',
       playerId: session.playerId || null,
+      playerName: session.playerName || '',
       grade: getGrade(session),
       title: getTitle(session),
       date: session.date || null,
@@ -66,8 +70,11 @@ export function computeScenarioLeaderboard(sessions = [], options = {}) {
 
 export function computeHallOfFame(sessions = [], options = {}) {
   const limit = Math.max(1, options.limit || 5);
+  const cohort = options.cohort || 'player';
+
   const top = sessions
     .filter(isRankableSession)
+    .filter((session) => (session.cohort || 'player') === cohort)
     .sort(rankSessions)
     .slice(0, limit)
     .map((session, index) => ({
@@ -95,6 +102,22 @@ function getIsoWeekParts(date = new Date()) {
   return { year: utcDate.getUTCFullYear(), week };
 }
 
+function buildWeeklyTierPlan(scenario) {
+  const availableTiers = scenario?.metadata?.availableTiers || ['neutral'];
+  const recommendedTiers = ['cooperative', 'neutral', 'hostile'].filter((tier) => availableTiers.includes(tier));
+  const tiers = (recommendedTiers.length ? recommendedTiers : availableTiers).map((tier) => ({
+    tier,
+    label: tier,
+    playCommand: `/scenario ${scenario.id} ${tier}`,
+  }));
+
+  return {
+    availableTiers,
+    recommendedTiers: tiers.map((entry) => entry.tier),
+    tiers,
+  };
+}
+
 export function selectScenarioOfWeek(scenarios = [], options = {}) {
   if (!Array.isArray(scenarios) || scenarios.length === 0) {
     throw new Error('At least one scenario is required');
@@ -108,5 +131,6 @@ export function selectScenarioOfWeek(scenarios = [], options = {}) {
   return {
     weekKey: `${year}-W${String(week).padStart(2, '0')}`,
     scenario,
+    ...buildWeeklyTierPlan(scenario),
   };
 }

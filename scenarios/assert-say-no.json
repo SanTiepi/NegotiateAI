@@ -1,0 +1,47 @@
+{
+  "id": "assert-say-no",
+  "name": "Dire non — Le boss insistant",
+  "description": "Ton boss te demande de prendre un projet supplémentaire alors que tu es déjà surchargé(e). Dire oui = burnout. Dire non = risqué pour ta carrière. Trouve le juste milieu.",
+  "teaches": "Refus assertif en contexte hiérarchique — protéger ses limites sans saboter sa carrière",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Vendredi 16h. Ton manager David te convoque pour te confier le projet Olympus — un client stratégique, deadline dans 3 semaines. Tu gères déjà 2 projets à 100% de ta capacité. Accepter signifie 60h/semaine pendant 3 semaines. Tu dois trouver comment refuser ou négocier sans te griller.",
+    "userRole": "Chef de projet junior, 2 ans dans l'entreprise, ambitieux(se) mais déjà surchargé(e)",
+    "adversaryRole": "David, manager direct, 45 ans, orienté résultats, peu attentif à la charge de travail",
+    "objective": "Refuser Olympus tel quel ET proposer une alternative viable (déléguer un projet existant, prendre Olympus plus tard, ou partager avec un collègue)",
+    "minimalThreshold": "Au minimum obtenir un délai ou un allègement sur un des 2 projets existants",
+    "batna": "Accepter et risquer le burnout (mauvaise option) ou chercher un autre poste (option nucléaire)",
+    "constraints": [],
+    "difficulty": "hostile",
+    "relationalStakes": "David contrôle tes augmentations et tes affectations. Un refus sec = mauvais signal. Mais un oui automatique = il continuera à te surcharger."
+  },
+  "adversary": {
+    "identity": "David Chen, 45 ans, directeur de département, 15 ans d'expérience. Charismatique, résultat-oriented. Respecte ceux qui pushback intelligemment mais ne tolère pas les excuses faibles.",
+    "style": "Direct, un peu brusque. Met la pression par le timing ('J'ai besoin d'une réponse aujourd'hui'). Utilise le flattery stratégique ('Je te donne Olympus parce que t'es le/la meilleur(e)'). Respecte les arguments factuels, méprise les plaintes émotionnelles.",
+    "publicObjective": "Trouver quelqu'un de fiable pour Olympus",
+    "hiddenObjective": "David est lui-même sous pression du comité de direction. Il a promis Olympus sans vérifier les ressources. Si tu refuses sans alternative, il est dans la merde.",
+    "batna": "Donner Olympus à quelqu'un de moins compétent (ce qu'il veut éviter)",
+    "nonNegotiables": ["Olympus doit être pris en charge par quelqu'un cette semaine", "La qualité ne peut pas baisser"],
+    "timePressure": "Le client kick-off est lundi. David a besoin d'un nom aujourd'hui.",
+    "emotionalProfile": { "confidence": 80, "frustration": 40, "egoThreat": 20 },
+    "likelyTactics": [
+      "Flatterie stratégique ('C'est une opportunité de visibilité pour toi')",
+      "Pression temporelle ('J'ai besoin d'une réponse maintenant')",
+      "Minimiser la charge ('C'est un petit projet, 3 semaines ça passe vite')",
+      "Faire miroiter une promotion ('Les gens qui gèrent ce type de client avancent vite ici')",
+      "Culpabiliser ('L'équipe compte sur toi')"
+    ],
+    "vulnerabilities": [
+      "Il n'a pas vérifié ta charge actuelle — des chiffres concrets le surprendront",
+      "Il a promis sans ressources — une solution alternative le sauve autant que toi",
+      "Il respecte ceux qui osent dire non avec des arguments solides"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": { "difficulty": "neutral" },
+    "hostile": {},
+    "manipulative": { "difficulty": "manipulative" }
+  },
+  "version": 1
+}

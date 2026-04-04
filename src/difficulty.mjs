@@ -249,7 +249,7 @@ export function assessZPD(sessions) {
  * @param {DifficultyProfile} profile
  * @returns {string}
  */
-export function profileToPromptInstructions(profile) {
+export function profileToPromptInstructions(profile, conversationType = 'negotiation') {
   const label = (v) => {
     if (v <= 20) return 'VERY LOW';
     if (v <= 40) return 'LOW';
@@ -258,42 +258,43 @@ export function profileToPromptInstructions(profile) {
     return 'VERY HIGH';
   };
 
+  const isNego = conversationType === 'negotiation';
   const lines = [];
 
-  // Adversary pushback
+  // Pushback / resistance
   const pb = profile.adversaryPushback;
   lines.push(`Resistance level: ${label(pb)} (${pb}/100).`);
-  if (pb <= 30) lines.push('Concede readily when the user makes reasonable arguments.');
-  else if (pb <= 60) lines.push('Push back on some points but be willing to compromise.');
-  else lines.push('Resist concessions strongly. Require significant justification before yielding.');
+  if (pb <= 30) lines.push(isNego ? 'Concede readily when the user makes reasonable arguments.' : 'Give in when the other person is clear and firm.');
+  else if (pb <= 60) lines.push(isNego ? 'Push back on some points but be willing to compromise.' : 'Resist on some points but be open to hearing the other side.');
+  else lines.push(isNego ? 'Resist concessions strongly. Require significant justification before yielding.' : 'Push back hard. Do not change your position easily. Make them work for every inch.');
 
   // Tactical complexity
   const tc = profile.tacticalComplexity;
   lines.push(`Tactical complexity: ${label(tc)} (${tc}/100).`);
-  if (tc <= 30) lines.push('Keep your approach straightforward — one tactic at a time.');
-  else if (tc <= 60) lines.push('Use occasional persuasion tactics (anchoring, framing).');
-  else lines.push('Use multiple tactics per message. Layer Cialdini principles (reciprocity, scarcity, authority, social proof).');
+  if (tc <= 30) lines.push(isNego ? 'Keep your approach straightforward — one tactic at a time.' : 'Keep your reactions simple and direct.');
+  else if (tc <= 60) lines.push(isNego ? 'Use occasional persuasion tactics (anchoring, framing).' : 'Use emotional persuasion occasionally (guilt, deflection, changing the subject).');
+  else lines.push(isNego ? 'Use multiple tactics per message. Layer Cialdini principles (reciprocity, scarcity, authority, social proof).' : 'Use multiple emotional tactics per message: guilt, victimization, counter-attacks, deflection, bringing up the past.');
 
   // Emotional volatility
   const ev = profile.emotionalVolatility;
   lines.push(`Emotional volatility: ${label(ev)} (${ev}/100).`);
-  if (ev <= 30) lines.push('Maintain a stable, professional tone throughout.');
-  else if (ev <= 60) lines.push('Show moderate emotional volatility — shift between calm and impatient.');
-  else lines.push('Display rapid emotional shifts — go from friendly to hostile with little warning. Use frustration and urgency as pressure tools.');
+  if (ev <= 30) lines.push('Maintain a stable, calm tone throughout.');
+  else if (ev <= 60) lines.push('Show moderate emotional shifts — move between calm and irritated.');
+  else lines.push('Display rapid emotional shifts — go from friendly to cold or hostile with little warning. Use frustration and silence as pressure tools.');
 
   // Hidden information
   const hi = profile.hiddenInformation;
   lines.push(`Hidden information: ${label(hi)} (${hi}/100).`);
-  if (hi <= 30) lines.push('Be relatively transparent about your constraints and interests.');
-  else if (hi <= 60) lines.push('Withhold some information. Do not reveal your full flexibility.');
-  else lines.push('Conceal your true BATNA. Use misleading statements about your constraints. Introduce hidden agendas mid-negotiation.');
+  if (hi <= 30) lines.push('Be relatively transparent about your feelings and constraints.');
+  else if (hi <= 60) lines.push(isNego ? 'Withhold some information. Do not reveal your full flexibility.' : 'Do not reveal everything you feel. Keep some concerns private.');
+  else lines.push(isNego ? 'Conceal your true BATNA. Use misleading statements about your constraints. Introduce hidden agendas mid-negotiation.' : 'Conceal your true feelings and alternative plans. Introduce unexpected concerns during the conversation.');
 
   // Time pressure
   const tp = profile.timePressure;
   lines.push(`Time pressure: ${label(tp)} (${tp}/100).`);
-  if (tp <= 30) lines.push('Allow the negotiation to proceed at a relaxed pace.');
-  else if (tp <= 60) lines.push('Apply moderate time pressure. Mention deadlines occasionally.');
-  else lines.push('Apply extreme deadline pressure. Emphasize urgency in every exchange. Threaten to walk away if agreement is not reached quickly.');
+  if (tp <= 30) lines.push('Allow the conversation to proceed at a relaxed pace.');
+  else if (tp <= 60) lines.push('Apply moderate time pressure. Mention deadlines or urgency occasionally.');
+  else lines.push('Apply extreme urgency. Emphasize time constraints in every exchange. Threaten to end the conversation or escalate if things do not move fast.');
 
   return lines.join(' ');
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>NegotiateAI</title>
+    <title>Lucid — Conversations qui comptent</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
   </head>
@@ -11,32 +11,90 @@
     <!-- NAV -->
     <nav class="nav">
       <div class="nav-brand" data-view="dashboard">
-        <span class="nav-logo">N</span>
-        <span class="nav-title">NegotiateAI</span>
+        <span class="nav-logo">L</span>
+        <span class="nav-title">Lucid</span>
       </div>
       <div class="nav-links">
-        <button class="nav-link active" data-view="dashboard">Tableau de bord</button>
-        <button class="nav-link" data-view="academy">Académie</button>
-        <button class="nav-link" data-view="setup">Nouvelle session</button>
+        <button class="nav-link active" data-view="dashboard">Accueil</button>
+        <button class="nav-link" data-view="academy">Progression</button>
+        <button class="nav-link" data-view="setup">S'entrainer</button>
         <button class="nav-link" data-view="history">Historique</button>
       </div>
+      <div class="nav-right">
+        <button class="nav-player" id="nav-player" title="Changer de joueur"></button>
+        <button class="nav-settings" id="nav-settings" title="Reglages">&#9881;</button>
+      </div>
     </nav>
+
+    <!-- Welcome overlay -->
+    <div class="modal hidden" id="welcome-overlay">
+      <div class="modal-content" style="max-width:420px">
+        <div class="modal-body" style="text-align:center;padding:32px 24px">
+          <div style="font-size:2.5rem;margin-bottom:12px">🎯</div>
+          <h2 style="margin-bottom:4px">Bienvenue sur Lucid</h2>
+          <p class="text-muted" style="margin-bottom:24px">Choisis un pseudo pour commencer</p>
+          <form id="welcome-form">
+            <input id="welcome-name" type="text" class="form-input" placeholder="Ton pseudo…" maxlength="20" autocomplete="off" required style="text-align:center;font-size:1.1rem;padding:12px;width:100%;margin-bottom:16px">
+            <button type="submit" class="btn btn-primary btn-lg" style="width:100%">C'est parti</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quickstart chooser (shown after welcome for new players) -->
+    <div class="modal hidden" id="onboarding-quickstart">
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-body" style="padding:28px 24px">
+          <h2 style="text-align:center;margin-bottom:4px">C'est quoi ta situation ?</h2>
+          <p class="text-muted" style="text-align:center;margin-bottom:20px">On te met en situation réelle. 5 minutes, un premier profil.</p>
+          <div class="quickstart-options" id="quickstart-options">
+            <button class="quickstart-option" data-scenario="tutorial-02-raise">
+              <span class="quickstart-emoji">&#128188;</span>
+              <span class="quickstart-label">Demander une augmentation</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-say-no">
+              <span class="quickstart-emoji">&#128721;</span>
+              <span class="quickstart-label">Dire non a quelqu'un</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-couple-chores">
+              <span class="quickstart-emoji">&#127968;</span>
+              <span class="quickstart-label">Aborder un sujet sensible en couple</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-difficult-feedback">
+              <span class="quickstart-emoji">&#128172;</span>
+              <span class="quickstart-label">Donner un feedback difficile</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-neighbor-noise">
+              <span class="quickstart-emoji">&#127925;</span>
+              <span class="quickstart-label">Gerer un conflit de voisinage</span>
+            </button>
+          </div>
+          <div style="text-align:center;margin-top:16px">
+            <button class="btn btn-outline btn-sm" id="quickstart-skip">Explorer l'app</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- VIEW: DASHBOARD -->
     <main id="view-dashboard" class="view active">
       <div class="container">
-        <header class="page-header">
-          <h1>Tableau de bord</h1>
-          <button class="btn btn-primary" data-view="setup">Nouvelle session</button>
-        </header>
 
-        <!-- Hero CTA: Prépare ta vraie négo -->
-        <div class="hero-cta" id="hero-prep">
-          <div class="hero-content">
-            <h2>Tu as une négociation qui approche ?</h2>
-            <p>Simule-la maintenant avec les vrais paramètres. Repars avec une fiche de préparation concrète.</p>
+        <!-- Coach desk header (shown when player has sessions) -->
+        <div id="d-coach-desk" class="hidden">
+          <header class="page-header">
+            <h1>Ton espace</h1>
+            <button class="btn btn-primary" data-view="setup">S'entrainer</button>
+          </header>
+
+          <!-- Recommendation CTA -->
+          <div class="hero-cta" id="hero-prep">
+            <div class="hero-content">
+              <h2>Tu as une conversation importante qui approche ?</h2>
+              <p>Simule-la avec les vrais parametres. Repars avec une fiche de preparation concrete.</p>
+            </div>
+            <button class="btn btn-primary btn-lg" data-view="real-prep">Preparer ma conversation</button>
           </div>
-          <button class="btn btn-primary btn-lg" data-view="real-prep">Préparer ma négo</button>
         </div>
 
         <section class="card dashboard-filters-card">
@@ -134,7 +192,7 @@
 
         <div class="grid-2">
           <section class="card">
-            <h2>Momentum récent</h2>
+            <h2>Dynamique recente</h2>
             <div id="d-history" class="chip-list"></div>
             <div class="mt-12">
               <h3>Meilleure dimension</h3>
@@ -158,12 +216,35 @@
           </section>
         </div>
 
-        <!-- Empty state -->
-        <div id="d-empty" class="empty-state hidden">
-          <div class="empty-icon">🎯</div>
-          <h2>Bienvenue sur NegotiateAI</h2>
-          <p>Lance ta première session pour commencer à t'entraîner.</p>
-          <button class="btn btn-primary btn-lg" data-view="setup">Commencer</button>
+        <!-- Empty state / Coach hero (cold) -->
+        <div id="d-empty" class="coach-hero hidden">
+          <h1>Dis ce que tu penses.<br>Sans tout casser.</h1>
+          <p>Lucid t'aide a preparer les conversations difficiles. Choisis une situation reelle, entraine-toi face a une IA, decouvre comment tu reagis sous pression.</p>
+          <div class="quickstart-options" id="d-empty-options">
+            <button class="quickstart-option" data-scenario="tutorial-02-raise">
+              <span class="quickstart-emoji">&#128188;</span>
+              <span class="quickstart-label">Demander une augmentation</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-say-no">
+              <span class="quickstart-emoji">&#128721;</span>
+              <span class="quickstart-label">Dire non a quelqu'un</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-couple-chores">
+              <span class="quickstart-emoji">&#127968;</span>
+              <span class="quickstart-label">Aborder un sujet sensible en couple</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-difficult-feedback">
+              <span class="quickstart-emoji">&#128172;</span>
+              <span class="quickstart-label">Donner un feedback difficile</span>
+            </button>
+            <button class="quickstart-option" data-scenario="assert-neighbor-noise">
+              <span class="quickstart-emoji">&#127925;</span>
+              <span class="quickstart-label">Gerer un conflit de voisinage</span>
+            </button>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-ghost btn-sm" data-view="setup">Explorer tous les scenarios</button>
+          </div>
         </div>
       </div>
     </main>
@@ -172,7 +253,7 @@
     <main id="view-academy" class="view">
       <div class="container">
         <header class="page-header">
-          <h1>Académie</h1>
+          <h1>Progression</h1>
           <button class="btn btn-primary" id="academy-refresh">Actualiser</button>
         </header>
 
@@ -220,7 +301,7 @@
           <section class="card">
             <div class="section-head">
               <div>
-                <h2>Scénario de la semaine</h2>
+                <h2>Defi de la semaine</h2>
                 <p class="text-muted">Benchmark commun pour comparer les sessions.</p>
               </div>
               <div class="section-actions">
@@ -236,8 +317,8 @@
         <section class="card">
           <div class="section-head">
             <div>
-              <h2>Panthéon</h2>
-              <p class="text-muted">Extraits anonymisés des meilleures sessions.</p>
+              <h2>Meilleures sessions</h2>
+              <p class="text-muted">Tes meilleurs moments.</p>
             </div>
             <div class="section-actions">
               <button class="btn btn-outline btn-sm" id="academy-export-hall">Exporter</button>
@@ -252,7 +333,7 @@
     <main id="view-setup" class="view">
       <div class="container">
         <header class="page-header">
-          <h1>Nouvelle session</h1>
+          <h1>S'entrainer</h1>
         </header>
 
         <h2 class="section-title">Scénarios rapides</h2>
@@ -264,27 +345,27 @@
           <div class="form-grid">
             <div class="form-group full">
               <label>Situation</label>
-              <input name="situation" placeholder="Décrivez le contexte de la négociation">
+              <input name="situation" placeholder="Decris la situation">
             </div>
             <div class="form-group">
               <label>Votre rôle</label>
               <input name="userRole" placeholder="Ex: Acheteur, Employé...">
             </div>
             <div class="form-group">
-              <label>Rôle adverse</label>
-              <input name="adversaryRole" placeholder="Ex: Vendeur, Manager...">
+              <label>Ton interlocuteur</label>
+              <input name="adversaryRole" placeholder="Ex: Manager, collegue, ami...">
             </div>
             <div class="form-group full">
               <label>Objectif <span class="required">*</span></label>
               <input name="objective" placeholder="Ce que vous voulez obtenir" required>
             </div>
             <div class="form-group">
-              <label>Seuil minimal <span class="required">*</span></label>
+              <label>Ta ligne a ne pas franchir <span class="required">*</span></label>
               <input name="minimalThreshold" placeholder="Le minimum acceptable" required>
             </div>
             <div class="form-group">
-              <label>BATNA <span class="required">*</span></label>
-              <input name="batna" placeholder="Votre plan B" required>
+              <label>Ton plan B <span class="required">*</span></label>
+              <input name="batna" placeholder="Si ca ne marche pas, tu fais quoi ?" required>
             </div>
             <div class="form-group">
               <label>Difficulté</label>
@@ -304,8 +385,8 @@
         <section class="card versus-lab-card">
           <div class="section-head">
             <div>
-              <h2>Versus Lab</h2>
-              <p class="text-muted">Compare 2 formulations humaines sur le même brief.</p>
+              <h2>Comparateur</h2>
+              <p class="text-muted">Compare 2 formulations sur la meme situation.</p>
             </div>
             <button type="button" class="btn btn-outline btn-sm" id="versus-run">Arbitrer</button>
           </div>
@@ -320,7 +401,7 @@
                 <input name="userRole" placeholder="Candidat" required>
               </div>
               <div class="form-group">
-                <label>Rôle adverse <span class="required">*</span></label>
+                <label>Ton interlocuteur <span class="required">*</span></label>
                 <input name="adversaryRole" placeholder="Responsable RH" required>
               </div>
               <div class="form-group full">
@@ -328,12 +409,12 @@
                 <input name="objective" placeholder="Signer à 140k CHF" required>
               </div>
               <div class="form-group">
-                <label>Seuil minimal <span class="required">*</span></label>
+                <label>Ligne a ne pas franchir <span class="required">*</span></label>
                 <input name="minimalThreshold" placeholder="130k CHF minimum" required>
               </div>
               <div class="form-group">
-                <label>BATNA <span class="required">*</span></label>
-                <input name="batna" placeholder="Autre offre à 135k CHF" required>
+                <label>Ton plan B <span class="required">*</span></label>
+                <input name="batna" placeholder="Autre offre a 135k CHF" required>
               </div>
               <div class="form-group full">
                 <label>Message A <span class="required">*</span></label>
@@ -361,7 +442,7 @@
         </div>
         <form id="real-prep-form" class="briefing-fields">
           <div class="form-group">
-            <label>Quand a lieu ta négociation ?</label>
+            <label>Quand a lieu cette conversation ?</label>
             <input name="when" placeholder="Ex : mardi prochain, 14h" required>
           </div>
           <div class="form-group">
@@ -382,7 +463,7 @@
           </div>
           <div class="form-group">
             <label>Si ça échoue, c'est quoi ton plan B ?</label>
-            <textarea name="planB" rows="2" required placeholder="Ta BATNA. Plus elle est solide, plus tu es fort."></textarea>
+            <textarea name="planB" rows="2" required placeholder="Ton plan B. Plus il est solide, plus tu es libre."></textarea>
           </div>
           <div class="form-group">
             <label>C'est quoi ta plus grande peur ?</label>
@@ -392,7 +473,7 @@
             <label>Tu as déjà négocié avec cette personne ?</label>
             <textarea name="history" rows="2" placeholder="Comment ça s'était passé ? Quel est le rapport de force ?"></textarea>
           </div>
-          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Simuler cette négociation</button>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%">Simuler cette conversation</button>
         </form>
       </div>
     </main>
@@ -460,7 +541,7 @@
         <div id="prep-sheet-content"></div>
         <div class="results-actions" style="margin-top:24px">
           <button class="btn btn-primary" data-view="journal">Remplir le journal après la négo</button>
-          <button class="btn btn-outline" data-view="dashboard">Tableau de bord</button>
+          <button class="btn btn-outline" data-view="dashboard">Accueil</button>
         </div>
       </div>
     </main>
@@ -552,11 +633,11 @@
 
         <!-- Mobile mini-gauges -->
         <div class="mobile-gauges" id="mobile-gauges">
-          <div class="mini-gauge"><span class="mini-gauge-label">Qualité</span><span class="mini-gauge-value" id="mg-deal">50</span></div>
-          <div class="mini-gauge"><span class="mini-gauge-label">Lev</span><span class="mini-gauge-value" id="mg-lev">0</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Qual</span><span class="mini-gauge-value" id="mg-deal">50</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Infl</span><span class="mini-gauge-value" id="mg-lev">0</span></div>
           <div class="mini-gauge"><span class="mini-gauge-label">Biais</span><span class="mini-gauge-value" id="mg-bias">50</span></div>
-          <div class="mini-gauge"><span class="mini-gauge-label">Prob</span><span class="mini-gauge-value" id="mg-prob">50</span></div>
-          <div class="mini-gauge"><span class="mini-gauge-label">Mom</span><span class="mini-gauge-value" id="mg-mom">0</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Conv</span><span class="mini-gauge-value" id="mg-prob">50</span></div>
+          <div class="mini-gauge"><span class="mini-gauge-label">Dyn</span><span class="mini-gauge-value" id="mg-mom">0</span></div>
           <div class="mini-gauge"><span class="mini-gauge-label">Tour</span><span class="mini-gauge-value" id="mg-rnd">0</span></div>
         </div>
 
@@ -576,7 +657,7 @@
                 <button type="submit" class="btn btn-primary" id="btn-send">Envoyer</button>
               </div>
               <div class="input-actions">
-                <button type="button" class="btn btn-ghost btn-sm" id="btn-silence" title="Silence stratégique — laissez l'adversaire combler le vide">... Silence</button>
+                <button type="button" class="btn btn-ghost btn-sm" id="btn-silence" title="Silence strategique — laissez l'autre combler le vide">... Silence</button>
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate">Simuler avant d'envoyer</button>
                 <button type="button" class="btn btn-ghost btn-sm" id="btn-simulate-batch">Comparer 5 variantes</button>
                 <button type="button" class="btn btn-voice btn-sm" id="btn-voice" title="Mode vocal">&#127908; Parler</button>
@@ -593,11 +674,11 @@
               <h3>Indicateurs</h3>
               <div class="gauge-list">
                 <div class="gauge" id="g-deal">
-                  <div class="gauge-header"><span class="gauge-label">Qualité de l'accord</span><span class="gauge-value">50%</span></div>
+                  <div class="gauge-header"><span class="gauge-label">Qualite de l'echange</span><span class="gauge-value">50%</span></div>
                   <div class="gauge-track"><div class="gauge-fill green" style="width:50%"></div></div>
                 </div>
                 <div class="gauge" id="g-leverage">
-                  <div class="gauge-header"><span class="gauge-label">Levier</span><span class="gauge-value">0</span></div>
+                  <div class="gauge-header"><span class="gauge-label">Influence</span><span class="gauge-value">0</span></div>
                   <div class="gauge-track signed"><div class="gauge-fill-signed" style="--lev:0"></div></div>
                 </div>
                 <div class="gauge" id="g-bias">
@@ -605,7 +686,7 @@
                   <div class="gauge-track"><div class="gauge-fill red" style="width:50%"></div></div>
                 </div>
                 <div class="gauge" id="g-deal-prob">
-                  <div class="gauge-header"><span class="gauge-label">Probabilité d'accord</span><span class="gauge-value">50%</span></div>
+                  <div class="gauge-header"><span class="gauge-label">Convergence</span><span class="gauge-value">50%</span></div>
                   <div class="gauge-track"><div class="gauge-fill blue" style="width:50%"></div></div>
                 </div>
                 <div class="gauge" id="g-tension">
@@ -613,7 +694,7 @@
                   <div class="gauge-track"><div class="gauge-fill amber" style="width:30%"></div></div>
                 </div>
                 <div class="gauge" id="g-momentum">
-                  <div class="gauge-header"><span class="gauge-label">Momentum</span><span class="gauge-value trend-stable">stable</span></div>
+                  <div class="gauge-header"><span class="gauge-label">Dynamique</span><span class="gauge-value trend-stable">stable</span></div>
                   <div class="gauge-track"><div class="gauge-fill green" style="width:50%"></div></div>
                 </div>
               </div>
@@ -681,77 +762,103 @@
     <!-- VIEW: RESULTS -->
     <main id="view-results" class="view">
       <div class="container">
-        <header class="page-header">
-          <h1>Résultats</h1>
-        </header>
 
-        <div class="results-hero">
-          <div id="r-grade-badge" class="grade-badge">—</div>
-          <div id="r-grade-label" class="grade-label"></div>
-          <div id="r-grade-desc" class="verdict"></div>
-        </div>
-
-        <!-- Triangle -->
-        <div class="card" style="margin-bottom:16px">
-          <h2>Triangle de performance</h2>
-          <div class="triangle-grid">
-            <div class="tri-axis">
-              <div class="tri-label">Transaction</div>
-              <div class="tri-bar-track"><div class="tri-bar-fill green" id="r-tri-trans" style="width:0%"></div></div>
-              <div class="tri-value" id="r-tri-trans-v">0</div>
-            </div>
-            <div class="tri-axis">
-              <div class="tri-label">Relation</div>
-              <div class="tri-bar-track"><div class="tri-bar-fill blue" id="r-tri-rel" style="width:0%"></div></div>
-              <div class="tri-value" id="r-tri-rel-v">0</div>
-            </div>
-            <div class="tri-axis">
-              <div class="tri-label">Intelligence</div>
-              <div class="tri-bar-track"><div class="tri-bar-fill amber" id="r-tri-intel" style="width:0%"></div></div>
-              <div class="tri-value" id="r-tri-intel-v">0</div>
-            </div>
+        <!-- Coach debrief (primary) -->
+        <div class="results-debrief">
+          <div class="results-hero">
+            <div id="r-grade-badge" class="grade-badge">--</div>
+            <div id="r-grade-label" class="grade-label"></div>
           </div>
-          <div id="r-discovery" class="text-muted" style="margin-top:8px"></div>
-        </div>
+          <div id="r-grade-desc" class="verdict"></div>
 
-        <!-- Rounds summary -->
-        <div class="card" style="margin-bottom:16px">
-          <h2>Tours</h2>
-          <div id="r-rounds" class="rounds-summary"></div>
-        </div>
+          <!-- Primary takeaway (single bold phrase) -->
+          <div id="r-takeaway" class="debrief-insight" style="margin-top:16px">
+            <p id="r-takeaway-text" style="font-size:1.05rem;font-weight:600;line-height:1.5"></p>
+          </div>
 
-        <div class="grid-2">
-          <section class="card">
-            <h2>Dimensions</h2>
-            <div id="r-dimensions" class="dimensions-list"></div>
-          </section>
-          <section class="card">
-            <h2>Biais détectés</h2>
-            <div id="r-biases" class="biases-list"></div>
-          </section>
-        </div>
+          <!-- First session insight (hidden by default) -->
+          <div id="r-first-insight" class="debrief-insight hidden">
+            <p id="r-first-insight-text" style="font-weight:600;margin-bottom:4px"></p>
+            <p class="text-muted">C'est ton premier profil sous pression. Continue pour affiner.</p>
+          </div>
 
-        <div class="grid-2">
-          <section class="card">
-            <h2>Tactiques utilisées</h2>
-            <div id="r-tactics" class="tags-list"></div>
-          </section>
-          <section class="card">
-            <h2>Recommandations</h2>
+          <!-- Recommendations (always visible, top priority) -->
+          <div class="debrief-insight" id="r-debrief-recs">
+            <h2>A retenir</h2>
             <ul id="r-recs" class="recs-list"></ul>
-          </section>
+          </div>
+
+          <!-- Default actions -->
+          <div class="debrief-actions" id="r-actions-default">
+            <button class="btn btn-primary" data-view="setup">S'entrainer encore</button>
+            <button class="btn btn-outline" data-view="dashboard">Accueil</button>
+          </div>
+
+          <!-- First session actions (hidden by default) -->
+          <div class="debrief-actions hidden" id="r-actions-first">
+            <button class="btn btn-primary" data-view="setup">Essayer un autre scenario</button>
+            <button class="btn btn-outline" id="r-first-daily">Le defi du jour</button>
+            <button class="btn btn-outline" data-view="real-prep">Preparer une vraie conversation</button>
+          </div>
         </div>
 
-        <section class="card" id="r-theory-section" style="margin-bottom:16px">
-          <h2>Analyse théorique</h2>
-          <p id="r-theory-summary" class="text-muted" style="margin-bottom:12px"></p>
-          <div id="r-theory-insights" class="theory-insights"></div>
-        </section>
+        <!-- Detailed analysis (collapsible) -->
+        <details class="results-details">
+          <summary>Voir l'analyse detaillee</summary>
 
-        <div class="results-actions">
-          <button class="btn btn-primary" data-view="setup">Nouvelle session</button>
-          <button class="btn btn-outline" data-view="dashboard">Tableau de bord</button>
-        </div>
+          <!-- Triangle -->
+          <div class="card" style="margin-bottom:16px">
+            <h2>Equilibre de la conversation</h2>
+            <div class="triangle-grid">
+              <div class="tri-axis">
+                <div class="tri-label">Transaction</div>
+                <div class="tri-bar-track"><div class="tri-bar-fill green" id="r-tri-trans" style="width:0%"></div></div>
+                <div class="tri-value" id="r-tri-trans-v">0</div>
+              </div>
+              <div class="tri-axis">
+                <div class="tri-label">Relation</div>
+                <div class="tri-bar-track"><div class="tri-bar-fill blue" id="r-tri-rel" style="width:0%"></div></div>
+                <div class="tri-value" id="r-tri-rel-v">0</div>
+              </div>
+              <div class="tri-axis">
+                <div class="tri-label">Intelligence</div>
+                <div class="tri-bar-track"><div class="tri-bar-fill amber" id="r-tri-intel" style="width:0%"></div></div>
+                <div class="tri-value" id="r-tri-intel-v">0</div>
+              </div>
+            </div>
+            <div id="r-discovery" class="text-muted" style="margin-top:8px"></div>
+          </div>
+
+          <!-- Rounds summary -->
+          <div class="card" style="margin-bottom:16px">
+            <h2>Tours</h2>
+            <div id="r-rounds" class="rounds-summary"></div>
+          </div>
+
+          <div class="grid-2">
+            <section class="card">
+              <h2>Dimensions</h2>
+              <div id="r-dimensions" class="dimensions-list"></div>
+            </section>
+            <section class="card">
+              <h2>Biais detectes</h2>
+              <div id="r-biases" class="biases-list"></div>
+            </section>
+          </div>
+
+          <div class="grid-2">
+            <section class="card">
+              <h2>Tactiques utilisees</h2>
+              <div id="r-tactics" class="tags-list"></div>
+            </section>
+            <section class="card">
+              <h2>Theorie</h2>
+              <p id="r-theory-summary" class="text-muted" style="margin-bottom:8px"></p>
+              <div id="r-theory-insights" class="theory-insights"></div>
+            </section>
+          </div>
+        </details>
+
       </div>
     </main>
 
@@ -777,17 +884,46 @@
       </div>
     </main>
 
-    <!-- Theme Switcher -->
-    <div class="theme-switcher">
-      <div class="theme-panel" id="theme-panel">
-        <button class="theme-btn active" data-theme="obsidian" title="Obsidian"></button>
-        <button class="theme-btn" data-theme="terminal" title="Terminal"></button>
-        <button class="theme-btn" data-theme="poker" title="Poker"></button>
-        <button class="theme-btn" data-theme="dojo" title="Dojo"></button>
-        <button class="theme-btn" data-theme="neon" title="Neon"></button>
-        <div class="theme-rating" id="theme-rating"></div>
+    <!-- Theme Chooser Modal (first launch + settings) -->
+    <div class="modal hidden" id="theme-chooser-modal">
+      <div class="modal-content" style="max-width:480px">
+        <div class="modal-header">
+          <h2 style="font-size:1rem">Choisis ton ambiance</h2>
+          <button class="modal-close" id="theme-chooser-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="theme-chooser">
+            <div class="theme-slides" id="theme-slides"></div>
+            <div class="theme-nav">
+              <button class="theme-nav-btn" id="theme-prev">&larr;</button>
+              <div class="theme-dots" id="theme-dots"></div>
+              <button class="theme-nav-btn" id="theme-next">&rarr;</button>
+            </div>
+            <button class="btn btn-primary btn-lg" id="theme-chooser-apply" style="width:100%;margin-top:8px">Appliquer</button>
+          </div>
+        </div>
       </div>
-      <button class="theme-toggle-btn" id="theme-toggle" title="Changer de thème">&#127912;</button>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal hidden" id="settings-modal">
+      <div class="modal-content" style="max-width:440px">
+        <div class="modal-header">
+          <h2 style="font-size:1rem">Reglages</h2>
+          <button class="modal-close" id="settings-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="settings-section">
+            <h3>Apparence</h3>
+            <div class="settings-row">
+              <span class="settings-label">Theme actuel</span>
+              <span class="settings-value" id="settings-current-theme">Lucid Coach</span>
+            </div>
+            <button class="btn btn-outline btn-sm" id="settings-change-theme" style="width:100%;margin-top:8px">Changer d'apparence</button>
+            <button class="btn btn-ghost btn-sm" id="settings-reset-theme" style="width:100%;margin-top:4px">Revenir au design par defaut</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script type="module" src="/app.js"></script>

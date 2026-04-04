@@ -56,6 +56,7 @@ describe('leaderboard', () => {
       turns: 3,
       mode: 'telegram',
       playerId: 'telegram:42',
+      playerName: '',
       grade: 'A',
       title: 'Acheteur vs Mme Dubois',
       date: '2026-04-02T06:00:00.000Z',
@@ -77,9 +78,9 @@ describe('leaderboard', () => {
 
   it('selectScenarioOfWeek is deterministic for the same week', () => {
     const scenarios = [
-      { id: 'salary-negotiation', name: 'Salary' },
-      { id: 'lease-renewal', name: 'Lease' },
-      { id: 'vendor-contract', name: 'Vendor' },
+      { id: 'salary-negotiation', name: 'Salary', metadata: { availableTiers: ['cooperative', 'neutral', 'hostile'] } },
+      { id: 'lease-renewal', name: 'Lease', metadata: { availableTiers: ['neutral', 'hostile'] } },
+      { id: 'vendor-contract', name: 'Vendor', metadata: { availableTiers: ['neutral', 'manipulative'] } },
     ];
 
     const a = selectScenarioOfWeek(scenarios, { date: new Date('2026-04-02T06:00:00.000Z') });
@@ -87,5 +88,8 @@ describe('leaderboard', () => {
 
     assert.equal(a.weekKey, b.weekKey);
     assert.equal(a.scenario.id, b.scenario.id);
+    assert.deepEqual(a.recommendedTiers, b.recommendedTiers);
+    assert.ok(a.tiers.length >= 1);
+    assert.ok(a.tiers.every((entry) => entry.playCommand.includes(a.scenario.id)));
   });
 });

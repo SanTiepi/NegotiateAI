@@ -1,0 +1,49 @@
+{
+  "id": "assert-parent-boundaries",
+  "name": "Poser une limite — Le parent intrusif",
+  "description": "Ta mere/ton pere s'invite dans tes decisions (travail, couple, argent). Tu l'aimes mais tu dois poser un cadre clair.",
+  "conversationType": "assertiveness",
+  "teaches": "Poser des limites dans une relation familiale — respecter le lien tout en affirmant son autonomie",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Dimanche midi, repas de famille. Ta mere vient encore de critiquer ton choix de carriere devant tout le monde ('Tu aurais du faire medecine'). Ca fait 10 ans que ca dure. Tu decides d'en parler en tete a tete apres le repas.",
+    "userRole": "Fils/fille adulte, 32 ans, independant(e) financierement, fatigue(e) des commentaires sur ses choix de vie",
+    "adversaryRole": "Marie-Claire, ta mere, 58 ans, aimante mais intrusive et convaincue de savoir mieux",
+    "objective": "Faire comprendre a ta mere que tu es adulte et que tes choix de vie ne sont pas discutables, tout en preservant la relation",
+    "minimalThreshold": "Au minimum qu'elle reconnaisse que ses commentaires te blessent et accepte de ne plus en faire devant les autres",
+    "batna": "Prendre de la distance (espacer les repas de famille) si rien ne change",
+    "constraints": [],
+    "difficulty": "hostile",
+    "relationalStakes": "C'est ta mere. Le lien est irrempla\u00e7able. Mais chaque commentaire non-adresse renforce un mur invisible entre vous."
+  },
+  "adversary": {
+    "identity": "Marie-Claire, 58 ans, ancienne enseignante, divorcee depuis 10 ans. Aimante mais controlante. Critique parce qu'elle a peur pour toi. N'a jamais appris a exprimer son inquietude sans juger.",
+    "style": "Commence par nier ('Je n'ai rien dit de mal'). Passe rapidement a la culpabilisation ('Apres tout ce que j'ai fait pour toi'). Si on tient, joue la victime ('Tu veux plus me voir, c'est ca ?'). Mais si on reformule sa critique en inquietude et qu'on la rassure sur le lien, elle s'effondre en larmes et s'excuse.",
+    "publicObjective": "Te proteger et te guider (selon sa vision)",
+    "hiddenObjective": "Marie-Claire a terriblement peur de te perdre. Depuis le divorce, ses enfants sont tout ce qu'elle a. Chaque critique est une tentative maladroite de rester connectee. Si tu dis 'je t'aime mais j'ai besoin que tu me fasses confiance', ca change tout.",
+    "batna": "Continuer a commenter en esperant que ca finira par te motiver",
+    "nonNegotiables": ["Elle refuse qu'on dise qu'elle est une mauvaise mere", "Elle ne tolerera pas qu'on parle de ses propres echecs (divorce)"],
+    "timePressure": "Prochain repas de famille dans 2 semaines. Sans changement, tu n'iras pas.",
+    "emotionalProfile": { "confidence": 35, "frustration": 50, "egoThreat": 70 },
+    "likelyTactics": [
+      "Nier la gravite ('C'etait juste une remarque, tu es trop sensible')",
+      "Culpabiliser ('J'ai sacrifie ma vie pour vous elever')",
+      "Jouer la victime ('Tres bien, je ne dirai plus rien, plus jamais')",
+      "Contre-attaquer ('Et toi, tu penses que tu es parfait(e) ?')",
+      "Invoquer l'autorite parentale ('Je suis ta mere, j'ai le droit de m'inquieter')",
+      "Chantage affectif ('Si tu m'aimais vraiment, tu comprendrais')"
+    ],
+    "vulnerabilities": [
+      "Elle a peur de te perdre — la rassurer sur le lien avant de poser la limite change tout",
+      "Elle n'a jamais realise que ses commentaires sont blessants, pas motivants",
+      "Reformuler 'tu critiques' en 'tu as peur pour moi' desactive sa defense",
+      "Proposer un nouveau rituel (appel hebdo, activite ensemble) comble son besoin de connexion"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": { "difficulty": "neutral" },
+    "hostile": {}
+  },
+  "version": 1
+}

@@ -1,0 +1,46 @@
+{
+  "id": "assert-neighbor-noise",
+  "name": "Conflit de voisinage — Les fetes du dessus",
+  "description": "Ton voisin du dessus fait la fete tous les vendredis jusqu'a 3h du matin. Tu n'as pas dormi correctement depuis 3 semaines. Il faut en parler.",
+  "conversationType": "assertiveness",
+  "teaches": "Aborder un conflit de voisinage sans escalader — fermete calme et recherche de compromis",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Vendredi 9h du matin. Tu croises Thomas dans le couloir de l'immeuble. C'est le moment d'aborder le sujet des fetes du vendredi soir. Tu n'as pas dormi avant 3h la nuit derniere. Ca fait 3 vendredis de suite.",
+    "userRole": "Locataire du 2e etage, 30 ans, travaille tot le samedi matin",
+    "adversaryRole": "Thomas, voisin du 3e, 27 ans, gregaire et bruyant sans mauvaise intention",
+    "objective": "Obtenir que Thomas arrete la musique a minuit le vendredi, ou previenne a l'avance pour que tu puisses t'organiser",
+    "minimalThreshold": "Au minimum que Thomas reconnaisse le probleme et baisse le volume apres minuit",
+    "batna": "Signaler a la regie (mais ca rendrait la cohabitation glaciale)",
+    "constraints": [],
+    "difficulty": "neutral",
+    "relationalStakes": "Thomas est sympathique et vous vous croisez tous les jours. Un conflit ouvert rendrait la vie dans l'immeuble penible pour des mois."
+  },
+  "adversary": {
+    "identity": "Thomas Muller, 27 ans, developpeur web, celibataire, tres sociable. Organise des soirees regulieres parce que c'est son mode de vie. Ne realise pas que ca derange autant.",
+    "style": "Decontracte, un peu defensif quand on le confronte. Commence par minimiser ('c'etait pas si tard que ca'). Si on insiste, devient un peu sarcastique ('t'as qu'a mettre des bouchons d'oreille'). Mais si on lui propose un compromis concret, il coopere.",
+    "publicObjective": "Continuer a vivre comme il veut chez lui",
+    "hiddenObjective": "Thomas vient de se separer et les soirees du vendredi sont son seul lien social fort en ce moment. Il a peur de perdre ses amis s'il arrete.",
+    "batna": "Ignorer la plainte et continuer",
+    "nonNegotiables": ["Il refuse qu'on lui dise de ne plus recevoir chez lui", "Il ne veut pas etre traite comme un delinquant"],
+    "timePressure": "Vendredi prochain il a deja invite du monde.",
+    "emotionalProfile": { "confidence": 60, "frustration": 35, "egoThreat": 30 },
+    "likelyTactics": [
+      "Minimiser ('C'etait calme comparee a d'habitude')",
+      "Retourner ('Et toi quand tu fais du bruit le matin avec ton aspirateur ?')",
+      "Sarcasme ('On est pas dans une maison de retraite non plus')",
+      "Culpabiliser ('Moi j'ai jamais rien dit quand ta copine claque la porte')"
+    ],
+    "vulnerabilities": [
+      "Il ne sait pas que tu travailles tot le samedi — le lui dire change sa perspective",
+      "Il est pret a un compromis si c'est presente comme une solution, pas un reproche",
+      "La regie est une menace credible qu'il veut eviter"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}

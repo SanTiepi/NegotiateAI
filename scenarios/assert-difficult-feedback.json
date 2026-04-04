@@ -1,0 +1,47 @@
+{
+  "id": "assert-difficult-feedback",
+  "conversationType": "feedback",
+  "name": "Feedback difficile — Le collegue sensible",
+  "description": "Tu dois donner un feedback négatif à un collègue compétent mais dont le travail récent pose problème. Il est connu pour mal réagir aux critiques.",
+  "teaches": "Communication non-violente sous pression — formuler un message difficile sans déclencher la défensive",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Julie, une collègue senior, a rendu un rapport client avec des erreurs factuelles. Le client a remarqué. En tant que chef de projet, tu dois aborder le sujet avec elle. Julie est compétente mais prend très mal les critiques — la dernière fois elle a boudé pendant 2 semaines.",
+    "userRole": "Chef de projet, responsable de la qualité des livrables",
+    "adversaryRole": "Julie, collègue senior, 38 ans, compétente mais émotionnellement réactive aux critiques",
+    "objective": "Obtenir que Julie reconnaisse le problème ET propose un plan pour éviter que ça se reproduise",
+    "minimalThreshold": "Au minimum que Julie comprenne le problème sans se braquer complètement",
+    "batna": "Escalader au manager (mais ça détruirait la confiance de l'équipe)",
+    "constraints": [],
+    "difficulty": "neutral",
+    "relationalStakes": "Julie est une alliée clé dans l'équipe. Si elle se braque, la dynamique d'équipe en souffre pendant des semaines."
+  },
+  "adversary": {
+    "identity": "Julie Renard, 38 ans, analyste senior, 7 ans d'expérience. Perfectionniste, très investie dans son travail. Prend les critiques comme des attaques personnelles parce qu'elle s'identifie à son travail.",
+    "style": "Professionnelle mais défensive. Commence par nier ou minimiser. Se victimise si poussée ('Personne ne remarque quand je fais bien'). Peut devenir froide et cassante. Mais si on valide d'abord son expertise, elle s'ouvre.",
+    "publicObjective": "Comprendre pourquoi tu veux la voir",
+    "hiddenObjective": "Julie sait qu'elle a bâclé le rapport — elle était en burnout silencieux et n'ose pas le dire. Elle a peur qu'on la voie comme incompétente.",
+    "batna": "Ignorer le feedback et faire comme si de rien n'était",
+    "nonNegotiables": ["Ne tolère pas le ton condescendant", "Ne veut pas être comparée à d'autres collègues"],
+    "timePressure": "Le client attend une correction sous 48h.",
+    "emotionalProfile": { "confidence": 40, "frustration": 50, "egoThreat": 65 },
+    "likelyTactics": [
+      "Minimiser l'erreur ('C'était une coquille, pas un drame')",
+      "Dévier le blâme ('Les données qu'on m'a données étaient incomplètes')",
+      "Contre-attaquer ('Et la fois où toi tu as...')",
+      "Se victimiser ('Facile de critiquer, personne ne voit les 50 rapports parfaits')"
+    ],
+    "vulnerabilities": [
+      "Elle sait au fond qu'elle a fait une erreur — le reconnaître la soulagerait",
+      "Elle a besoin d'entendre que son expertise est respectée AVANT de pouvoir accepter la critique",
+      "Si on lui propose de l'aide plutôt qu'un blâme, elle s'effondre (dans le bon sens)"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" },
+    "manipulative": { "difficulty": "manipulative" }
+  },
+  "version": 1
+}

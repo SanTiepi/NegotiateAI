@@ -50,6 +50,10 @@ function post(path, data) {
   });
 }
 
+// ============================================================
+// Player identity
+// ============================================================
+
 function getPlayerId() {
   const storageKey = 'negotiateai.playerId';
   try {
@@ -63,6 +67,119 @@ function getPlayerId() {
     return 'local-player';
   }
 }
+
+function getPlayerName() {
+  try {
+    return window.localStorage.getItem('negotiateai.playerName') || '';
+  } catch {
+    return '';
+  }
+}
+
+function setPlayerIdentity(name) {
+  const trimmed = String(name).trim().slice(0, 20);
+  if (!trimmed) return;
+  try {
+    window.localStorage.setItem('negotiateai.playerName', trimmed);
+    // Look up existing playerId for this name, or create a new one
+    const accountsRaw = window.localStorage.getItem('negotiateai.accounts') || '{}';
+    const accounts = JSON.parse(accountsRaw);
+    let id = accounts[trimmed];
+    if (!id) {
+      id = `web-${Math.random().toString(36).slice(2, 10)}`;
+      accounts[trimmed] = id;
+      window.localStorage.setItem('negotiateai.accounts', JSON.stringify(accounts));
+    }
+    window.localStorage.setItem('negotiateai.playerId', id);
+  } catch { /* localStorage unavailable */ }
+  updateNavPlayer();
+}
+
+function updateNavPlayer() {
+  const btn = document.getElementById('nav-player');
+  if (btn) btn.textContent = getPlayerName() || '?';
+}
+
+function showWelcome() {
+  const overlay = document.getElementById('welcome-overlay');
+  if (overlay) overlay.classList.remove('hidden');
+  const input = document.getElementById('welcome-name');
+  if (input) {
+    input.value = getPlayerName();
+    setTimeout(() => input.focus(), 100);
+  }
+}
+
+function hideWelcome() {
+  const overlay = document.getElementById('welcome-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+function showQuickStart() {
+  document.getElementById('onboarding-quickstart')?.classList.remove('hidden');
+}
+function hideQuickStart() {
+  document.getElementById('onboarding-quickstart')?.classList.add('hidden');
+}
+
+let isFirstEverSession = false;
+
+let pendingQuickstart = false;
+
+document.getElementById('welcome-form')?.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('welcome-name')?.value?.trim();
+  if (!name) return;
+  setPlayerIdentity(name);
+  hideWelcome();
+  // Check if new player
+  try {
+    const snapshot = await api(withPlayerQuery('/api/dashboard/player')).catch(() => null);
+    const total = snapshot?.stats?.totalSessions || 0;
+    if (total === 0) {
+      isFirstEverSession = true;
+      // If no theme chosen yet, show theme chooser first, then quickstart
+      const hasChosenTheme = localStorage.getItem('negotiate-theme');
+      if (!hasChosenTheme) {
+        pendingQuickstart = true;
+        showThemeChooser();
+        return;
+      }
+      showQuickStart();
+      return;
+    }
+  } catch { /* fallback to dashboard */ }
+  loadDashboard();
+});
+
+// Quickstart chooser — each option launches a real scenario
+document.getElementById('quickstart-options')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-scenario]');
+  if (!btn) return;
+  hideQuickStart();
+  launchScenario(btn.dataset.scenario);
+});
+
+document.getElementById('quickstart-skip')?.addEventListener('click', () => {
+  hideQuickStart();
+  navigate('dashboard');
+});
+
+// Coach hero quickstart options (dashboard cold state)
+document.getElementById('d-empty-options')?.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-scenario]');
+  if (!btn) return;
+  isFirstEverSession = true;
+  launchScenario(btn.dataset.scenario);
+});
+
+document.getElementById('nav-player')?.addEventListener('click', () => showWelcome());
+
+// Show welcome on first visit (no name set)
+if (!getPlayerName()) {
+  showWelcome();
+}
+updateNavPlayer();
 
 function getDashboardFilters() {
   const form = document.getElementById('dashboard-filters');
@@ -85,6 +202,8 @@ function withPlayerQuery(path, extraParams = {}) {
   const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
   const url = new URL(path, base);
   url.searchParams.set('playerId', getPlayerId());
+  const pn = getPlayerName();
+  if (pn) url.searchParams.set('playerName', pn);
 
   for (const [key, value] of Object.entries(extraParams)) {
     if (value) url.searchParams.set(key, value);
@@ -94,23 +213,77 @@ function withPlayerQuery(path, extraParams = {}) {
 }
 
 function withPlayerPayload(data = {}) {
-  return {
-    ...data,
-    playerId: getPlayerId(),
-  };
+  const payload = { ...data, playerId: getPlayerId() };
+  const pn = getPlayerName();
+  if (pn) payload.playerName = pn;
+  return payload;
 }
 
 // ============================================================
 // DASHBOARD
 // ============================================================
 
-const DIMENSION_LABELS = {
-  outcomeLeverage: { label: 'Levier & résultat', max: 25 },
-  batnaDiscipline: { label: 'Discipline BATNA', max: 20 },
-  emotionalRegulation: { label: 'Régulation émotionnelle', max: 25 },
-  biasResistance: { label: 'Résistance aux biais', max: 15 },
-  conversationalFlow: { label: 'Flow conversationnel', max: 15 },
+const DIMENSION_LABELS_BY_TYPE = {
+  negotiation: {
+    outcomeLeverage: { label: 'Levier & resultat', max: 25 },
+    batnaDiscipline: { label: 'Discipline plan B', max: 20 },
+    emotionalRegulation: { label: 'Regulation emotionnelle', max: 25 },
+    biasResistance: { label: 'Resistance aux biais', max: 15 },
+    conversationalFlow: { label: 'Flow conversationnel', max: 15 },
+  },
+  assertiveness: {
+    outcomeLeverage: { label: 'Clarte de la demande', max: 25 },
+    batnaDiscipline: { label: 'Tenue de ligne', max: 20 },
+    emotionalRegulation: { label: 'Calme', max: 25 },
+    biasResistance: { label: 'Ne pas se laisser embarquer', max: 15 },
+    conversationalFlow: { label: 'Fluidite', max: 15 },
+  },
+  feedback: {
+    outcomeLeverage: { label: 'Clarte du message', max: 25 },
+    batnaDiscipline: { label: 'Cadrage', max: 20 },
+    emotionalRegulation: { label: 'Calme', max: 25 },
+    biasResistance: { label: 'Ecoute', max: 15 },
+    conversationalFlow: { label: 'Fluidite', max: 15 },
+  },
 };
+
+function getDimensionLabels(conversationType) {
+  return DIMENSION_LABELS_BY_TYPE[conversationType] || DIMENSION_LABELS_BY_TYPE.negotiation;
+}
+
+// Default for dashboard/profile contexts where conversationType is not known
+const DIMENSION_LABELS = DIMENSION_LABELS_BY_TYPE.negotiation;
+
+// Gauge visibility by conversation type
+// Desktop gauge IDs and corresponding mobile mini-gauge IDs
+const GAUGE_VISIBILITY = {
+  negotiation: null, // null = show all
+  assertiveness: ['g-tension', 'g-momentum', 'g-bias'], // Tension, Dynamique, Biais
+  feedback: ['g-deal-prob', 'g-tension', 'g-momentum'], // Convergence, Tension, Dynamique
+};
+
+const GAUGE_MOBILE_MAP = {
+  'g-deal': 'mg-deal', 'g-leverage': 'mg-lev', 'g-bias': 'mg-bias',
+  'g-deal-prob': 'mg-prob', 'g-tension': null, 'g-momentum': 'mg-mom',
+};
+
+function applyGaugeVisibility(conversationType) {
+  const visible = GAUGE_VISIBILITY[conversationType] || null;
+  const allGaugeIds = ['g-deal', 'g-leverage', 'g-bias', 'g-deal-prob', 'g-tension', 'g-momentum'];
+  const allMiniIds = ['mg-deal', 'mg-lev', 'mg-bias', 'mg-prob', 'mg-mom'];
+
+  for (const gId of allGaugeIds) {
+    const el = document.getElementById(gId);
+    if (el) el.closest('.gauge, .indicator-section')?.classList.toggle('hidden', visible !== null && !visible.includes(gId));
+  }
+  for (const mId of allMiniIds) {
+    const el = document.getElementById(mId);
+    if (el) {
+      const gaugeId = Object.entries(GAUGE_MOBILE_MAP).find(([, v]) => v === mId)?.[0];
+      el.closest('.mini-gauge')?.classList.toggle('hidden', visible !== null && gaugeId && !visible.includes(gaugeId));
+    }
+  }
+}
 
 const BELT_COLORS = {
   white: '#e2e8f0',
@@ -120,12 +293,18 @@ const BELT_COLORS = {
   black: '#a78bfa',
 };
 
-const DIFFICULTY_LABELS = {
-  cooperative: 'Coopératif',
-  neutral: 'Neutre',
-  hostile: 'Hostile',
-  manipulative: 'Manipulateur',
+const DIFFICULTY_LABELS_BY_TYPE = {
+  negotiation: { cooperative: 'Cooperatif', neutral: 'Neutre', hostile: 'Hostile', manipulative: 'Manipulateur' },
+  assertiveness: { cooperative: 'Comprehensif', neutral: 'Insistant', hostile: 'Agressif', manipulative: 'Toxique' },
+  feedback: { cooperative: 'Receptif', neutral: 'Reserve', hostile: 'Defensif', manipulative: 'Ferme' },
 };
+
+function getDifficultyLabel(difficulty, conversationType) {
+  const labels = DIFFICULTY_LABELS_BY_TYPE[conversationType] || DIFFICULTY_LABELS_BY_TYPE.negotiation;
+  return labels[difficulty] || difficulty;
+}
+
+const DIFFICULTY_LABELS = DIFFICULTY_LABELS_BY_TYPE.negotiation;
 
 const MODE_LABELS = {
   web: 'Web',
@@ -248,6 +427,7 @@ async function loadAcademy(force = false) {
           <p class="text-muted">${escapeHtml(weekly.description || weekly.brief?.situation || '—')}</p>
           <div class="academy-meta">
             <span class="chip">${escapeHtml(weekly.id || 'scénario')}</span>
+            ${(weekly.recommendedTiers || []).map((tier) => `<span class="chip">${escapeHtml(tier)}</span>`).join('')}
           </div>
         </div>
       `
@@ -263,9 +443,10 @@ async function loadAcademy(force = false) {
         leaderboard.entries.forEach((entry, index) => {
           const row = document.createElement('div');
           row.className = 'metric-row';
+          const who = entry.playerName || entry.playerId || 'unknown';
           const label = entry.grade
-            ? `#${index + 1} · ${escapeHtml(entry.grade)} · ${escapeHtml(entry.mode || 'unknown')}`
-            : `#${index + 1} · ${escapeHtml(entry.mode || 'unknown')}`;
+            ? `#${index + 1} · ${escapeHtml(who)} · ${escapeHtml(entry.grade)}`
+            : `#${index + 1} · ${escapeHtml(who)}`;
           row.innerHTML = `<span class="metric-label">${label}</span><span class="metric-value">${escapeHtml(entry.score)} pts</span>`;
           leaderboardEl.appendChild(row);
         });
@@ -300,7 +481,7 @@ async function loadAcademy(force = false) {
     renderAcademyPlaceholder('academy-drills', 'Impossible de charger les exercices.');
     renderAcademyPlaceholder('academy-weekly', 'Impossible de charger le scénario de la semaine.');
     renderAcademyPlaceholder('academy-leaderboard', 'Impossible de charger le classement.');
-    renderAcademyPlaceholder('academy-hall', 'Impossible de charger le panthéon.');
+    renderAcademyPlaceholder('academy-hall', 'Impossible de charger les meilleures sessions.');
   }
 }
 
@@ -374,11 +555,15 @@ async function loadDashboard() {
     const realStats = stats.realWorldStats || { totalReal: 0, avgSelfScore: 0, transferRate: 0, topLearning: null };
 
     document.getElementById('d-empty').classList.toggle('hidden', !empty);
-    document.querySelector('.stats-grid').classList.toggle('hidden', empty);
+    document.getElementById('d-coach-desk')?.classList.toggle('hidden', empty);
+    document.querySelector('.stats-grid')?.classList.toggle('hidden', empty);
     document.querySelectorAll('#view-dashboard .grid-2').forEach((el) => el.classList.toggle('hidden', empty));
 
+    // Declassify dashboard chrome when cold (no sessions yet)
+    document.querySelector('.dashboard-filters-card')?.classList.toggle('hidden', empty);
+
     const realStatsRoot = document.getElementById('d-real-stats');
-    realStatsRoot.classList.toggle('hidden', !realStats.totalReal);
+    realStatsRoot.classList.toggle('hidden', empty || !realStats.totalReal);
     document.getElementById('d-real-count').textContent = realStats.totalReal || 0;
     document.getElementById('d-real-score').textContent = realStats.totalReal ? `${realStats.avgSelfScore}/10` : '—';
     document.getElementById('d-transfer').textContent = realStats.totalReal ? `${realStats.transferRate}%` : '—';
@@ -482,6 +667,7 @@ async function loadPresets() {
     grid.innerHTML = '';
 
     const tutorials = presets.filter((p) => p.category === 'tutorial');
+    const assertiveness = presets.filter((p) => p.category === 'assertiveness');
     const basics = presets.filter((p) => !p.category);
     const swiss = presets.filter((p) => p.category === 'swiss');
     const celebrities = presets.filter((p) => p.category === 'celebrity');
@@ -514,6 +700,7 @@ async function loadPresets() {
     }
 
     renderGroup('Commencer ici', tutorials);
+    renderGroup("S'affirmer", assertiveness);
     renderGroup('Situations classiques', basics);
     renderGroup('Immobilier suisse', swiss);
     renderGroup('Personnalités célèbres', celebrities);
@@ -645,13 +832,18 @@ document.getElementById('versus-run').addEventListener('click', async () => {
 
 let currentSessionId = null;
 let currentBrief = null;
+let currentConversationType = 'negotiation';
 
 function startNegotiation(session) {
   currentSessionId = session.sessionId;
+  currentConversationType = session.conversationType || 'negotiation';
   pendingScenarioFile = null;
   pendingBrief = null;
   pendingSessionMeta = null;
   navigate('negotiate');
+
+  // Show/hide gauges based on conversation type
+  applyGaugeVisibility(currentConversationType);
 
   document.getElementById('n-adversary').textContent = session.adversary?.identity || '—';
   document.getElementById('n-act').textContent = 'Ouverture';
@@ -958,7 +1150,7 @@ function renderSimulation(report) {
       <p style="text-align:center;color:var(--text-muted);margin-bottom:16px">${report.predictedOutcome}</p>
 
       <div class="sim-section">
-        <h4>Réaction simulée de l'adversaire</h4>
+        <h4>Reaction simulee de l'interlocuteur</h4>
         <p style="font-style:italic;color:var(--text-2);padding:8px 12px;background:var(--bg);border-radius:8px">"${report.simulatedResponse}"</p>
       </div>
 
@@ -1021,9 +1213,9 @@ function showBriefing(briefing) {
     <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
       ${briefing.playerRole ? `<span class="role-tag">Vous : ${briefing.playerRole}</span>` : ''}
       ${briefing.adversaryRole ? `<span class="role-tag">Face à : ${briefing.adversaryRole}</span>` : ''}
-      ${briefing.difficulty ? `<span class="role-tag" style="background:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}22;color:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}">${briefing.difficulty}</span>` : ''}
+      ${briefing.difficulty ? `<span class="role-tag" style="background:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}22;color:${DIFF_COLORS[briefing.difficulty] || 'var(--text-muted)'}">${getDifficultyLabel(briefing.difficulty, briefing.conversationType || 'negotiation')}</span>` : ''}
     </div>
-    ${briefing.adversaryPublic ? `<h3 style="margin-top:14px">Votre adversaire</h3><p>${briefing.adversaryPublic.identity || ''}</p><p class="text-muted">${briefing.adversaryPublic.style || ''}</p>` : ''}
+    ${briefing.adversaryPublic ? `<h3 style="margin-top:14px">Ton interlocuteur</h3><p>${briefing.adversaryPublic.identity || ''}</p><p class="text-muted">${briefing.adversaryPublic.style || ''}</p>` : ''}
     ${briefing.relationalStakes ? `<h3>Enjeux relationnels</h3><p class="text-muted">${briefing.relationalStakes}</p>` : ''}
     ${briefing.constraints?.length ? `<h3>Contraintes</h3><ul style="padding-left:18px">${briefing.constraints.map((c) => `<li class="text-muted">${c}</li>`).join('')}</ul>` : ''}
   `;
@@ -1035,6 +1227,24 @@ function showBriefing(briefing) {
   oddsEl.style.color = odds.successRate > 60 ? 'var(--green)' : odds.successRate > 40 ? 'var(--amber)' : 'var(--red)';
   oddsEl.style.background = odds.successRate > 60 ? 'var(--green-bg)' : odds.successRate > 40 ? 'var(--amber-bg)' : 'var(--red-bg)';
   document.getElementById('b-odds-msg').textContent = odds.message || '';
+
+  // Update slider labels based on conversation type
+  if (briefing.sliders) {
+    const s = briefing.sliders;
+    const updateSlider = (id, slider) => {
+      const header = document.getElementById(`sl-${id}-label`);
+      const input = document.getElementById(`sl-${id}`);
+      if (header) header.textContent = `${slider.label}: ${input?.value || slider.default}`;
+      if (header?.parentElement) {
+        const spans = header.parentElement.querySelectorAll('span');
+        if (spans[0]) spans[0].textContent = slider.leftLabel;
+        if (spans[2]) spans[2].textContent = slider.rightLabel;
+      }
+    };
+    if (s.ambition) updateSlider('ambition', s.ambition);
+    if (s.relation) updateSlider('relation', s.relation);
+    if (s.posture) updateSlider('posture', s.posture);
+  }
 
   // Pre-fill suggestions
   const form = document.getElementById('briefing-form');
@@ -1099,6 +1309,40 @@ function updateRoundScore(roundScore) {
 // RESULTS
 // ============================================================
 
+function buildPrimaryTakeaway(feedback, conversationType) {
+  const dimLabels = getDimensionLabels(conversationType);
+  const scores = feedback?.scores || {};
+  const biases = feedback?.biasesDetected || [];
+  const recs = feedback?.recommendations || [];
+
+  // If there's a dominant bias, lead with that
+  if (biases.length > 0) {
+    const topBias = biases[0];
+    const biasName = topBias.biasType || 'un biais';
+    return `Attention a l'${biasName}. ${topBias.explanation || 'Travaille a le reperer plus tot.'}`;
+  }
+
+  // Otherwise, find the weakest dimension and frame as advice
+  const dims = Object.entries(scores).filter(([k]) => dimLabels[k]);
+  if (dims.length > 0) {
+    const weakest = dims.reduce((a, b) => {
+      const aMax = dimLabels[a[0]]?.max || 100;
+      const bMax = dimLabels[b[0]]?.max || 100;
+      return (a[1] / aMax) < (b[1] / bMax) ? a : b;
+    });
+    const info = dimLabels[weakest[0]];
+    const pct = Math.round((weakest[1] / info.max) * 100);
+    if (pct < 60) {
+      return `Ton point de progression : ${info.label}. Concentre-toi la-dessus la prochaine fois.`;
+    }
+  }
+
+  // Fallback to first recommendation
+  if (recs.length > 0) return recs[0];
+
+  return 'Bonne session. Continue pour affiner ton profil.';
+}
+
 function showResults(feedback, fightCard) {
   navigate('results');
 
@@ -1117,6 +1361,12 @@ function showResults(feedback, fightCard) {
     document.getElementById('r-grade-badge').textContent = score;
     document.getElementById('r-grade-label').textContent = 'Score';
     document.getElementById('r-grade-desc').textContent = '';
+  }
+
+  // Primary takeaway — one strong phrase
+  const takeawayEl = document.getElementById('r-takeaway-text');
+  if (takeawayEl) {
+    takeawayEl.textContent = buildPrimaryTakeaway(feedback, currentConversationType);
   }
 
   // Triangle
@@ -1157,7 +1407,8 @@ function showResults(feedback, fightCard) {
   const dimsEl = document.getElementById('r-dimensions');
   dimsEl.innerHTML = '';
   const scores = feedback.scores || {};
-  for (const [key, info] of Object.entries(DIMENSION_LABELS)) {
+  const dimLabels = getDimensionLabels(currentConversationType);
+  for (const [key, info] of Object.entries(dimLabels)) {
     const val = scores[key] || 0;
     const pct = Math.round((val / info.max) * 100);
     const cls = pct >= 70 ? 'green' : pct >= 45 ? 'amber' : 'red';
@@ -1212,6 +1463,29 @@ function showResults(feedback, fightCard) {
 
   // Theory analysis
   if (fightCard?.theory) renderTheory(fightCard.theory);
+
+  // First session insight + adapted next steps
+  const insightEl = document.getElementById('r-first-insight');
+  const actionsDefault = document.getElementById('r-actions-default');
+  const actionsFirst = document.getElementById('r-actions-first');
+
+  if (isFirstEverSession) {
+    // Build insight text from biases
+    const biasNames = biases.map((b) => b.biasType).filter(Boolean);
+    const insightText = biasNames.length > 0
+      ? `Tendance détectée : ${biasNames[0]}. C'est un pattern courant — tu peux le travailler.`
+      : 'Bon début — aucun biais majeur détecté. Continue pour affiner ton profil.';
+    document.getElementById('r-first-insight-text').textContent = insightText;
+
+    insightEl?.classList.remove('hidden');
+    actionsDefault?.classList.add('hidden');
+    actionsFirst?.classList.remove('hidden');
+    isFirstEverSession = false;
+  } else {
+    insightEl?.classList.add('hidden');
+    actionsDefault?.classList.remove('hidden');
+    actionsFirst?.classList.add('hidden');
+  }
 }
 
 // ============================================================
@@ -1525,7 +1799,7 @@ async function showPrepSheet(sessionId) {
       <div class="prep-section card"><h3>Arguments clés</h3><ol class="prep-list">${(sheet.keyArguments || []).map((a) => `<li>${a}</li>`).join('')}</ol></div>
       <div class="prep-section card"><h3>Lignes rouges</h3><ul class="prep-list">${(sheet.redLines || []).map((r) => `<li style="color:var(--red)">${r}</li>`).join('')}</ul></div>
       <div class="prep-section card"><h3>Pièges à éviter</h3><ul class="prep-list">${(sheet.trapsToAvoid || []).map((t) => `<li style="color:var(--amber)">${t}</li>`).join('')}</ul></div>
-      ${(sheet.ifTheyDo || []).length > 0 ? `<div class="prep-section card"><h3>Si l'adversaire...</h3>${sheet.ifTheyDo.map((s) => `<div class="prep-if-card"><div class="prep-if-trigger">${s.trigger}</div><div class="prep-if-response">${s.response}</div>${s.why ? `<div class="prep-if-why">${s.why}</div>` : ''}</div>`).join('')}</div>` : ''}
+      ${(sheet.ifTheyDo || []).length > 0 ? `<div class="prep-section card"><h3>Si l'autre...</h3>${sheet.ifTheyDo.map((s) => `<div class="prep-if-card"><div class="prep-if-trigger">${s.trigger}</div><div class="prep-if-response">${s.response}</div>${s.why ? `<div class="prep-if-why">${s.why}</div>` : ''}</div>`).join('')}</div>` : ''}
       <div class="prep-section card"><h3>Rappel BATNA</h3><p style="font-weight:600">${sheet.batnaReminder || '—'}</p></div>
       <div class="prep-confidence">${sheet.confidenceBooster || 'Tu es prêt.'}</div>
       <div class="prep-one-thing">${sheet.oneThingToRemember || '—'}</div>
@@ -1722,16 +1996,10 @@ const FRAMEWORK_NAMES = {
 };
 
 function renderTheory(theoryAnalysis) {
-  const section = document.getElementById('r-theory-section');
-  if (!section) return;
-  if (!theoryAnalysis || !theoryAnalysis.insights?.length) {
-    section.classList.add('hidden');
-    return;
-  }
-  section.classList.remove('hidden');
-  document.getElementById('r-theory-summary').textContent = theoryAnalysis.summary || '';
-
   const container = document.getElementById('r-theory-insights');
+  if (!container) return;
+  if (!theoryAnalysis || !theoryAnalysis.insights?.length) return;
+  document.getElementById('r-theory-summary').textContent = theoryAnalysis.summary || '';
   container.innerHTML = '';
   for (const insight of theoryAnalysis.insights) {
     const card = document.createElement('div');
@@ -1746,51 +2014,137 @@ function renderTheory(theoryAnalysis) {
 }
 
 // ============================================================
-// THEME SWITCHER + RATING
+// THEME SYSTEM
 // ============================================================
 
-const THEMES = ['obsidian', 'terminal', 'poker', 'dojo', 'neon'];
-const THEME_NAMES = { obsidian: 'Obsidian', terminal: 'Terminal', poker: 'Poker', dojo: 'Dojo', neon: 'Neon' };
-let currentTheme = localStorage.getItem('negotiate-theme') || 'obsidian';
-const themeRatings = JSON.parse(localStorage.getItem('negotiate-theme-ratings') || '{}');
+const THEMES = [
+  { id: 'lucid', label: 'Lucid Coach', tagline: 'Sobre, chaleureux, premium', ideal: 'un coach qui t\'ecoute', cssClass: '', bg1: '#0f1218', bg2: '#c9956b' },
+  { id: 'obsidian', label: 'Signal Room', tagline: 'Net, technique, concentre', ideal: 'un tableau de bord precis', cssClass: 'theme-obsidian', bg1: '#0a0e1a', bg2: '#6366f1' },
+  { id: 'terminal', label: 'Terminal', tagline: 'Brut, minimaliste, focus', ideal: 'un terminal de hacker', cssClass: 'theme-terminal', bg1: '#0d0d0d', bg2: '#00ff41' },
+  { id: 'poker', label: 'Casefile Desk', tagline: 'Classique, strategique, feutre', ideal: 'une table de poker', cssClass: 'theme-poker', bg1: '#1a3a1a', bg2: '#d4a017' },
+  { id: 'dojo', label: 'Quiet Journal', tagline: 'Lumineux, calme, papier', ideal: 'un carnet de notes', cssClass: 'theme-dojo', bg1: '#f5f0e8', bg2: '#8b4513' },
+  { id: 'neon', label: 'Sparring Club', tagline: 'Electrique, vif, immersif', ideal: 'une arene de combat', cssClass: 'theme-neon', bg1: '#0c0015', bg2: '#e040fb' },
+];
 
-function applyTheme(theme) {
-  document.body.className = `theme-${theme}`;
-  currentTheme = theme;
-  localStorage.setItem('negotiate-theme', theme);
-  document.querySelectorAll('.theme-btn').forEach((b) => b.classList.toggle('active', b.dataset.theme === theme));
-  renderThemeRating(theme);
+let currentTheme = localStorage.getItem('negotiate-theme') || 'lucid';
+let committedTheme = currentTheme;
+let chooserIndex = 0;
+
+function previewTheme(themeId) {
+  const theme = THEMES.find((t) => t.id === themeId) || THEMES[0];
+  document.body.className = theme.cssClass;
+  currentTheme = theme.id;
+  const label = document.getElementById('settings-current-theme');
+  if (label) label.textContent = theme.label;
 }
 
-function renderThemeRating(theme) {
-  const container = document.getElementById('theme-rating');
-  const rating = themeRatings[theme] || 0;
+function commitTheme(themeId) {
+  previewTheme(themeId);
+  committedTheme = currentTheme;
+  localStorage.setItem('negotiate-theme', currentTheme);
+}
+
+function revertTheme() {
+  previewTheme(committedTheme);
+}
+
+function buildChooserSlides() {
+  const container = document.getElementById('theme-slides');
+  const dots = document.getElementById('theme-dots');
+  if (!container || !dots) return;
   container.innerHTML = '';
-  for (let i = 1; i <= 5; i++) {
-    const star = document.createElement('button');
-    star.className = `theme-star ${i <= rating ? 'filled' : ''}`;
-    star.textContent = i <= rating ? '\u2605' : '\u2606';
-    star.addEventListener('click', () => rateTheme(theme, i));
-    container.appendChild(star);
+  dots.innerHTML = '';
+  THEMES.forEach((theme, i) => {
+    const slide = document.createElement('div');
+    slide.className = `theme-slide ${i === chooserIndex ? 'active' : ''}`;
+    slide.innerHTML = `
+      <div class="theme-preview" style="background:linear-gradient(135deg,${theme.bg1},${theme.bg2});border-radius:var(--radius)"></div>
+      <div class="theme-slide-name">${escapeHtml(theme.label)}</div>
+      <div class="theme-slide-tagline">${escapeHtml(theme.tagline)}</div>
+      <div class="theme-slide-ideal">Ideal si tu veux... ${escapeHtml(theme.ideal)}</div>
+    `;
+    container.appendChild(slide);
+    const dot = document.createElement('button');
+    dot.className = `theme-dot ${i === chooserIndex ? 'active' : ''}`;
+    dot.addEventListener('click', () => goToSlide(i));
+    dots.appendChild(dot);
+  });
+}
+
+function goToSlide(index) {
+  chooserIndex = ((index % THEMES.length) + THEMES.length) % THEMES.length;
+  document.querySelectorAll('.theme-slide').forEach((s, i) => s.classList.toggle('active', i === chooserIndex));
+  document.querySelectorAll('.theme-dot').forEach((d, i) => d.classList.toggle('active', i === chooserIndex));
+  previewTheme(THEMES[chooserIndex].id);
+}
+
+function showThemeChooser() {
+  chooserIndex = THEMES.findIndex((t) => t.id === currentTheme);
+  if (chooserIndex < 0) chooserIndex = 0;
+  buildChooserSlides();
+  document.getElementById('theme-chooser-modal')?.classList.remove('hidden');
+}
+
+function hideThemeChooser() {
+  document.getElementById('theme-chooser-modal')?.classList.add('hidden');
+}
+
+function showSettings() {
+  const label = document.getElementById('settings-current-theme');
+  const theme = THEMES.find((t) => t.id === currentTheme) || THEMES[0];
+  if (label) label.textContent = theme.label;
+  document.getElementById('settings-modal')?.classList.remove('hidden');
+}
+
+function hideSettings() {
+  document.getElementById('settings-modal')?.classList.add('hidden');
+}
+
+// Theme chooser navigation
+document.getElementById('theme-prev')?.addEventListener('click', () => goToSlide(chooserIndex - 1));
+document.getElementById('theme-next')?.addEventListener('click', () => goToSlide(chooserIndex + 1));
+document.getElementById('theme-chooser-apply')?.addEventListener('click', () => {
+  commitTheme(currentTheme);
+  hideThemeChooser();
+  if (pendingQuickstart) {
+    pendingQuickstart = false;
+    showQuickStart();
   }
-}
-
-function rateTheme(theme, rating) {
-  themeRatings[theme] = rating;
-  localStorage.setItem('negotiate-theme-ratings', JSON.stringify(themeRatings));
-  renderThemeRating(theme);
-}
-
-// Wire theme buttons
-document.getElementById('theme-toggle').addEventListener('click', () => {
-  document.getElementById('theme-panel').classList.toggle('open');
+});
+document.getElementById('theme-chooser-close')?.addEventListener('click', () => {
+  revertTheme();
+  hideThemeChooser();
+  // If first-launch close, still continue to quickstart with default theme
+  if (pendingQuickstart) {
+    commitTheme(committedTheme);
+    pendingQuickstart = false;
+    showQuickStart();
+  }
 });
 
-document.querySelectorAll('.theme-btn').forEach((btn) => {
-  btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+// Settings
+document.getElementById('nav-settings')?.addEventListener('click', () => showSettings());
+document.getElementById('settings-close')?.addEventListener('click', () => hideSettings());
+document.getElementById('settings-change-theme')?.addEventListener('click', () => {
+  hideSettings();
+  showThemeChooser();
+});
+document.getElementById('settings-reset-theme')?.addEventListener('click', () => {
+  commitTheme('lucid');
 });
 
-applyTheme(currentTheme);
+// Keyboard support for carousel
+document.getElementById('theme-chooser-modal')?.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') goToSlide(chooserIndex - 1);
+  if (e.key === 'ArrowRight') goToSlide(chooserIndex + 1);
+  if (e.key === 'Escape') { revertTheme(); hideThemeChooser(); }
+});
+document.getElementById('settings-modal')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') hideSettings();
+});
+
+// Apply theme visually at boot (don't persist — only commitTheme writes to storage)
+previewTheme(currentTheme);
 
 // ============================================================
 // MOBILE MINI-GAUGES
@@ -1828,6 +2182,21 @@ document.getElementById('d-filters-reset')?.addEventListener('click', () => {
   if (!form) return;
   form.reset();
   loadDashboard();
+});
+
+// First-session daily button in results view
+document.getElementById('r-first-daily')?.addEventListener('click', async () => {
+  try {
+    const daily = academyDaily || await api('/api/daily');
+    academyDaily = daily;
+    pendingScenarioFile = null;
+    pendingBrief = daily.brief;
+    pendingSessionMeta = { mode: 'daily', dailyMeta: { date: daily.date, targetSkill: daily.targetSkill, difficulty: daily.difficulty } };
+    const briefing = await post('/api/briefing', { brief: daily.brief });
+    showBriefing(briefing);
+  } catch (err) {
+    alert('Erreur : ' + err.message);
+  }
 });
 
 loadDashboard();

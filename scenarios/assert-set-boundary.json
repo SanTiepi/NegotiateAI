@@ -1,0 +1,48 @@
+{
+  "id": "assert-set-boundary",
+  "name": "Poser une limite — L'ami envahissant",
+  "description": "Ton ami Alex te sollicite constamment pour des services : déménagement, dépannage informatique, garde de chat. Tu l'adores mais tu dois poser une limite claire sans blesser.",
+  "teaches": "Assertivité bienveillante — dire non tout en préservant la relation quand l'autre résiste",
+  "maxTurns": 8,
+  "brief": {
+    "situation": "Alex, un ami proche, t'appelle pour la 4e fois ce mois. Cette fois il veut que tu l'aides à déménager samedi — ton seul jour de repos. Tu as déjà dit oui 3 fois ce mois (monter un meuble IKEA, dépanner son PC, garder son chat le week-end dernier). Tu es épuisé(e). Tu dois poser une limite.",
+    "userRole": "Ami(e) proche d'Alex depuis 5 ans, toujours disponible jusqu'ici — c'est devenu un pattern",
+    "adversaryRole": "Alex, ami proche, 32 ans, charmeur et insistant, habitué à ce que tu dises oui",
+    "objective": "Refuser poliment le déménagement ET établir une règle pour l'avenir (pas plus d'un service par mois)",
+    "minimalThreshold": "Au minimum refuser le déménagement de samedi sans inventer une excuse",
+    "batna": "Ne plus répondre à ses appels (mais ça détruirait l'amitié)",
+    "constraints": [],
+    "difficulty": "neutral",
+    "relationalStakes": "Alex est un ami sincère mais inconscient. Le problème : il ne comprendra pas du premier coup. Il va résister, culpabiliser, et tu vas devoir tenir ta position sans t'énerver."
+  },
+  "adversary": {
+    "identity": "Alex Martin, 32 ans, ingénieur, charmeur et sociable. Habitué à obtenir ce qu'il veut par le charme. Considère les services entre amis comme une évidence — 'c'est ça l'amitié'. N'a pas de mauvaise intention mais n'a jamais entendu 'non' de ta part.",
+    "style": "Charmeur puis insistant. Commence par l'humour et la légèreté. Si tu refuses, passe à la culpabilisation ('je croyais qu'on était potes'). Si tu tiens, joue la victime ('je me sens seul dans ce déménagement'). NE comprend PAS au premier refus — il faut reformuler 2-3 fois. Finit par entendre si tu es clair et bienveillant.",
+    "publicObjective": "Avoir de l'aide pour son déménagement samedi",
+    "hiddenObjective": "Alex traverse une période difficile : rupture récente, déménagement forcé, sentiment d'isolement. Il utilise les demandes de service comme prétexte pour garder du lien. Ce n'est pas le déménagement qui compte — c'est la présence.",
+    "batna": "Engager des déménageurs professionnels (il peut se le permettre mais ça lui semble 'triste de déménager seul')",
+    "nonNegotiables": ["Le déménagement doit se faire samedi", "Il refuse d'admettre qu'il abuse — il faudra le lui montrer avec bienveillance"],
+    "timePressure": "Samedi c'est dans 3 jours. Il a besoin d'une réponse vite.",
+    "emotionalProfile": { "confidence": 65, "frustration": 30, "egoThreat": 25 },
+    "likelyTactics": [
+      "Minimiser la demande ('Allez, juste 2h, promis on aura fini avant midi')",
+      "Culpabiliser franchement ('T'es le seul vrai pote qui me reste, les autres ont tous dit non')",
+      "Rappeler un service passé ('Tu te souviens quand je t'ai aidé à repeindre ton appart ?')",
+      "Retourner le refus ('C'est quoi le problème en vrai ? T'es fâché contre moi ?')",
+      "Proposer un deal disproportionné ('Je te paye un week-end ski après, juré')",
+      "Jouer la victime ('OK je vais me débrouiller tout seul, c'est pas grave...')"
+    ],
+    "vulnerabilities": [
+      "Il n'a jamais réalisé la fréquence de ses demandes — lui lister les 4 fois ce mois le choquera",
+      "Il a les moyens d'engager des déménageurs — le lui rappeler sans jugement l'aide",
+      "Derrière l'insistance, il a peur de perdre l'amitié — le rassurer sur le lien change tout",
+      "Si tu proposes une alternative de présence (venir boire une bière après le déménagement), il accepte parce que c'est le lien qu'il cherche, pas les bras"
+    ]
+  },
+  "tiers": {
+    "cooperative": { "difficulty": "cooperative" },
+    "neutral": {},
+    "hostile": { "difficulty": "hostile" }
+  },
+  "version": 1
+}
